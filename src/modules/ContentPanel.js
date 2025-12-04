@@ -1,6 +1,9 @@
 // Gestionnaire de panneau de contenu pour Mondes Immergés
 import { gsap } from 'gsap';
 
+// Get BASE_URL from Vite for correct asset paths on GitHub Pages
+const BASE_URL = import.meta.env.BASE_URL || '/';
+
 export class ContentPanel {
     /**
      * Crée une instance du gestionnaire de panneau de contenu
@@ -72,7 +75,7 @@ export class ContentPanel {
                 
                 // Afficher une image de remplacement
                 const placeholder = document.createElement('img');
-                placeholder.src = '/images/video-placeholder.jpg';
+                placeholder.src = `${BASE_URL}images/video-placeholder.jpg`;
                 placeholder.alt = 'Vidéo non disponible';
                 placeholder.style.width = '100%';
                 placeholder.style.borderRadius = '3px';

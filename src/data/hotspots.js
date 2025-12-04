@@ -13,7 +13,7 @@ export const hotspots = [
             <p>La Grande Barrière de Corail représente le plus grand récif corallien du monde. Située au large du Queensland en Australie, elle s'étend sur plus de 2 300 kilomètres et abrite une biodiversité exceptionnelle avec plus de 1 500 espèces de poissons et 400 types de coraux.</p>
             <p>Ce site classé au patrimoine mondial de l'UNESCO est aujourd'hui gravement menacé par le changement climatique, la pollution et la surpêche. Les scientifiques observent un blanchissement massif des coraux dû à l'augmentation de la température des océans, avec cinq épisodes majeurs depuis 1998, dont trois entre 2016 et 2020.</p>
         `,
-        videoSrc: '/videos/grande-barriere.mp4',
+        videoSrc: `${BASE_URL}videos/grande-barriere.mp4`,
         scientificData: {
             depth: { min: 15, max: 45, avg: 35 },
             temperature: { min: 23.5, max: 28.5, avg: 25.7 },
@@ -63,7 +63,7 @@ export const hotspots = [
             <p>Les abysses constituent les zones les plus profondes des océans, situées entre 3 000 et 11 000 mètres de profondeur. Ces environnements extrêmes, caractérisés par une pression écrasante, l'absence de lumière et des températures avoisinant 2°C, abritent pourtant une vie extraordinaire.</p>
             <p>Les créatures abyssales ont développé des adaptations fascinantes : organes bioluminescents, corps transparents, dents démesurées ou encore capacité à résister à des pressions plusieurs centaines de fois supérieures à celle de la surface. Notre connaissance de ces écosystèmes reste limitée, avec moins de 5% des fonds marins ayant été explorés à ce jour.</p>
         `,
-        videoSrc: '/videos/abysses.mp4',
+        videoSrc: `${BASE_URL}videos/abysses.mp4`,
         scientificData: {
             depth: { min: 3000, max: 11000, avg: 5000 },
             temperature: { min: 1.5, max: 3.0, avg: 2.3 },
@@ -113,7 +113,7 @@ export const hotspots = [
             <p>L'océan Arctique, en grande partie recouvert de glace, constitue un écosystème unique abritant des espèces parfaitement adaptées aux conditions extrêmes, comme l'ours polaire, le phoque annelé et le narval.</p>
             <p>Le réchauffement climatique affecte cet environnement deux fois plus rapidement que le reste de la planète. La fonte de la banquise estivale, qui a diminué de plus de 40% depuis 1979, transforme radicalement les habitats et menace la survie de nombreuses espèces qui dépendent de la glace pour leur alimentation et leur reproduction.</p>
         `,
-        videoSrc: '/videos/arctique.mp4',
+        videoSrc: `${BASE_URL}videos/arctique.mp4`,
         scientificData: {
             temperature: { min: -1.8, max: 3.0, avg: -0.5 },
             iceExtent: { winter: '15 millions km²', summer: '5 millions km²' },
@@ -163,7 +163,7 @@ export const hotspots = [
             <p>Le "Great Pacific Garbage Patch" est une zone d'accumulation de déchets plastiques située dans le Pacifique Nord. Cette "soupe de plastique" s'étend sur une surface équivalente à trois fois la France et contient plus de 1,8 trillion de morceaux de plastique.</p>
             <p>Ces débris se fragmentent en microplastiques qui sont ingérés par la faune marine et entrent dans la chaîne alimentaire. Chaque année, plus de 8 millions de tonnes de plastique sont déversées dans les océans, avec des conséquences désastreuses pour les écosystèmes marins et potentiellement la santé humaine.</p>
         `,
-        videoSrc: '/videos/plastique.mp4',
+        videoSrc: `${BASE_URL}videos/plastique.mp4`,
         scientificData: {
             area: 'Environ 1,6 million km²',
             plasticDensity: { min: '10 kg/km²', max: '100 kg/km²' },
@@ -212,7 +212,7 @@ export const hotspots = [
             <p>Le Triangle de Corail, situé entre l'Indonésie, la Malaisie, les Philippines, la Papouasie-Nouvelle-Guinée, les Îles Salomon et le Timor-Leste, représente l'épicentre de la biodiversité marine mondiale.</p>
             <p>Cette région abrite 76% des espèces de coraux connues et plus de 3 000 espèces de poissons. Véritable nurserie des océans, le Triangle de Corail joue un rôle crucial dans l'équilibre des écosystèmes marins de la planète et assure la subsistance de plus de 120 millions de personnes.</p>
         `,
-        videoSrc: '/videos/triangle-corail.mp4',
+        videoSrc: `${BASE_URL}videos/triangle-corail.mp4`,
         scientificData: {
             area: '5,7 millions km²',
             depth: { min: 10, max: 200, avg: 53 },
@@ -262,7 +262,7 @@ export const hotspots = [
             <p>Les requins, prédateurs au sommet de la chaîne alimentaire marine depuis plus de 400 millions d'années, sont aujourd'hui gravement menacés. Plus d'un tiers des espèces de requins et de raies sont en danger d'extinction.</p>
             <p>La surpêche, notamment pour le commerce des ailerons, et les prises accessoires sont les principales menaces. En tant que régulateurs des écosystèmes marins, leur déclin a des effets en cascade sur la santé des océans et l'équilibre des populations de poissons.</p>
         `,
-        videoSrc: '/videos/requins.mp4',
+        videoSrc: `${BASE_URL}videos/requins.mp4`,
         scientificData: {
             speciesCount: '500+ espèces',
             depth: { min: 0, max: 2000, avg: 150 },

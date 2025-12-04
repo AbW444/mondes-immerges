@@ -1,6 +1,9 @@
 // Gestionnaire d'interface utilisateur pour Mondes Immergés
 import { gsap } from 'gsap';
 
+// Get BASE_URL from Vite for correct asset paths on GitHub Pages
+const BASE_URL = import.meta.env.BASE_URL || '/';
+
 export class InterfaceUI {
     /**
      * Crée une instance de l'interface utilisateur
@@ -753,7 +756,7 @@ export class InterfaceUI {
         mapImage.style.cssText = `
             width: 100%;
             height: 100%;
-            background-image: url('/images/map-outline.png');
+            background-image: url('${BASE_URL}images/map-outline.png');
             background-size: cover;
             background-position: center;
             opacity: 0.7;

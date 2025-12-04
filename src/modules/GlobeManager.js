@@ -4,6 +4,9 @@ import { gsap } from 'gsap';
 // Import corrigé pour la redirection
 import { getRedirectUrl } from '../data/redirect-config.js';
 
+// Get BASE_URL from Vite for correct asset paths on GitHub Pages
+const BASE_URL = import.meta.env.BASE_URL || '/';
+
 export class GlobeManager {
     constructor(options) {
         this.options = options;
@@ -20,8 +23,8 @@ export class GlobeManager {
         this.clock = new THREE.Clock();
         
         // NOUVEAU: Variables pour la gestion des vidéos
-        this.currentVideoPath = '/videos/globe-video.webm';
-        this.alternateVideoPath = '/videos/globe-video-aberration.webm';
+        this.currentVideoPath = `${BASE_URL}videos/globe-video.webm`;
+        this.alternateVideoPath = `${BASE_URL}videos/globe-video-aberration.webm`;
         this.isAlternateVideo = false;
         
         // Paramètres pour l'orbite ellipsoïdale
@@ -348,7 +351,7 @@ export class GlobeManager {
         `;
         
         const logo = document.createElement('img');
-        logo.src = '/images/nat-geo-logo.png';
+        logo.src = `${BASE_URL}images/nat-geo-logo.png`;
         logo.alt = 'National Geographic';
         logo.style.cssText = `
             height: 40px;
@@ -381,7 +384,7 @@ export class GlobeManager {
     createCelestialBodies() {
         const textureLoader = new THREE.TextureLoader();
 
-        const sunTexture = textureLoader.load('/images/sun-texture.jpg');
+        const sunTexture = textureLoader.load(`${BASE_URL}images/sun-texture.jpg`);
         const sunGeometry = new THREE.SphereGeometry(3, 32, 32);
         const sunMaterial = new THREE.MeshBasicMaterial({
             map: sunTexture,
@@ -392,7 +395,7 @@ export class GlobeManager {
         sun.position.copy(this.celestialParams.sunPosition);
         this.scene.add(sun);
 
-        const moonTexture = textureLoader.load('/images/moon-texture.jpg');
+        const moonTexture = textureLoader.load(`${BASE_URL}images/moon-texture.jpg`);
         const moonGeometry = new THREE.SphereGeometry(1.5, 32, 32);
         const moonMaterial = new THREE.MeshStandardMaterial({
             map: moonTexture,
@@ -580,7 +583,7 @@ export class GlobeManager {
     
     createSkybox() {
         const loader = new THREE.TextureLoader();
-        const skyTexturePath = '/images/night-sky.png';
+        const skyTexturePath = `${BASE_URL}images/night-sky.png`;
         
         loader.load(skyTexturePath, (texture) => {
             this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1132,7 +1135,7 @@ export class GlobeManager {
        console.log("Tentative de résolution de l'erreur vidéo...");
        
        const textureLoader = new THREE.TextureLoader();
-       textureLoader.load('/images/video-placeholder.jpg', (texture) => {
+       textureLoader.load(`${BASE_URL}images/video-placeholder.jpg`, (texture) => {
            if (this.globe && this.globe.material) {
                console.log("Application de la texture de secours");
                
