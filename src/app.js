@@ -6,8 +6,6 @@ import { InterfaceUI } from './modules/InterfaceUI.js';
 import { ContentPanel } from './modules/ContentPanel.js';
 import { hotspots, getHotspotById } from './data/hotspots.js';
 
-// Get BASE_URL from Vite for correct asset paths on GitHub Pages
-const BASE_URL = import.meta.env.BASE_URL || '/';
 
 /**
  * Application principale Mondes Immergés
@@ -54,8 +52,8 @@ class MondesImmergesApp {
         // Initialiser le gestionnaire de globe
         this.globeManager = new GlobeManager({
             containerId: 'globe-container',
-            videoPath: `${BASE_URL}videos/globe-video.mp4`,
-            skyTexturePath: `${BASE_URL}images/night-sky.png`
+            videoPath: `${import.meta.env.BASE_URL}videos/globe-video.mp4`,
+            skyTexturePath: `${import.meta.env.BASE_URL}images/night-sky.png`
         });
         
         // Initialiser la gestion des interactions
@@ -257,7 +255,7 @@ class MondesImmergesApp {
         
         // Créer l'élément image du logo
         const logo = document.createElement('img');
-        logo.src = `${BASE_URL}images/nat-geo-logo.png`;
+        logo.src = `${import.meta.env.BASE_URL}images/nat-geo-logo.png`;
         logo.alt = 'National Geographic';
         logo.style.cssText = `
             height: 40px;
