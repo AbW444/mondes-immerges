@@ -12,7 +12,7 @@ export default defineConfig({
 
   // IMPORTANT: Pour GitHub Pages - Remplacer par le nom exact de votre repo
   base: process.env.NODE_ENV === 'production'
-    ? '/nationalgeographic.fr-mondesimmerges-interface/'
+    ? '/interface_globe/'
     : '/',
   
   // Configuration du serveur de développement
@@ -147,7 +147,7 @@ export default defineConfig({
   // NOUVEAU: Configuration pour les Web Workers si nécessaire
   worker: {
     format: 'es',
-    plugins: []
+    plugins: () => []
   },
   
   // Configuration CSS
