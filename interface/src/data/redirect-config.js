@@ -1,17 +1,17 @@
 // URLs de redirection pour les hotspots
-// Remplacer par vos vraies URLs ou utiliser une URL par défaut
+// URLs des pages de collection dans le repo consolidé
 
 export const REDIRECT_URLS = {
-    'grande-barriere': 'https://page-collection-les-ombres-de-la-mer.vercel.app/',
-    'abysses': 'https://page-collection-les-ombres-de-la-mer.vercel.app/',
-    'arctique': 'https://page-collection-les-ombres-de-la-mer.vercel.app/',
-    'plastique': 'https://page-collection-les-ombres-de-la-mer.vercel.app/',
-    'triangle-corail': 'https://page-collection-les-ombres-de-la-mer.vercel.app/',
-    'requins': 'https://page-collection-les-ombres-de-la-mer.vercel.app/'
+    'grande-barriere': '/nationalgeographic.fr-mondesimmerges/les-ombres-de-la-mer/',
+    'abysses': '/nationalgeographic.fr-mondesimmerges/les-ombres-de-la-mer/',
+    'arctique': '/nationalgeographic.fr-mondesimmerges/les-ombres-de-la-mer/',
+    'plastique': '/nationalgeographic.fr-mondesimmerges/into-the-okavango/',
+    'triangle-corail': '/nationalgeographic.fr-mondesimmerges/les-ombres-de-la-mer/',
+    'requins': '/nationalgeographic.fr-mondesimmerges/les-ombres-de-la-mer/'
 };
 
-// URL par défaut si un hotspot n'est pas trouvé
-export const DEFAULT_URL = 'https://page-collection-les-ombres-de-la-mer.vercel.app/';
+// URL par défaut si un hotspot n'est pas trouvé - retour à l'accueil
+export const DEFAULT_URL = '/nationalgeographic.fr-mondesimmerges/accueil/';
 
 // Fonction utilitaire pour récupérer l'URL d'un hotspot
 export function getRedirectUrl(hotspotId) {
