@@ -51,8 +51,8 @@ class MondesImmergesApp {
         // Initialiser le gestionnaire de globe
         this.globeManager = new GlobeManager({
             containerId: 'globe-container',
-            videoPath: '/public/videos/globe-video.mp4',
-            skyTexturePath: '/public/images/night-sky.png'
+            videoPath: '/videos/globe-video.mp4',
+            skyTexturePath: '/images/night-sky.png'
         });
         
         // Initialiser la gestion des interactions
@@ -254,7 +254,7 @@ class MondesImmergesApp {
         
         // Créer l'élément image du logo
         const logo = document.createElement('img');
-        logo.src = '/public/images/nat-geo-logo.png';
+        logo.src = '/images/nat-geo-logo.png';
         logo.alt = 'National Geographic';
         logo.style.cssText = `
             height: 40px;

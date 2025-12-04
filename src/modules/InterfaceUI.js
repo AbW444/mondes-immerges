@@ -753,7 +753,7 @@ export class InterfaceUI {
         mapImage.style.cssText = `
             width: 100%;
             height: 100%;
-            background-image: url('/public/images/map-outline.png');
+            background-image: url('/images/map-outline.png');
             background-size: cover;
             background-position: center;
             opacity: 0.7;

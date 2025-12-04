@@ -72,7 +72,7 @@ export class ContentPanel {
                 
                 // Afficher une image de remplacement
                 const placeholder = document.createElement('img');
-                placeholder.src = '/public/images/video-placeholder.jpg';
+                placeholder.src = '/images/video-placeholder.jpg';
                 placeholder.alt = 'Vidéo non disponible';
                 placeholder.style.width = '100%';
                 placeholder.style.borderRadius = '3px';
