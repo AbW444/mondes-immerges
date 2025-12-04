@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mondes Immergés | National Geographic</title>
+    <link rel="stylesheet" href="src/styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+	<div class="cursor"></div>
+	<div class="cursor-follower"></div>
+
+    <div id="app">
+        <!-- Écran d'accueil - maintenant caché par défaut -->
+        <div id="welcome-screen" class="hidden" style="display: none;">
+            <!-- Logo supprimé du centre -->
+            <div class="title-container">
+                <h1>MONDES IMMERGÉS</h1>
+                <h2>Voyage scientifique dans les profondeurs des océans</h2>
+                <button id="explore-btn">EXPLORER</button>
+            </div>
+        </div>
+
+        <!-- Conteneur principal pour le globe et les visualisations -->
+        <div id="main-container">
+            <!-- Le globe 3D sera inséré ici -->
+            <div id="globe-container"></div>
+            
+            <!-- Interface de satellite -->
+            <div class="satellite-hud hud-top-left">
+                <div><span class="status-indicator status-green"></span>SYSTÈME: ACTIF</div>
+                <div>MISSION: EXPLORATION OCÉANIQUE</div>
+                <div>ORBITE: <span id="orbit-status">NORMALE</span></div>
+                <div>ALTITUDE: <span id="altitude-value">8.720</span> KM</div>
+            </div>
+            
+            <div class="satellite-hud hud-top-right">
+                <div>DATE: <span id="current-date">06/05/2025</span></div>
+                <div>HEURE UTC: <span id="current-time">00:00:00</span></div>
+                <div>SAT-ID: NGS-OCEAN-0923</div>
+                <div>STATUT: <span class="status-indicator status-green"></span>OPÉRATIONNEL</div>
+            </div>
+            
+            <!-- Crosshair centrale de visée -->
+            <div class="satellite-crosshair">
+                <div class="crosshair-inner"></div>
+                <div class="crosshair-outer"></div>
+                <div class="crosshair-line crosshair-line-h"></div>
+                <div class="crosshair-line crosshair-line-v"></div>
+            </div>
+            
+            <div class="coordinates-display">
+                <span id="coord-lat">0.0000</span>° N, <span id="coord-lng">0.0000</span>° E | ZOOM: <span id="zoom-level">1.0</span>x
+            </div>
+            
+            <!-- Effet de scan -->
+            <div class="scanner-effect">
+                <div class="scan-line"></div>
+                <div class="scan-grid"></div>
+            </div>
+            
+            <!-- Interface utilisateur pour la navigation -->
+            <div id="ui-controls">
+                <div id="navigation-controls">
+                    <button id="zoom-in">+</button>
+                    <button id="zoom-out">-</button>
+                    <button id="reset-view">R</button>
+                </div>
+                <div id="info-button">i</div>
+            </div>
+        </div>
+
+        <!-- Overlay d'informations -->
+        <div id="info-overlay" class="hidden">
+            <div class="overlay-content">
+                <h3>À propos de Mondes Immergés</h3>
+                <p>Une exploration interactive scientifique des écosystèmes marins de notre planète, présentée par National Geographic.</p>
+                <p>Ce projet utilise des données satellites haute précision et des relevés scientifiques pour offrir une visualisation immersive des océans du monde et de leurs écosystèmes critiques.</p>
+                <button id="close-info">Fermer</button>
+            </div>
+        </div>
+
+        <!-- Écran de chargement -->
+        <div id="loading-screen">
+            <div class="spinner"></div>
+            <p>INITIALISATION DU SYSTÈME...</p>
+        </div>
+
+        <!-- PANNEAU DE CONTENU RETIRÉ - Pas d'éléments content-panel, close-panel, hotspot-title, hotspot-description, hotspot-video -->
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="src/main.js"></script>
+    
+    <!-- Script pour mettre à jour l'heure et la date en temps réel -->
+    <script>
+        function updateTime() {
+            const now = new Date();
+            
+            // Formater la date
+            const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            const currentDateElement = document.getElementById('current-date');
+            if (currentDateElement) {
+                currentDateElement.textContent = now.toLocaleDateString('fr-FR', dateOptions);
+            }
+            
+            // Formater l'heure UTC
+            const hours = String(now.getUTCHours()).padStart(2, '0');
+            const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+            const seconds = String(now.getUTCSeconds()).padStart(2, '0');
+            const currentTimeElement = document.getElementById('current-time');
+            if (currentTimeElement) {
+                currentTimeElement.textContent = `${hours}:${minutes}:${seconds}`;
+            }
+            
+            // Mettre à jour toutes les secondes
+            setTimeout(updateTime, 1000);
+        }
+        
+        // Démarrer la mise à jour de l'heure une fois la page chargée
+        document.addEventListener('DOMContentLoaded', updateTime);
+    </script>
+</body>
+</html>

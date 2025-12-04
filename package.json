@@ -6,10 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:github": "vite build --base=/interface_globe/",
+    "build:github": "vite build --base=/nationalgeographic.fr-mondesimmerges/",
     "build:safe": "node build.js",
     "preview": "vite preview",
-    "deploy": "npm run build:safe && gh-pages -d dist -r https://github.com/AbW444/interface_globe.git",
+    "deploy": "npm run build:safe && gh-pages -d dist -r https://github.com/AbW444/nationalgeographic.fr-mondesimmerges.git",
     "deploy:quick": "npm run build:github && gh-pages -d dist",
     "predeploy": "npm run build:safe",
     "clean": "rimraf dist",
@@ -44,12 +44,12 @@
     "terser": "^5.44.1",
     "vite": "^5.1.4"
   },
-  "homepage": "https://AbW444.github.io/interface_globe",
+  "homepage": "https://AbW444.github.io/nationalgeographic.fr-mondesimmerges",
   "repository": {
-    "url": "https://github.com/AbW444/interface_globe.git"
+    "url": "https://github.com/AbW444/nationalgeographic.fr-mondesimmerges.git"
   },
   "bugs": {
-    "url": "https://github.com/AbW444/interface_globe/issues"
+    "url": "https://github.com/AbW444/nationalgeographic.fr-mondesimmerges/issues"
   },
   "engines": {
     "node": ">=18.0.0",

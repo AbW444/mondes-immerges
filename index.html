@@ -3,125 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mondes Immergés | National Geographic</title>
-    <link rel="stylesheet" href="src/styles/main.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>National Geographic - Mondes Immergés</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #001428 0%, #000814 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 0;
+            border-bottom: 2px solid #ffcc00;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #ffcc00;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #e0e0e0;
+        }
+
+        main {
+            flex: 1;
+            max-width: 1200px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+
+        .intro {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .intro p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #e0e0e0;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .pages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .page-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 204, 0, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .page-card:hover {
+            transform: translateY(-5px);
+            border-color: #ffcc00;
+            background: rgba(255, 204, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(255, 204, 0, 0.3);
+        }
+
+        .page-card h2 {
+            color: #ffcc00;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .page-card p {
+            color: #e0e0e0;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        .page-card .status {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 5px 15px;
+            background: rgba(255, 204, 0, 0.2);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #ffcc00;
+        }
+
+        footer {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            text-align: center;
+            border-top: 2px solid #ffcc00;
+        }
+
+        footer p {
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .pages-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-	<div class="cursor"></div>
-	<div class="cursor-follower"></div>
-
-    <div id="app">
-        <!-- Écran d'accueil - maintenant caché par défaut -->
-        <div id="welcome-screen" class="hidden" style="display: none;">
-            <!-- Logo supprimé du centre -->
-            <div class="title-container">
-                <h1>MONDES IMMERGÉS</h1>
-                <h2>Voyage scientifique dans les profondeurs des océans</h2>
-                <button id="explore-btn">EXPLORER</button>
-            </div>
+    <header>
+        <div class="header-content">
+            <h1>National Geographic - Mondes Immergés</h1>
+            <p class="subtitle">Projet consolidé regroupant toutes les pages du site National Geographic Mondes Immergés.</p>
         </div>
+    </header>
 
-        <!-- Conteneur principal pour le globe et les visualisations -->
-        <div id="main-container">
-            <!-- Le globe 3D sera inséré ici -->
-            <div id="globe-container"></div>
-            
-            <!-- Interface de satellite -->
-            <div class="satellite-hud hud-top-left">
-                <div><span class="status-indicator status-green"></span>SYSTÈME: ACTIF</div>
-                <div>MISSION: EXPLORATION OCÉANIQUE</div>
-                <div>ORBITE: <span id="orbit-status">NORMALE</span></div>
-                <div>ALTITUDE: <span id="altitude-value">8.720</span> KM</div>
-            </div>
-            
-            <div class="satellite-hud hud-top-right">
-                <div>DATE: <span id="current-date">06/05/2025</span></div>
-                <div>HEURE UTC: <span id="current-time">00:00:00</span></div>
-                <div>SAT-ID: NGS-OCEAN-0923</div>
-                <div>STATUT: <span class="status-indicator status-green"></span>OPÉRATIONNEL</div>
-            </div>
-            
-            <!-- Crosshair centrale de visée -->
-            <div class="satellite-crosshair">
-                <div class="crosshair-inner"></div>
-                <div class="crosshair-outer"></div>
-                <div class="crosshair-line crosshair-line-h"></div>
-                <div class="crosshair-line crosshair-line-v"></div>
-            </div>
-            
-            <div class="coordinates-display">
-                <span id="coord-lat">0.0000</span>° N, <span id="coord-lng">0.0000</span>° E | ZOOM: <span id="zoom-level">1.0</span>x
-            </div>
-            
-            <!-- Effet de scan -->
-            <div class="scanner-effect">
-                <div class="scan-line"></div>
-                <div class="scan-grid"></div>
-            </div>
-            
-            <!-- Interface utilisateur pour la navigation -->
-            <div id="ui-controls">
-                <div id="navigation-controls">
-                    <button id="zoom-in">+</button>
-                    <button id="zoom-out">-</button>
-                    <button id="reset-view">R</button>
-                </div>
-                <div id="info-button">i</div>
-            </div>
-        </div>
+    <main>
+        <section class="intro">
+            <p>
+                Plongez dans une expérience immersive à la découverte des océans et de leurs écosystèmes
+                fascinants. Explorez différentes collections documentaires et naviguez à travers
+                les merveilles des profondeurs marines.
+            </p>
+        </section>
 
-        <!-- Overlay d'informations -->
-        <div id="info-overlay" class="hidden">
-            <div class="overlay-content">
-                <h3>À propos de Mondes Immergés</h3>
-                <p>Une exploration interactive scientifique des écosystèmes marins de notre planète, présentée par National Geographic.</p>
-                <p>Ce projet utilise des données satellites haute précision et des relevés scientifiques pour offrir une visualisation immersive des océans du monde et de leurs écosystèmes critiques.</p>
-                <button id="close-info">Fermer</button>
+        <section class="pages-section">
+            <h2 style="text-align: center; color: #ffcc00; margin-bottom: 30px; font-size: 2rem;">Explorez les Collections</h2>
+
+            <div class="pages-grid">
+                <!-- Interface Globe -->
+                <a href="./interface/" class="page-card">
+                    <h2>Interface</h2>
+                    <p>Globe interactif principal permettant de naviguer entre les différentes collections.</p>
+                    <p style="margin-top: 10px; font-style: italic;">Technologies : Vite, Three.js, GSAP</p>
+                    <span class="status">✅ Disponible</span>
+                </a>
+
+                <!-- Les Ombres De La Mer -->
+                <a href="./ombres-de-la-mer/" class="page-card">
+                    <h2>Les Ombres De La Mer</h2>
+                    <p>Page collection documentaire sur les ombres de la mer.</p>
+                    <span class="status">🚧 À venir</span>
+                </a>
+
+                <!-- Into The Okavango -->
+                <a href="./okavango/" class="page-card">
+                    <h2>Into The Okavango</h2>
+                    <p>Page collection documentaire sur le delta de l'Okavango.</p>
+                    <span class="status">🚧 À venir</span>
+                </a>
             </div>
-        </div>
+        </section>
 
-        <!-- Écran de chargement -->
-        <div id="loading-screen">
-            <div class="spinner"></div>
-            <p>INITIALISATION DU SYSTÈME...</p>
-        </div>
+        <section class="intro" style="margin-top: 60px;">
+            <h2 style="color: #ffcc00; margin-bottom: 20px;">Développement</h2>
+            <p>
+                Chaque dossier contient une page indépendante avec son propre index.html et ses assets.
+                Pour l'interface (globe), installer les dépendances : <code style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px;">bash cd interface && npm install && npm run dev</code>
+            </p>
+        </section>
+    </main>
 
-        <!-- PANNEAU DE CONTENU RETIRÉ - Pas d'éléments content-panel, close-panel, hotspot-title, hotspot-description, hotspot-video -->
-    </div>
-
-    <!-- Scripts -->
-    <script type="module" src="src/main.js"></script>
-    
-    <!-- Script pour mettre à jour l'heure et la date en temps réel -->
-    <script>
-        function updateTime() {
-            const now = new Date();
-            
-            // Formater la date
-            const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
-            const currentDateElement = document.getElementById('current-date');
-            if (currentDateElement) {
-                currentDateElement.textContent = now.toLocaleDateString('fr-FR', dateOptions);
-            }
-            
-            // Formater l'heure UTC
-            const hours = String(now.getUTCHours()).padStart(2, '0');
-            const minutes = String(now.getUTCMinutes()).padStart(2, '0');
-            const seconds = String(now.getUTCSeconds()).padStart(2, '0');
-            const currentTimeElement = document.getElementById('current-time');
-            if (currentTimeElement) {
-                currentTimeElement.textContent = `${hours}:${minutes}:${seconds}`;
-            }
-            
-            // Mettre à jour toutes les secondes
-            setTimeout(updateTime, 1000);
-        }
-        
-        // Démarrer la mise à jour de l'heure une fois la page chargée
-        document.addEventListener('DOMContentLoaded', updateTime);
-    </script>
+    <footer>
+        <p>&copy; 2024 National Geographic - Mondes Immergés. Tous droits réservés.</p>
+    </footer>
 </body>
 </html>

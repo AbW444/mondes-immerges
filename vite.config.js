@@ -10,11 +10,11 @@ export default defineConfig({
   // Répertoire racine du projet
   root: './',
 
-  // IMPORTANT: Pour GitHub Pages - Remplacer par le nom exact de votre repo
+  // IMPORTANT: Pour GitHub Pages - Utiliser le nom du repo consolidé
   base: process.env.NODE_ENV === 'production'
-    ? '/interface_globe/'
+    ? '/nationalgeographic.fr-mondesimmerges/'
     : '/',
-  
+
   // Configuration du serveur de développement
   server: {
     port: 3000,
@@ -26,21 +26,23 @@ export default defineConfig({
       'Cross-Origin-Opener-Policy': 'same-origin'
     }
   },
-  
-  // Configuration de la construction - OPTIMISÉE POUR WEBGL
+
+  // Configuration de la construction - OPTIMISÉE POUR WEBGL + MULTI-PAGES
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
     emptyOutDir: true,
-    sourcemap: false, // Désactivé pour réduire la taille
-    
-    // NOUVEAU: Optimisations spécifiques pour WebGL et Three.js
-    target: 'es2018', // Compatibilité élargie tout en gardant les performances
-    minify: 'esbuild', // Utiliser esbuild au lieu de terser pour plus de simplicité
-    
+    sourcemap: false,
+    target: 'es2018',
+    minify: 'esbuild',
+
     // Options de rollup pour optimiser le bundling
     rollupOptions: {
-      input: resolve(__dirname, 'index.html'),
+      // Multi-pages input
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        interface: resolve(__dirname, 'interface/index.html'),
+      },
       
       // Séparer les gros modules en chunks séparés pour améliorer le cache
       output: {
