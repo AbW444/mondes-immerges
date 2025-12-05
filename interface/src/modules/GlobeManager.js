@@ -715,7 +715,7 @@ export class GlobeManager {
             overflow: hidden;
             z-index: 10;
         `;
-        
+
         const labelDiv = document.createElement('div');
         labelDiv.className = 'hotspot-label';
         labelDiv.textContent = text;
@@ -729,13 +729,38 @@ export class GlobeManager {
             font-size: 12px;
             white-space: nowrap;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.2s ease;
             border: 1px solid rgba(255, 204, 0, 0.7);
             z-index: 11;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(2px);
             text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+            pointer-events: auto;
+            cursor: pointer;
         `;
+
+        // Ajouter les effets de survol
+        labelDiv.addEventListener('mouseenter', () => {
+            labelDiv.style.backgroundColor = 'rgba(255, 204, 0, 0.9)';
+            labelDiv.style.color = '#000';
+            labelDiv.style.transform = 'scale(1.05)';
+        });
+
+        labelDiv.addEventListener('mouseleave', () => {
+            labelDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            labelDiv.style.color = '#ffcc00';
+            labelDiv.style.transform = 'scale(1)';
+        });
+
+        // Rendre le label cliquable avec le même comportement que le hotspot
+        labelDiv.addEventListener('click', (e) => {
+            e.stopPropagation(); // Empêcher la propagation au conteneur
+            const hotspot = marker.userData.hotspot;
+            if (hotspot) {
+                console.log(`Label cliqué: ${hotspot.title}`);
+                this.activateHotspot(hotspot);
+            }
+        });
         
         const connector = document.createElement('div');
         connector.className = 'connector-line';
