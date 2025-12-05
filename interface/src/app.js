@@ -358,84 +358,13 @@ class MondesImmergesApp {
      * Exécute une séquence de démarrage stylisée
      */
     startupSequence() {
-        // Créer l'effet de chargement orbital
+        // Créer l'effet de chargement orbital seulement - pas de texte, pas de barre
         this.visualEffects.createOrbitalLoaderEffect(() => {
             // Cette fonction sera appelée une fois l'animation terminée
             this.finalizeStartup();
-        }, 4);
-        
-       
-        
-        // Conteneur pour les messages
-        const messageContainer = document.createElement('div');
-        messageContainer.style.cssText = `
-            max-width: 800px;
-            margin: 0 auto;
-        `;
-        
-        startupOverlay.appendChild(messageContainer);
-        document.body.appendChild(startupOverlay);
-        
-        // Messages de démarrage
-        const startupMessages = [
-            "Initialisation du système de navigation...",
-            "Chargement des modules cartographiques...",
-            "Calibration des capteurs océanographiques...",
-            "Établissement de la liaison satellite...",
-            "Chargement des données bathymétriques...",
-            "Analyse des courants marins...",
-            "Détection des points d'intérêt...",
-            "Optimisation de l'interface scientifique...",
-            "Calcul de l'orbite ellipsoïdale...",
-            "Système opérationnel. Bienvenue à bord."
-        ];
-        
-        // Afficher les messages un par un
-        let messageIndex = 0;
-        
-        const intervalId = setInterval(() => {
-            if (messageIndex < startupMessages.length) {
-                const message = document.createElement('div');
-                message.className = 'startup-message';
-                message.innerHTML = `<span style="color: #66ccff;">[SYSTÈME]</span> ${startupMessages[messageIndex]}`;
-                message.style.cssText = `
-                    margin-bottom: 6px;
-                    background-color: rgba(0, 10, 30, 0.7);
-                    padding: 6px 10px;
-                    border-radius: 4px;
-                    color: white;
-                    font-size: 11px;
-                    font-family: 'Roboto Mono', monospace;
-                    text-align: left;
-                    transform: translateY(10px);
-                    opacity: 0;
-                    transition: opacity 0.3s ease, transform 0.3s ease;
-                `;
-                
-                messageContainer.appendChild(message);
-                
-                // Animer l'entrée du message
-                setTimeout(() => {
-                    message.style.opacity = '1';
-                    message.style.transform = 'translateY(0)';
-                }, 50);
-                
-                messageIndex++;
-            } else {
-                // Fin de la séquence
-                clearInterval(intervalId);
-                
-                // Disparition progressive de l'overlay
-                setTimeout(() => {
-                    startupOverlay.style.transition = 'opacity 1s ease';
-                    startupOverlay.style.opacity = '0';
-                    
-                    setTimeout(() => {
-                        startupOverlay.remove();
-                    }, 1000);
-                }, 1000);
-            }
-        }, 400);
+        }, 1.5);
+
+        // Pas de messages - loader uniquement
     }
     
     /**

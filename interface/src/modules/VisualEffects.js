@@ -204,22 +204,11 @@ export class VisualEffects {
         `;
         orbitalLoader.appendChild(center);
         
-        // Ajouter le texte
-        const text = document.createElement('div');
-        text.style.cssText = `
-            position: absolute;
-            bottom: 30%;
-            text-align: center;
-            color: #ffcc00;
-            font-family: 'Roboto Mono', monospace;
-            font-size: 16px;
-            letter-spacing: 2px;
-        `;
-        text.textContent = "INITIALISATION DU SYSTÈME...";
-        
+        // Texte supprimé - loader uniquement
+
         // Ajouter les éléments au DOM
         loaderContainer.appendChild(orbitalLoader);
-        loaderContainer.appendChild(text);
+        // text supprimé - pas de texte dans le loader
         
         // Ajouter le style des animations
         const styleEl = document.createElement('style');
