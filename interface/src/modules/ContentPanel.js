@@ -1,5 +1,6 @@
-// Gestionnaire de panneau de contenu pour Mondes Immergés
+// Gestionnaire de panneau de contenu pour Mondes Immergés - VERSION OPTIMISÉE
 import { gsap } from 'gsap';
+import { getVideoManager } from './VideoManager.js';
 
 
 export class ContentPanel {
@@ -21,7 +22,13 @@ export class ContentPanel {
         this.videoElement = options.videoElement;
         this.globeManager = options.globeManager;
         this.isVisible = false;
-        
+
+        // Gestionnaire vidéo optimisé
+        this.videoManager = getVideoManager();
+
+        // Tracker de la dernière vidéo pour éviter les rechargements
+        this.currentVideoSrc = null;
+
         // Éléments pour le mode "informations complémentaires"
         this.drawerToggle = null;
         this.drawer = null;
@@ -546,23 +553,44 @@ export class ContentPanel {
         
         // Mettre à jour la description
         this.descriptionElement.innerHTML = descriptionHTML;
-        
-        // Mettre à jour la vidéo
+
+        // Mettre à jour la vidéo de manière optimisée
         if (this.videoElement && content.videoSrc) {
-            this.videoElement.style.display = 'block';
-            if (this.videoElement.querySelector('source')) {
-                this.videoElement.querySelector('source').src = content.videoSrc;
+            // Vérifier si c'est la même vidéo pour éviter un rechargement inutile
+            if (this.currentVideoSrc === content.videoSrc) {
+                console.log('[ContentPanel] Même vidéo, pas de rechargement nécessaire');
+                this.videoElement.style.display = 'block';
+                // Juste remettre à zéro si besoin
+                if (this.videoElement.currentTime > 0) {
+                    this.videoElement.currentTime = 0;
+                }
             } else {
-                const source = document.createElement('source');
-                source.src = content.videoSrc;
-                source.type = 'video/mp4';
-                this.videoElement.appendChild(source);
+                console.log('[ContentPanel] Chargement optimisé de la vidéo:', content.videoSrc);
+
+                // Charger avec le VideoManager pour bénéficier du cache
+                this.videoManager.loadVideo(content.videoSrc, { preload: 'metadata' })
+                    .then(video => {
+                        // Remplacer le src seulement si nécessaire
+                        if (this.videoElement.src !== video.src) {
+                            this.videoElement.src = video.src;
+                        }
+                        this.videoElement.style.display = 'block';
+                        this.currentVideoSrc = content.videoSrc;
+
+                        // Animation de fade-in
+                        gsap.fromTo(this.videoElement,
+                            { opacity: 0 },
+                            { opacity: 1, duration: 0.5, ease: "power2.out" }
+                        );
+                    })
+                    .catch(e => {
+                        console.error('[ContentPanel] Erreur lors du chargement de la vidéo:', e);
+                        this.videoElement.style.display = 'none';
+                    });
             }
-            
-            // Recharger la vidéo
-            this.videoElement.load();
         } else if (this.videoElement) {
             this.videoElement.style.display = 'none';
+            this.currentVideoSrc = null;
         }
         
         // Mettre à jour le contenu du tiroir si des informations détaillées sont fournies

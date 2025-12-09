@@ -1,8 +1,10 @@
-// Gestionnaire de globe pour Mondes Immergés - VERSION CORRIGÉE
+// Gestionnaire de globe pour Mondes Immergés - VERSION OPTIMISÉE
 import * as THREE from 'three';
 import { gsap } from 'gsap';
 // Import corrigé pour la redirection
 import { getRedirectUrl } from '../data/redirect-config.js';
+// Import du gestionnaire vidéo optimisé
+import { getVideoManager } from './VideoManager.js';
 
 
 export class GlobeManager {
@@ -19,11 +21,18 @@ export class GlobeManager {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.clock = new THREE.Clock();
-        
-        // NOUVEAU: Variables pour la gestion des vidéos
+
+        // Gestionnaire vidéo optimisé
+        this.videoManager = getVideoManager();
+
+        // Variables pour la gestion des vidéos
         this.currentVideoPath = `${import.meta.env.BASE_URL}videos/globe-video.webm`;
         this.alternateVideoPath = `${import.meta.env.BASE_URL}videos/globe-video-aberration.webm`;
         this.isAlternateVideo = false;
+
+        // Nettoyage des ressources
+        this.cleanupFunctions = [];
+        this.videoCleanup = null;
         
         // Paramètres pour l'orbite ellipsoïdale
         this.orbitParams = {
@@ -110,10 +119,12 @@ export class GlobeManager {
         
         // Créer l'éclairage
         this.setupLighting();
-        
-        // Créer le globe
-        this.createGlobe();
-        
+
+        // Créer le globe (async) - Ne pas bloquer l'initialisation
+        this.createGlobe().catch(e => {
+            console.error('[GlobeManager] Erreur fatale lors de la création du globe:', e);
+        });
+
         // Créer le soleil et la lune
         this.createCelestialBodies();
         
@@ -169,80 +180,88 @@ export class GlobeManager {
         }
     }
     
-    // NOUVELLE MÉTHODE: Changer la texture vidéo du globe
-    switchVideoTexture() {
+    // MÉTHODE OPTIMISÉE: Changer la texture vidéo du globe avec VideoManager
+    async switchVideoTexture() {
         if (!this.videoElement || !this.videoTexture) {
-            console.warn('Vidéo ou texture non initialisée');
+            console.warn('[GlobeManager] Vidéo ou texture non initialisée');
             return;
         }
-        
-        console.log('=== CHANGEMENT DE TEXTURE VIDÉO ===');
-        
+
+        console.log('[GlobeManager] === CHANGEMENT DE TEXTURE VIDÉO ===');
+
         // Basculer vers l'autre vidéo
         this.isAlternateVideo = !this.isAlternateVideo;
         const newVideoPath = this.isAlternateVideo ? this.alternateVideoPath : this.currentVideoPath;
-        
-        console.log(`Passage à: ${newVideoPath}`);
-        
-        // Créer un nouvel élément vidéo pour éviter les conflits
-        const newVideo = document.createElement('video');
-        newVideo.src = newVideoPath;
-        newVideo.loop = true;
-        newVideo.muted = true;
-        newVideo.autoplay = true;
-        newVideo.playsInline = true;
-        newVideo.crossOrigin = 'anonymous';
-        
-        // Gérer le chargement de la nouvelle vidéo
-        newVideo.addEventListener('canplaythrough', () => {
-            console.log('Nouvelle vidéo prête');
-            
+
+        console.log(`[GlobeManager] Passage à: ${newVideoPath}`);
+
+        try {
+            // Nettoyer l'ancienne configuration de lecture automatique
+            if (this.videoCleanup) {
+                this.videoCleanup();
+            }
+
+            // Charger la nouvelle vidéo avec le VideoManager (depuis le cache si disponible)
+            const newVideo = await this.videoManager.loadVideo(newVideoPath, {
+                loop: true,
+                muted: true,
+                autoplay: true
+            });
+
+            // Synchroniser le temps de lecture si possible
+            if (this.videoElement && this.videoElement.currentTime) {
+                newVideo.currentTime = this.videoElement.currentTime % newVideo.duration;
+            }
+
             // Arrêter l'ancienne vidéo
-            this.videoElement.pause();
-            
-            // Créer une nouvelle texture avec la nouvelle vidéo
+            if (this.videoElement) {
+                this.videoElement.pause();
+            }
+
+            // Créer une nouvelle texture optimisée
             const newTexture = new THREE.VideoTexture(newVideo);
             newTexture.minFilter = THREE.LinearFilter;
             newTexture.magFilter = THREE.LinearFilter;
-            newTexture.format = THREE.RGBAFormat;
+            newTexture.format = THREE.RGBFormat;
             newTexture.colorSpace = THREE.SRGBColorSpace;
-            
-            // Remplacer la texture du matériau du globe
+            newTexture.generateMipmaps = false;
+            newTexture.needsUpdate = true;
+
+            // Remplacer la texture du globe
             if (this.globe && this.globe.material) {
-                // Disposer de l'ancienne texture pour libérer la mémoire
+                // Disposer proprement de l'ancienne texture
                 if (this.videoTexture) {
                     this.videoTexture.dispose();
                 }
-                
+
                 // Appliquer la nouvelle texture
                 this.globe.material.map = newTexture;
                 this.globe.material.needsUpdate = true;
-                
+
                 // Mettre à jour les références
                 this.videoElement = newVideo;
                 this.videoTexture = newTexture;
-                
-                console.log('Texture du globe mise à jour avec succès');
-                
+
+                // Configurer la nouvelle gestion automatique
+                this.videoCleanup = this.videoManager.setupAutoPlay(newVideo);
+
+                // Démarrer la lecture
+                await this.videoManager.playVideo(newVideo);
+
+                console.log('[GlobeManager] Texture du globe mise à jour avec succès');
+
                 // Effet visuel pour indiquer le changement
                 this.createVideoSwitchEffect();
+
+                // Précharger l'autre vidéo pour le prochain changement
+                const nextVideoPath = this.isAlternateVideo ? this.currentVideoPath : this.alternateVideoPath;
+                this.videoManager.preloadVideo(nextVideoPath, 5);
             }
-        });
-        
-        newVideo.addEventListener('error', (e) => {
-            console.error('Erreur lors du chargement de la nouvelle vidéo:', e);
-            console.log('Tentative de retour à la vidéo précédente...');
+        } catch (e) {
+            console.error('[GlobeManager] Erreur lors du changement de vidéo:', e);
             // Revenir à l'état précédent en cas d'erreur
             this.isAlternateVideo = !this.isAlternateVideo;
-        });
-        
-        // Commencer le chargement
-        newVideo.load();
-        
-        // Démarrer la lecture une fois chargée
-        newVideo.play().catch(e => {
-            console.error('Erreur lors de la lecture de la nouvelle vidéo:', e);
-        });
+        }
     }
     
     // NOUVELLE MÉTHODE: Effet visuel lors du changement de vidéo
@@ -438,35 +457,41 @@ export class GlobeManager {
         this.scene.add(this.cameraMarker);
     }
     
-    createGlobe() {
-        const video = document.createElement('video');
-        // Utiliser la vidéo par défaut au démarrage
-        video.src = this.currentVideoPath;
-        video.loop = true;
-        video.muted = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.crossOrigin = 'anonymous';
-        this.videoElement = video;
-        
-        video.addEventListener('ended', () => {
-            video.play();
-        });
-        
-        setInterval(() => {
-            if (video.paused && !video.ended) {
-                console.log("Vidéo en pause, relance...");
-                video.play().catch(e => {
-                    console.error("Impossible de relancer la vidéo:", e);
-                });
-            }
-        }, 1000);
-        
-        this.videoTexture = new THREE.VideoTexture(video);
+    async createGlobe() {
+        console.log('[GlobeManager] Chargement optimisé de la vidéo du globe...');
+
+        // Utiliser le VideoManager pour charger la vidéo avec cache
+        try {
+            const video = await this.videoManager.loadVideo(this.currentVideoPath, {
+                loop: true,
+                muted: true,
+                autoplay: true
+            });
+
+            this.videoElement = video;
+
+            // Configurer la gestion automatique de la lecture avec événements natifs (pas de polling)
+            this.videoCleanup = this.videoManager.setupAutoPlay(video);
+            this.cleanupFunctions.push(this.videoCleanup);
+
+            // Démarrer la lecture
+            await this.videoManager.playVideo(video);
+
+            console.log('[GlobeManager] Vidéo du globe chargée et lecture démarrée');
+        } catch (e) {
+            console.error('[GlobeManager] Erreur lors du chargement de la vidéo:', e);
+            this.handleVideoError();
+            return;
+        }
+
+        // Créer la texture vidéo optimisée
+        this.videoTexture = new THREE.VideoTexture(this.videoElement);
         this.videoTexture.minFilter = THREE.LinearFilter;
         this.videoTexture.magFilter = THREE.LinearFilter;
-        this.videoTexture.format = THREE.RGBAFormat;
+        this.videoTexture.format = THREE.RGBFormat; // RGB au lieu de RGBA pour meilleures performances
         this.videoTexture.colorSpace = THREE.SRGBColorSpace;
+        this.videoTexture.generateMipmaps = false; // Désactiver les mipmaps pour vidéos
+        this.videoTexture.needsUpdate = true;
         
         const depthGeometry = new THREE.SphereGeometry(1.99, 64, 64);
         const depthMaterial = new THREE.MeshBasicMaterial({
@@ -517,11 +542,10 @@ export class GlobeManager {
         this.clouds = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
         this.clouds.renderOrder = 2;
         this.scene.add(this.clouds);
-        
-        video.play().catch(e => {
-            console.error('Erreur lors de la lecture de la vidéo:', e);
-            this.handleVideoError();
-        });
+
+        // Précharger la vidéo alternative en arrière-plan pour un changement rapide
+        console.log('[GlobeManager] Préchargement de la vidéo alternative...');
+        this.videoManager.preloadVideo(this.alternateVideoPath, 3);
     }
     
     // MÉTHODE CORRIGÉE: Atmosphère avec shader compatible
@@ -805,36 +829,47 @@ export class GlobeManager {
             return true;
         };
         
+        // Optimisation: Throttle pour ne pas recalculer chaque frame
+        let lastUpdateTime = 0;
+        const updateInterval = 100; // Mise à jour toutes les 100ms au lieu de chaque frame (~60fps)
+
         marker.onBeforeRender = () => {
             if (!marker.userData.label || !marker.userData.connector) return;
-            
+
+            // Throttle: Ne mettre à jour que toutes les 100ms
+            const currentTime = performance.now();
+            if (currentTime - lastUpdateTime < updateInterval) {
+                return;
+            }
+            lastUpdateTime = currentTime;
+
             const isVisible = isPointVisibleToCamera(marker.userData.worldPosition);
-            
+
             if (isVisible && !this.orbitParams.inHotspotMode) {
                 const vector = marker.userData.worldPosition.clone();
                 vector.project(this.camera);
-                
+
                 const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
                 const y = (-vector.y * 0.5 + 0.5) * window.innerHeight;
-                
+
                 const centerX = window.innerWidth / 2;
                 const centerY = window.innerHeight / 2;
-                
+
                 const distFromCenter = Math.sqrt(
-                    Math.pow(x - centerX, 2) + 
+                    Math.pow(x - centerX, 2) +
                     Math.pow(y - centerY, 2)
                 );
-                
+
                 const angle = Math.atan2(y - centerY, x - centerX);
-                
+
                 const minDistance = Math.min(centerX, centerY) * 0.6;
-                
+
                 let labelX, labelY;
                 if (distFromCenter < minDistance) {
                     const offsetDistance = minDistance + 60 + (Math.sin(angle * 5) * 20);
                     labelX = centerX + Math.cos(angle) * offsetDistance;
                     labelY = centerY + Math.sin(angle) * offsetDistance;
-                    
+
                     const padding = 20;
                     if (labelX < padding) labelX = padding;
                     if (labelX > window.innerWidth - padding) labelX = window.innerWidth - padding;
@@ -844,42 +879,31 @@ export class GlobeManager {
                     const textWidth = text.length * 8;
                     const offsetX = 25 + textWidth * 0.25;
                     const offsetY = 10;
-                    
+
                     if (x + offsetX + textWidth > window.innerWidth - 20) {
                         labelX = x - offsetX - textWidth;
                     } else {
                         labelX = x + offsetX;
                     }
-                    
+
                     if (y - offsetY - 30 < 20) {
                         labelY = y + offsetY;
                     } else {
                         labelY = y - offsetY;
                     }
                 }
-                
-                marker.userData.label.style.left = `${labelX}px`;
-                marker.userData.label.style.top = `${labelY}px`;
+
+                // Utiliser transform au lieu de left/top pour de meilleures performances
+                marker.userData.label.style.transform = `translate(${labelX}px, ${labelY}px)`;
                 marker.userData.label.style.opacity = '1';
-                
-                connector.style.left = `${x}px`;
-                connector.style.top = `${y}px`;
-                
-                const lineLength = Math.sqrt(
-                    Math.pow(labelX - x, 2) + 
-                    Math.pow(labelY - y, 2)
-                );
-                
-                const lineAngle = Math.atan2(labelY - y, labelX - x);
-                
-                connector.style.width = `${lineLength}px`;
-                connector.style.transform = `rotate(${lineAngle}rad)`;
+
+                connector.style.transform = `translate(${x}px, ${y}px) rotate(${Math.atan2(labelY - y, labelX - x)}rad)`;
+                connector.style.width = `${Math.sqrt(Math.pow(labelX - x, 2) + Math.pow(labelY - y, 2))}px`;
                 connector.style.opacity = '1';
-                
-                connector.style.animation = "pulseConnector 2s infinite alternate";
             } else {
-                marker.userData.label.style.opacity = '0';
-                connector.style.opacity = '0';
+                // Optimisation: Utiliser visibility au lieu de opacity pour de meilleures performances
+                marker.userData.label.style.visibility = 'hidden';
+                connector.style.visibility = 'hidden';
             }
         };
     }
@@ -1278,13 +1302,68 @@ export class GlobeManager {
        if (this.globe && this.globe.material.uniforms && this.globe.material.uniforms.time) {
            this.globe.material.uniforms.time.value = time;
        }
-       
-       if (this.videoElement && this.videoElement.paused && !this.videoElement.ended) {
-           this.videoElement.play().catch(e => {
-               console.error('Erreur lors de la reprise de la vidéo:', e);
+
+       // Le check vidéo a été supprimé - maintenant géré par les événements natifs du VideoManager
+
+       this.renderer.render(this.scene, this.camera);
+   }
+
+   /**
+    * Nettoie toutes les ressources et libère la mémoire
+    */
+   destroy() {
+       console.log('[GlobeManager] Nettoyage des ressources...');
+
+       // Nettoyer tous les écouteurs d'événements vidéo
+       this.cleanupFunctions.forEach(cleanup => {
+           if (typeof cleanup === 'function') {
+               cleanup();
+           }
+       });
+       this.cleanupFunctions = [];
+
+       // Arrêter et nettoyer la vidéo
+       if (this.videoElement) {
+           this.videoElement.pause();
+           this.videoElement = null;
+       }
+
+       // Disposer des textures
+       if (this.videoTexture) {
+           this.videoTexture.dispose();
+           this.videoTexture = null;
+       }
+
+       // Nettoyer les hotspots et leurs labels
+       this.hotspotObjects.forEach(hotspot => {
+           if (hotspot.userData.labelContainer) {
+               hotspot.userData.labelContainer.remove();
+           }
+           if (hotspot.geometry) hotspot.geometry.dispose();
+           if (hotspot.material) hotspot.material.dispose();
+       });
+       this.hotspotObjects = [];
+
+       // Nettoyer la scène
+       if (this.scene) {
+           this.scene.traverse(object => {
+               if (object.geometry) object.geometry.dispose();
+               if (object.material) {
+                   if (Array.isArray(object.material)) {
+                       object.material.forEach(material => material.dispose());
+                   } else {
+                       object.material.dispose();
+                   }
+               }
            });
        }
-       
-       this.renderer.render(this.scene, this.camera);
+
+       // Nettoyer le renderer
+       if (this.renderer) {
+           this.renderer.dispose();
+           this.renderer = null;
+       }
+
+       console.log('[GlobeManager] Ressources nettoyées');
    }
 }
