@@ -158,7 +158,7 @@ class MondesImmergesApp {
      */
     startExploration(skipStartupAnimation = false) {
         if (this.isExploring) return;
-        
+
         // Masquer l'écran d'accueil et afficher le conteneur principal
         if (this.welcomeScreen) {
             this.welcomeScreen.classList.add('hidden');
@@ -166,10 +166,13 @@ class MondesImmergesApp {
         if (this.mainContainer) {
             this.mainContainer.classList.remove('hidden');
         }
-        
-        // Transition visuelle
-        this.visualEffects.transitionIn();
-        
+
+        // Transition visuelle SEULEMENT si on ne saute pas l'animation de démarrage
+        // Cela évite le flash noir indésirable quand l'interface est déjà chargée
+        if (!skipStartupAnimation) {
+            this.visualEffects.transitionIn();
+        }
+
         // Si skipStartupAnimation est true, on saute la séquence d'initialisation
         if (skipStartupAnimation) {
             console.log("Séquence de démarrage fictive ignorée");
@@ -179,7 +182,7 @@ class MondesImmergesApp {
             setTimeout(() => {
                 this.startupSequence();
             }, 1000);
-            
+
             this.isExploring = true;
         }
     }
@@ -368,13 +371,13 @@ class MondesImmergesApp {
     finalizeStartup() {
         // Afficher des messages système après le chargement
         this.showSystemMessages();
-        
-        // Ajouter des particules en arrière-plan pour l'ambiance
-        this.visualEffects.addBackgroundParticles({
-            count: 30,
-            container: this.mainContainer
-        });
-        
+
+        // DÉSACTIVÉ: Particules en arrière-plan supprimées pour éviter les particules blanches fixes
+        // this.visualEffects.addBackgroundParticles({
+        //     count: 30,
+        //     container: this.mainContainer
+        // });
+
         // Afficher une notification de bienvenue
         setTimeout(() => {
             this.visualEffects.showNotification(

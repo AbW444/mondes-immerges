@@ -260,6 +260,17 @@ export class VisualEffects {
             { opacity: 1, duration: 0.5 }
         );
 
+        // Si un targetContainer est fourni (ex: loading-screen), faire disparaître son fond progressivement
+        if (targetContainer) {
+            setTimeout(() => {
+                gsap.to(targetContainer, {
+                    backgroundColor: 'rgba(0, 0, 0, 0)',
+                    duration: duration * 0.8,
+                    ease: 'power2.out'
+                });
+            }, duration * 200); // Commence après 20% de la durée
+        }
+
         // Définir un timer pour la sortie
         setTimeout(() => {
             // Animer la sortie
