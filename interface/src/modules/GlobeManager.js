@@ -948,26 +948,59 @@ export class GlobeManager {
         
         return nearestHotspot;
     }
-    
+
+    // Masquer tous les labels et connecteurs
+    hideAllLabels() {
+        console.log('🔒 Masquage de tous les labels et connecteurs');
+        this.hotspotObjects.forEach(marker => {
+            if (marker.userData.label) {
+                marker.userData.label.style.opacity = '0';
+                marker.userData.label.style.display = 'none';
+            }
+            if (marker.userData.connector) {
+                marker.userData.connector.style.opacity = '0';
+                marker.userData.connector.style.display = 'none';
+            }
+        });
+    }
+
+    // Réafficher tous les labels et connecteurs
+    showAllLabels() {
+        console.log('🔓 Réaffichage de tous les labels et connecteurs');
+        this.hotspotObjects.forEach(marker => {
+            if (marker.userData.label) {
+                marker.userData.label.style.display = 'block';
+                // L'opacité sera gérée par onBeforeRender
+            }
+            if (marker.userData.connector) {
+                marker.userData.connector.style.display = 'block';
+                // L'opacité sera gérée par onBeforeRender
+            }
+        });
+    }
+
     // Vue verticale du hotspot
     activateHotspot(hotspot) {
         if (this.orbitParams.inHotspotMode) return;
-        
+
         console.log(`=== ACTIVATION HOTSPOT: ${hotspot.title} ===`);
-        
+
+        // Masquer tous les labels et connecteurs immédiatement
+        this.hideAllLabels();
+
         // Convertir coordonnées GPS vers 3D
         const lat = hotspot.position.lat * (Math.PI / 180);
         const lon = hotspot.position.lng * (Math.PI / 180);
         const radius = 2.1;
-        
+
         const hotspotX = radius * Math.cos(lat) * Math.cos(lon);
         const hotspotY = radius * Math.sin(lat);
         const hotspotZ = radius * Math.cos(lat) * Math.sin(lon);
         const hotspotPos = new THREE.Vector3(hotspotX, hotspotY, hotspotZ);
-        
+
         // Créer l'effet de scan
         this.createScanEffect(hotspot.position);
-        
+
         // Arrêter l'orbite
         this.orbitParams.isOrbiting = false;
         
@@ -1128,11 +1161,14 @@ export class GlobeManager {
    
    exitHotspotMode() {
        if (!this.orbitParams.inHotspotMode) return;
-       
+
        console.log("Sortie du mode hotspot");
-       
+
        this.orbitParams.inHotspotMode = false;
-       
+
+       // Réafficher tous les labels et connecteurs
+       this.showAllLabels();
+
        // Réinitialiser le champ de vision
        gsap.to(this.camera, {
            fov: 60,
@@ -1142,7 +1178,7 @@ export class GlobeManager {
                this.camera.updateProjectionMatrix();
            }
        });
-       
+
        // Réactiver l'orbite
        setTimeout(() => {
            this.orbitParams.isOrbiting = true;
