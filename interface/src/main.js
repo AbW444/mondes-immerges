@@ -282,9 +282,9 @@ function initialize() {
             updateProgress();
         }, delay * (index + 1));
     });
-    
-    // Créer un arrière-plan étoilé pour le conteneur principal
-    createStarfieldAnimation();
+
+    // SUPPRIMÉ: createStarfieldAnimation() car elle causait des particules blanches et potentiellement le freeze
+    // L'arrière-plan étoilé est déjà géré par le GlobeManager avec la skybox
 }
 
 /**
@@ -443,17 +443,23 @@ function triggerStartupSequence(app) {
             // Démarrer la séquence d'initialisation
             if (app.startupSequence && typeof app.startupSequence === 'function') {
                 console.log('🚀 Lancement de la séquence de démarrage...');
+
+                // Marquer l'application comme en exploration dès maintenant
+                app.isExploring = true;
+
+                // Lancer la séquence de démarrage sans appeler startExploration après
+                // car cela causait un flash/refresh noir indésirable
                 app.startupSequence();
-                
-                // Après la séquence, lancer l'exploration
-                setTimeout(() => {
-                    console.log('🌊 Démarrage de l\'exploration...');
-                    app.startExploration(true);
-                }, 5000);
+
+                // SUPPRIMÉ: l'appel à startExploration qui causait le freeze/refresh noir
+                // setTimeout(() => {
+                //     console.log('🌊 Démarrage de l\'exploration...');
+                //     app.startExploration(true);
+                // }, 5000);
             } else {
                 // Fallback si la méthode n'existe pas
                 console.log('⚠️  Méthode startupSequence non trouvée, démarrage direct');
-                app.startExploration(true);
+                app.isExploring = true;
             }
         }, 500);
     } else {

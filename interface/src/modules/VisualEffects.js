@@ -147,7 +147,7 @@ export class VisualEffects {
             background-color: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(5px);
         `;
-        
+
         // Créer le loader orbital
         const orbitalLoader = document.createElement('div');
         orbitalLoader.style.cssText = `
@@ -158,7 +158,7 @@ export class VisualEffects {
             justify-content: center;
             align-items: center;
         `;
-        
+
         // Anneaux orbitaux (3 anneaux avec différentes vitesses)
         for (let i = 0; i < 3; i++) {
             const ring = document.createElement('div');
@@ -170,7 +170,7 @@ export class VisualEffects {
                 height: ${120 + i * 40}px;
                 animation: orbit${i} ${4 - i * 0.5}s linear infinite;
             `;
-            
+
             // Créer particules sur l'anneau
             for (let j = 0; j < 3 + i; j++) {
                 const particle = document.createElement('div');
@@ -188,10 +188,10 @@ export class VisualEffects {
                 `;
                 ring.appendChild(particle);
             }
-            
+
             orbitalLoader.appendChild(ring);
         }
-        
+
         // Créer le point central
         const center = document.createElement('div');
         center.style.cssText = `
@@ -203,13 +203,13 @@ export class VisualEffects {
             animation: pulse 2s ease-in-out infinite;
         `;
         orbitalLoader.appendChild(center);
-        
+
         // Texte supprimé - loader uniquement
 
         // Ajouter les éléments au DOM
         loaderContainer.appendChild(orbitalLoader);
         // text supprimé - pas de texte dans le loader
-        
+
         // Ajouter le style des animations
         const styleEl = document.createElement('style');
         styleEl.textContent = `
@@ -231,18 +231,29 @@ export class VisualEffects {
             }
         `;
         document.head.appendChild(styleEl);
-        
+
         this.effectsContainer.appendChild(loaderContainer);
-        
+
         // Animer l'entrée
-        gsap.fromTo(loaderContainer, 
-            { opacity: 0 }, 
+        gsap.fromTo(loaderContainer,
+            { opacity: 0 },
             { opacity: 1, duration: 0.5 }
         );
-        
+
+        // NOUVEAU: Faire disparaître progressivement le fond noir pendant l'animation
+        // Commencer à faire disparaître le fond après 0.3s et terminer avant la fin du loader
+        setTimeout(() => {
+            gsap.to(loaderContainer, {
+                backgroundColor: 'rgba(0, 0, 0, 0)',
+                backdropFilter: 'blur(0px)',
+                duration: duration * 0.6, // Disparition sur 60% du temps restant
+                ease: "power2.inOut"
+            });
+        }, 300);
+
         // Définir un timer pour la sortie
         setTimeout(() => {
-            // Animer la sortie
+            // Animer la sortie du loader (pas du fond qui a déjà disparu)
             gsap.to(loaderContainer, {
                 opacity: 0,
                 duration: 0.5,

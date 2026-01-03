@@ -41,9 +41,10 @@ class MondesImmergesApp {
         if (this.isInitialized) return;
         this.isInitialized = true;
         
-        // Ajouter un fond étoilé au conteneur principal
-        this.createStarryBackground();
-        
+        // SUPPRIMÉ: Fond étoilé qui pouvait causer des particules blanches et conflits
+        // this.createStarryBackground();
+        // L'arrière-plan est déjà géré par le GlobeManager avec la skybox
+
         // Initialiser les effets visuels en premier
         this.visualEffects = new VisualEffects({
             container: this.mainContainer
@@ -373,13 +374,13 @@ class MondesImmergesApp {
     finalizeStartup() {
         // Afficher des messages système après le chargement
         this.showSystemMessages();
-        
-        // Ajouter des particules en arrière-plan pour l'ambiance
-        this.visualEffects.addBackgroundParticles({
-            count: 30,
-            container: this.mainContainer
-        });
-        
+
+        // SUPPRIMÉ: Particules en arrière-plan qui causaient des particules blanches fixes
+        // this.visualEffects.addBackgroundParticles({
+        //     count: 30,
+        //     container: this.mainContainer
+        // });
+
         // Afficher une notification de bienvenue
         setTimeout(() => {
             this.visualEffects.showNotification(
