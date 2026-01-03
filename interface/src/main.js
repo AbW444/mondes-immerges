@@ -192,6 +192,11 @@ async function startApplication() {
                         console.log('🌊 Démarrage exploration...');
                         app.startExploration(true);
                     }, 6500);
+
+                    // Faire apparaître les éléments UI 1 seconde APRÈS la fin de la transition (7s total)
+                    setTimeout(() => {
+                        showInterfaceElements();
+                    }, 7000);
                 });
             } else {
                 console.log('🌊 Démarrage direct...');
@@ -199,6 +204,9 @@ async function startApplication() {
                 setTimeout(() => {
                     app.startExploration(true);
                 }, 6500);
+                setTimeout(() => {
+                    showInterfaceElements();
+                }, 7000);
             }
         }, 300);
 
@@ -235,6 +243,7 @@ function hideJellySpinner() {
 
 /**
  * Prépare le conteneur principal (invisible pour l'instant)
+ * ET initialise l'interface en mode "clear" (tous les éléments UI cachés)
  */
 function prepareMainContainer() {
     const mainContainer = document.getElementById('main-container');
@@ -244,6 +253,79 @@ function prepareMainContainer() {
     // Le laisser à opacity 0 pour l'instant
     mainContainer.style.opacity = '0';
     mainContainer.style.transition = 'opacity 1s cubic-bezier(0.19, 1, 0.22, 1)';
+
+    // Initialiser l'interface en mode "clear" - tous les éléments UI cachés
+    const uiControls = document.getElementById('ui-controls');
+    const huds = document.querySelectorAll('.satellite-hud, .coordinates-display');
+    const crosshair = document.querySelector('.satellite-crosshair');
+
+    if (uiControls) {
+        uiControls.style.opacity = '0';
+        uiControls.style.transform = 'translateY(20px)';
+        uiControls.style.pointerEvents = 'none';
+    }
+
+    huds.forEach(hud => {
+        hud.style.opacity = '0';
+    });
+
+    if (crosshair) {
+        crosshair.style.opacity = '0';
+    }
+
+    console.log('✅ Interface initialisée en mode clear');
+}
+
+/**
+ * Fait apparaître les éléments de l'interface avec animation
+ * Appelé 1 seconde après la fin de la transition du fond noir
+ */
+function showInterfaceElements() {
+    const uiControls = document.getElementById('ui-controls');
+    const huds = document.querySelectorAll('.satellite-hud, .coordinates-display');
+    const crosshair = document.querySelector('.satellite-crosshair');
+
+    console.log('✨ Apparition des éléments UI');
+
+    // Réactiver les interactions
+    if (uiControls) {
+        uiControls.style.pointerEvents = 'auto';
+    }
+
+    // Utiliser GSAP pour l'animation si disponible, sinon CSS
+    if (window.gsap) {
+        if (uiControls) {
+            gsap.to(uiControls, {
+                opacity: 1,
+                y: 0,
+                duration: 0.8,
+                ease: "power2.out"
+            });
+        }
+
+        gsap.to([...huds, crosshair].filter(Boolean), {
+            opacity: 1,
+            duration: 0.8,
+            ease: "power2.out"
+        });
+    } else {
+        // Fallback CSS
+        if (uiControls) {
+            uiControls.style.transition = 'all 0.8s ease';
+            uiControls.style.opacity = '1';
+            uiControls.style.transform = 'translateY(0)';
+        }
+
+        huds.forEach(hud => {
+            hud.style.transition = 'opacity 0.8s ease';
+            hud.style.opacity = '1';
+        });
+
+        if (crosshair) {
+            crosshair.style.transition = 'opacity 0.8s ease';
+            crosshair.style.opacity = '1';
+        }
+    }
 }
 
 /**

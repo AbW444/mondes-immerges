@@ -221,12 +221,31 @@ export class VisualEffects {
             animation: pulse 2s ease-in-out infinite;
         `;
         orbitalLoader.appendChild(center);
-        
-        // Texte supprimé - loader uniquement
+
+        // Ajouter le texte "Initialisation du système..."
+        const loadingText = document.createElement('div');
+        loadingText.className = 'orbital-loading-text';
+        loadingText.style.cssText = `
+            position: absolute;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffcc00;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+            white-space: nowrap;
+            letter-spacing: 1px;
+        `;
+
+        // Créer le texte avec les spans pour les points
+        loadingText.innerHTML = `
+            Initialisation du système<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
+        `;
+
+        orbitalLoader.appendChild(loadingText);
 
         // Ajouter les éléments au DOM
         loaderContainer.appendChild(orbitalLoader);
-        // text supprimé - pas de texte dans le loader
         
         // Ajouter le style des animations
         const styleEl = document.createElement('style');
@@ -246,6 +265,26 @@ export class VisualEffects {
             @keyframes pulse {
                 0%, 100% { transform: scale(1); opacity: 1; }
                 50% { transform: scale(1.3); opacity: 0.7; }
+            }
+
+            /* Animation des points de chargement */
+            .loading-dots span {
+                opacity: 0;
+                animation: dotFade 1.5s infinite;
+            }
+            .loading-dots span:nth-child(1) {
+                animation-delay: 0s;
+            }
+            .loading-dots span:nth-child(2) {
+                animation-delay: 0.5s;
+            }
+            .loading-dots span:nth-child(3) {
+                animation-delay: 1s;
+            }
+
+            @keyframes dotFade {
+                0%, 100% { opacity: 0; }
+                50% { opacity: 1; }
             }
         `;
         document.head.appendChild(styleEl);
