@@ -169,25 +169,32 @@ async function startApplication() {
 
         console.log('✅ Application initialisée');
 
-        // Transition fluide de l'écran de chargement
-        await hideLoadingScreen();
+        // NE PAS masquer l'écran de chargement encore
+        // Juste cacher le spinner jelly
+        hideJellySpinner();
 
-        // Afficher le conteneur principal
-        showMainContainer();
+        // Afficher le conteneur principal en arrière-plan (transparent pour l'instant)
+        prepareMainContainer();
 
-        // Démarrer la séquence de l'app
+        // Démarrer la séquence qui va créer l'effet orbital
+        // sur l'écran de chargement toujours visible
         setTimeout(() => {
             if (app.startupSequence && typeof app.startupSequence === 'function') {
                 console.log('🎬 Séquence de démarrage...');
-                app.startupSequence();
+                // Passer la fonction de fin au startupSequence
+                app.startupSequence(() => {
+                    // Cette fonction sera appelée quand l'animation orbital est terminée
+                    hideLoadingScreenGradually();
 
-                // Démarrer l'exploration après la séquence
-                setTimeout(() => {
-                    console.log('🌊 Démarrage exploration...');
-                    app.startExploration(true);
-                }, 5000);
+                    // Démarrer l'exploration après
+                    setTimeout(() => {
+                        console.log('🌊 Démarrage exploration...');
+                        app.startExploration(true);
+                    }, 1000);
+                });
             } else {
                 console.log('🌊 Démarrage direct...');
+                hideLoadingScreenGradually();
                 app.startExploration(true);
             }
         }, 300);
@@ -199,26 +206,75 @@ async function startApplication() {
 }
 
 /**
- * Masque l'écran de chargement avec transition fluide
+ * Cache uniquement le spinner jelly, garde l'écran de chargement
+ */
+function hideJellySpinner() {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (!loadingScreen) return;
+
+    // Cacher juste le spinner jelly
+    const jellySpinner = loadingScreen.querySelector('l-jelly');
+    const fallbackSpinner = loadingScreen.querySelector('.spinner');
+
+    if (jellySpinner) {
+        jellySpinner.style.transition = 'opacity 0.3s ease';
+        jellySpinner.style.opacity = '0';
+        setTimeout(() => jellySpinner.remove(), 300);
+    }
+    if (fallbackSpinner) {
+        fallbackSpinner.style.transition = 'opacity 0.3s ease';
+        fallbackSpinner.style.opacity = '0';
+        setTimeout(() => fallbackSpinner.remove(), 300);
+    }
+
+    console.log('✅ Spinner caché, fond noir conservé');
+}
+
+/**
+ * Prépare le conteneur principal (invisible pour l'instant)
+ */
+function prepareMainContainer() {
+    const mainContainer = document.getElementById('main-container');
+    if (!mainContainer) return;
+
+    mainContainer.classList.remove('hidden');
+    // Le laisser à opacity 0 pour l'instant
+    mainContainer.style.opacity = '0';
+    mainContainer.style.transition = 'opacity 1s cubic-bezier(0.19, 1, 0.22, 1)';
+}
+
+/**
+ * Masque progressivement l'écran de chargement
+ */
+function hideLoadingScreenGradually() {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (!loadingScreen) return;
+
+    // Transition progressive sur 2 secondes
+    loadingScreen.style.transition = 'opacity 2s cubic-bezier(0.19, 1, 0.22, 1)';
+    loadingScreen.style.opacity = '0';
+
+    // Afficher progressivement le conteneur principal en même temps
+    const mainContainer = document.getElementById('main-container');
+    if (mainContainer) {
+        setTimeout(() => {
+            mainContainer.style.opacity = '1';
+        }, 500);
+    }
+
+    setTimeout(() => {
+        loadingScreen.style.display = 'none';
+        loadingScreen.classList.add('hidden');
+        console.log('✅ Écran de chargement complètement masqué');
+    }, 2000);
+}
+
+/**
+ * Masque l'écran de chargement avec transition fluide (deprecated)
  */
 function hideLoadingScreen() {
-    return new Promise((resolve) => {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (!loadingScreen) {
-            resolve();
-            return;
-        }
-
-        // Transition de fondu
-        loadingScreen.style.transition = 'opacity 0.7s cubic-bezier(0.19, 1, 0.22, 1)';
-        loadingScreen.style.opacity = '0';
-
-        setTimeout(() => {
-            loadingScreen.style.display = 'none';
-            loadingScreen.classList.add('hidden');
-            resolve();
-        }, 700);
-    });
+    // Cette fonction n'est plus utilisée mais conservée pour compatibilité
+    return Promise.resolve();
 }
 
 /**

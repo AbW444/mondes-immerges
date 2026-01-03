@@ -40,10 +40,7 @@ class MondesImmergesApp {
         
         if (this.isInitialized) return;
         this.isInitialized = true;
-        
-        // Ajouter un fond étoilé au conteneur principal
-        this.createStarryBackground();
-        
+
         // Initialiser les effets visuels en premier
         this.visualEffects = new VisualEffects({
             container: this.mainContainer
@@ -229,16 +226,7 @@ class MondesImmergesApp {
         
         // Autres ajustements responsive si nécessaire
     }
-    
-    /**
-     * Crée un arrière-plan étoilé
-     */
-    createStarryBackground() {
-        const background = document.createElement('div');
-        background.className = 'starry-background';
-        this.mainContainer.appendChild(background);
-    }
-    
+
     /**
      * Ajoute le logo National Geographic en haut au centre
      */
@@ -357,12 +345,19 @@ class MondesImmergesApp {
     /**
      * Exécute une séquence de démarrage stylisée
      */
-    startupSequence() {
-        // Créer l'effet de chargement orbital seulement - pas de texte, pas de barre
+    startupSequence(onComplete) {
+        // Créer l'effet de chargement orbital dans l'écran de chargement existant
+        const loadingScreen = document.getElementById('loading-screen');
+
         this.visualEffects.createOrbitalLoaderEffect(() => {
             // Cette fonction sera appelée une fois l'animation terminée
             this.finalizeStartup();
-        }, 1.5);
+
+            // Appeler le callback si fourni
+            if (onComplete && typeof onComplete === 'function') {
+                onComplete();
+            }
+        }, 3, loadingScreen); // Durée de 3 secondes et utiliser l'écran de chargement
 
         // Pas de messages - loader uniquement
     }

@@ -130,23 +130,41 @@ export class VisualEffects {
      * @param {Function} onComplete - Fonction à appeler une fois l'animation terminée
      * @param {number} duration - Durée de l'animation en secondes
      */
-    createOrbitalLoaderEffect(onComplete, duration = 4) {
+    createOrbitalLoaderEffect(onComplete, duration = 4, targetContainer = null) {
         // Créer un conteneur pour l'effet
         const loaderContainer = document.createElement('div');
         loaderContainer.className = 'orbital-loader';
-        loaderContainer.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 50;
-            background-color: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-        `;
+
+        // Si un conteneur cible est fourni, ne pas créer de fond (l'écran de chargement a déjà un fond noir)
+        if (targetContainer) {
+            loaderContainer.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 50;
+                background-color: transparent;
+            `;
+        } else {
+            // Comportement par défaut avec fond
+            loaderContainer.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 50;
+                background-color: rgba(0, 0, 0, 0.7);
+                backdrop-filter: blur(5px);
+            `;
+        }
         
         // Créer le loader orbital
         const orbitalLoader = document.createElement('div');
@@ -231,21 +249,23 @@ export class VisualEffects {
             }
         `;
         document.head.appendChild(styleEl);
-        
-        this.effectsContainer.appendChild(loaderContainer);
-        
+
+        // Ajouter au conteneur cible ou au conteneur d'effets par défaut
+        const container = targetContainer || this.effectsContainer;
+        container.appendChild(loaderContainer);
+
         // Animer l'entrée
-        gsap.fromTo(loaderContainer, 
-            { opacity: 0 }, 
+        gsap.fromTo(loaderContainer,
+            { opacity: 0 },
             { opacity: 1, duration: 0.5 }
         );
-        
+
         // Définir un timer pour la sortie
         setTimeout(() => {
             // Animer la sortie
             gsap.to(loaderContainer, {
                 opacity: 0,
-                duration: 0.5,
+                duration: 1,
                 onComplete: () => {
                     loaderContainer.remove();
                     styleEl.remove();
