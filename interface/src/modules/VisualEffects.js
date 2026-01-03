@@ -146,6 +146,7 @@ export class VisualEffects {
             z-index: 50;
             background-color: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(5px);
+            transition: background-color ${duration}s ease-out;
         `;
         
         // Créer le loader orbital
@@ -233,13 +234,22 @@ export class VisualEffects {
         document.head.appendChild(styleEl);
         
         this.effectsContainer.appendChild(loaderContainer);
-        
+
         // Animer l'entrée
-        gsap.fromTo(loaderContainer, 
-            { opacity: 0 }, 
+        gsap.fromTo(loaderContainer,
+            { opacity: 0 },
             { opacity: 1, duration: 0.5 }
         );
-        
+
+        // Commencer à faire disparaître le fond noir progressivement pendant l'animation
+        setTimeout(() => {
+            gsap.to(loaderContainer, {
+                backgroundColor: 'rgba(0, 0, 0, 0)',
+                duration: duration * 0.8, // Commence à disparaître pendant 80% de la durée
+                ease: 'power2.out'
+            });
+        }, duration * 200); // Commence après 20% de la durée
+
         // Définir un timer pour la sortie
         setTimeout(() => {
             // Animer la sortie
