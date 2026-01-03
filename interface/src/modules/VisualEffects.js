@@ -313,18 +313,12 @@ export class VisualEffects {
         // Définir un timer pour la sortie
         setTimeout(() => {
             // Si c'est dans un conteneur cible (écran de chargement),
-            // faire disparaître juste le loader orbital, pas le fond
+            // l'orbital reste à 100% d'opacité puis disparaît instantanément
             if (targetContainer) {
-                // Faire disparaître progressivement le loader orbital
-                gsap.to(loaderContainer, {
-                    opacity: 0,
-                    duration: 2,
-                    onComplete: () => {
-                        loaderContainer.remove();
-                        styleEl.remove();
-                        console.log('✅ Orbital loader supprimé');
-                    }
-                });
+                // Supprimer l'orbital instantanément (pas de fade)
+                loaderContainer.remove();
+                styleEl.remove();
+                console.log('✅ Orbital loader supprimé instantanément');
             } else {
                 // Comportement normal : tout disparaît ensemble
                 gsap.to(loaderContainer, {

@@ -186,27 +186,27 @@ async function startApplication() {
                     // Cette fonction sera appelée quand l'orbital loader apparaît
                     hideLoadingScreenGradually();
 
-                    // CRITIQUE: Démarrer l'exploration APRÈS la fin complète de la transition (6s)
-                    // pour éviter le freeze pendant la transition
+                    // Démarrer l'exploration APRÈS la fin de la transition (4s)
+                    // Les éléments UI apparaissent 0.5s après (4.5s total)
                     setTimeout(() => {
                         console.log('🌊 Démarrage exploration...');
                         app.startExploration(true);
-                    }, 6500);
 
-                    // Faire apparaître les éléments UI 1 seconde APRÈS la fin de la transition (7s total)
-                    setTimeout(() => {
-                        showInterfaceElements();
-                    }, 7000);
+                        // Faire apparaître les éléments UI 0.5s après la fin du fond noir
+                        setTimeout(() => {
+                            showInterfaceElements();
+                        }, 500);
+                    }, 4000);
                 });
             } else {
                 console.log('🌊 Démarrage direct...');
                 hideLoadingScreenGradually();
                 setTimeout(() => {
                     app.startExploration(true);
-                }, 6500);
-                setTimeout(() => {
-                    showInterfaceElements();
-                }, 7000);
+                    setTimeout(() => {
+                        showInterfaceElements();
+                    }, 500);
+                }, 4000);
             }
         }, 300);
 
@@ -330,33 +330,34 @@ function showInterfaceElements() {
 
 /**
  * Masque progressivement l'écran de chargement
- * La durée doit correspondre à toute la durée de l'orbital loader
- * (duration=4s + fade=2s = 6s total)
+ * La durée correspond à la durée de l'orbital loader (4s)
+ * L'interface (globe) est affichée IMMÉDIATEMENT derrière le fond noir
  */
 function hideLoadingScreenGradually() {
     const loadingScreen = document.getElementById('loading-screen');
+    const mainContainer = document.getElementById('main-container');
+
     if (!loadingScreen) return;
 
-    console.log('🌑 Début transition fond noir (100% → 0% sur 6s)');
+    console.log('🌑 Début transition fond noir (100% → 0% sur 4s)');
+    console.log('🌍 Interface (globe) visible immédiatement derrière le fond noir');
 
-    // Transition progressive sur 6 secondes pour synchroniser avec l'orbital loader
-    loadingScreen.style.transition = 'opacity 6s cubic-bezier(0.19, 1, 0.22, 1)';
-    loadingScreen.style.opacity = '0';
-
-    // Afficher progressivement le conteneur principal pendant la transition
-    const mainContainer = document.getElementById('main-container');
+    // IMPORTANT: Afficher l'interface (globe, espace) IMMÉDIATEMENT
+    // Elle sera visible derrière le fond noir qui disparaît progressivement
     if (mainContainer) {
-        setTimeout(() => {
-            mainContainer.style.opacity = '1';
-        }, 2000);
+        mainContainer.style.opacity = '1';
     }
+
+    // Transition progressive sur 4 secondes (durée de l'orbital)
+    loadingScreen.style.transition = 'opacity 4s cubic-bezier(0.19, 1, 0.22, 1)';
+    loadingScreen.style.opacity = '0';
 
     // Nettoyer après la transition complète
     setTimeout(() => {
         loadingScreen.style.display = 'none';
         loadingScreen.classList.add('hidden');
         console.log('✅ Écran de chargement complètement masqué');
-    }, 6000);
+    }, 4000);
 }
 
 /**
