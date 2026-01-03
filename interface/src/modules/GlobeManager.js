@@ -807,80 +807,97 @@ export class GlobeManager {
         
         marker.onBeforeRender = () => {
             if (!marker.userData.label || !marker.userData.connector) return;
-            
+
             const isVisible = isPointVisibleToCamera(marker.userData.worldPosition);
-            
-            if (isVisible && !this.orbitParams.inHotspotMode) {
-                const vector = marker.userData.worldPosition.clone();
-                vector.project(this.camera);
-                
-                const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-                const y = (-vector.y * 0.5 + 0.5) * window.innerHeight;
-                
-                const centerX = window.innerWidth / 2;
-                const centerY = window.innerHeight / 2;
-                
-                const distFromCenter = Math.sqrt(
-                    Math.pow(x - centerX, 2) + 
-                    Math.pow(y - centerY, 2)
-                );
-                
-                const angle = Math.atan2(y - centerY, x - centerX);
-                
-                const minDistance = Math.min(centerX, centerY) * 0.6;
-                
-                let labelX, labelY;
-                if (distFromCenter < minDistance) {
-                    const offsetDistance = minDistance + 60 + (Math.sin(angle * 5) * 20);
-                    labelX = centerX + Math.cos(angle) * offsetDistance;
-                    labelY = centerY + Math.sin(angle) * offsetDistance;
-                    
-                    const padding = 20;
-                    if (labelX < padding) labelX = padding;
-                    if (labelX > window.innerWidth - padding) labelX = window.innerWidth - padding;
-                    if (labelY < padding) labelY = padding;
-                    if (labelY > window.innerHeight - padding) labelY = window.innerHeight - padding;
-                } else {
-                    const textWidth = text.length * 8;
-                    const offsetX = 25 + textWidth * 0.25;
-                    const offsetY = 10;
-                    
-                    if (x + offsetX + textWidth > window.innerWidth - 20) {
-                        labelX = x - offsetX - textWidth;
-                    } else {
-                        labelX = x + offsetX;
-                    }
-                    
-                    if (y - offsetY - 30 < 20) {
-                        labelY = y + offsetY;
-                    } else {
-                        labelY = y - offsetY;
-                    }
+
+            // Si en mode hotspot ou non visible, supprimer les éléments du DOM
+            if (!isVisible || this.orbitParams.inHotspotMode) {
+                // Supprimer les éléments du DOM au lieu de juste les cacher
+                if (marker.userData.label) {
+                    marker.userData.label.style.opacity = '0';
+                    marker.userData.label.style.display = 'none';
                 }
-                
-                marker.userData.label.style.left = `${labelX}px`;
-                marker.userData.label.style.top = `${labelY}px`;
-                marker.userData.label.style.opacity = '1';
-                
-                connector.style.left = `${x}px`;
-                connector.style.top = `${y}px`;
-                
-                const lineLength = Math.sqrt(
-                    Math.pow(labelX - x, 2) + 
-                    Math.pow(labelY - y, 2)
-                );
-                
-                const lineAngle = Math.atan2(labelY - y, labelX - x);
-                
-                connector.style.width = `${lineLength}px`;
-                connector.style.transform = `rotate(${lineAngle}rad)`;
-                connector.style.opacity = '1';
-                
-                connector.style.animation = "pulseConnector 2s infinite alternate";
-            } else {
-                marker.userData.label.style.opacity = '0';
-                connector.style.opacity = '0';
+                if (marker.userData.connector) {
+                    marker.userData.connector.style.opacity = '0';
+                    marker.userData.connector.style.display = 'none';
+                }
+                return;
             }
+
+            // Réafficher les éléments si nécessaire
+            if (marker.userData.label) {
+                marker.userData.label.style.display = 'block';
+            }
+            if (marker.userData.connector) {
+                marker.userData.connector.style.display = 'block';
+            }
+
+            const vector = marker.userData.worldPosition.clone();
+            vector.project(this.camera);
+
+            const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+            const y = (-vector.y * 0.5 + 0.5) * window.innerHeight;
+
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+
+            const distFromCenter = Math.sqrt(
+                Math.pow(x - centerX, 2) +
+                Math.pow(y - centerY, 2)
+            );
+
+            const angle = Math.atan2(y - centerY, x - centerX);
+
+            const minDistance = Math.min(centerX, centerY) * 0.6;
+
+            let labelX, labelY;
+            if (distFromCenter < minDistance) {
+                const offsetDistance = minDistance + 60 + (Math.sin(angle * 5) * 20);
+                labelX = centerX + Math.cos(angle) * offsetDistance;
+                labelY = centerY + Math.sin(angle) * offsetDistance;
+
+                const padding = 20;
+                if (labelX < padding) labelX = padding;
+                if (labelX > window.innerWidth - padding) labelX = window.innerWidth - padding;
+                if (labelY < padding) labelY = padding;
+                if (labelY > window.innerHeight - padding) labelY = window.innerHeight - padding;
+            } else {
+                const textWidth = text.length * 8;
+                const offsetX = 25 + textWidth * 0.25;
+                const offsetY = 10;
+
+                if (x + offsetX + textWidth > window.innerWidth - 20) {
+                    labelX = x - offsetX - textWidth;
+                } else {
+                    labelX = x + offsetX;
+                }
+
+                if (y - offsetY - 30 < 20) {
+                    labelY = y + offsetY;
+                } else {
+                    labelY = y - offsetY;
+                }
+            }
+
+            marker.userData.label.style.left = `${labelX}px`;
+            marker.userData.label.style.top = `${labelY}px`;
+            marker.userData.label.style.opacity = '1';
+
+            connector.style.left = `${x}px`;
+            connector.style.top = `${y}px`;
+
+            const lineLength = Math.sqrt(
+                Math.pow(labelX - x, 2) +
+                Math.pow(labelY - y, 2)
+            );
+
+            const lineAngle = Math.atan2(labelY - y, labelX - x);
+
+            connector.style.width = `${lineLength}px`;
+            connector.style.transform = `rotate(${lineAngle}rad)`;
+            connector.style.opacity = '1';
+
+            connector.style.animation = "pulseConnector 2s infinite alternate";
         };
     }
     

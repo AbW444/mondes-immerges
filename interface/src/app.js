@@ -41,8 +41,8 @@ class MondesImmergesApp {
         if (this.isInitialized) return;
         this.isInitialized = true;
         
-        // Ajouter un fond étoilé au conteneur principal
-        this.createStarryBackground();
+        // DÉSACTIVÉ: Fond étoilé supprimé pour éviter les particules blanches fixes
+        // this.createStarryBackground();
         
         // Initialiser les effets visuels en premier
         this.visualEffects = new VisualEffects({
@@ -373,13 +373,13 @@ class MondesImmergesApp {
     finalizeStartup() {
         // Afficher des messages système après le chargement
         this.showSystemMessages();
-        
-        // Ajouter des particules en arrière-plan pour l'ambiance
-        this.visualEffects.addBackgroundParticles({
-            count: 30,
-            container: this.mainContainer
-        });
-        
+
+        // DÉSACTIVÉ: Particules d'arrière-plan supprimées pour éviter le freeze
+        // this.visualEffects.addBackgroundParticles({
+        //     count: 30,
+        //     container: this.mainContainer
+        // });
+
         // Afficher une notification de bienvenue
         setTimeout(() => {
             this.visualEffects.showNotification(

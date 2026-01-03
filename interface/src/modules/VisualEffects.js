@@ -144,7 +144,7 @@ export class VisualEffects {
             justify-content: center;
             align-items: center;
             z-index: 50;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 1);
             backdrop-filter: blur(5px);
         `;
         
@@ -235,14 +235,22 @@ export class VisualEffects {
         this.effectsContainer.appendChild(loaderContainer);
         
         // Animer l'entrée
-        gsap.fromTo(loaderContainer, 
-            { opacity: 0 }, 
+        gsap.fromTo(loaderContainer,
+            { opacity: 0 },
             { opacity: 1, duration: 0.5 }
         );
-        
+
+        // Animer le fond noir pour qu'il disparaisse progressivement pendant l'animation
+        gsap.to(loaderContainer, {
+            backgroundColor: 'rgba(0, 0, 0, 0)',
+            duration: duration,
+            ease: "power2.out",
+            delay: 0.3 // Commence après l'apparition du loader
+        });
+
         // Définir un timer pour la sortie
         setTimeout(() => {
-            // Animer la sortie
+            // Animer la sortie du loader (icône seulement, le fond est déjà transparent)
             gsap.to(loaderContainer, {
                 opacity: 0,
                 duration: 0.5,

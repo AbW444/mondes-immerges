@@ -282,9 +282,9 @@ function initialize() {
             updateProgress();
         }, delay * (index + 1));
     });
-    
-    // Créer un arrière-plan étoilé pour le conteneur principal
-    createStarfieldAnimation();
+
+    // DÉSACTIVÉ: Arrière-plan étoilé supprimé pour éviter les particules blanches fixes
+    // createStarfieldAnimation();
 }
 
 /**
