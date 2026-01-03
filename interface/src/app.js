@@ -368,13 +368,7 @@ class MondesImmergesApp {
     finalizeStartup() {
         // Afficher des messages système après le chargement
         this.showSystemMessages();
-        
-        // Ajouter des particules en arrière-plan pour l'ambiance
-        this.visualEffects.addBackgroundParticles({
-            count: 30,
-            container: this.mainContainer
-        });
-        
+
         // Afficher une notification de bienvenue
         setTimeout(() => {
             this.visualEffects.showNotification(

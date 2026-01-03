@@ -262,16 +262,32 @@ export class VisualEffects {
 
         // Définir un timer pour la sortie
         setTimeout(() => {
-            // Animer la sortie
-            gsap.to(loaderContainer, {
-                opacity: 0,
-                duration: 1,
-                onComplete: () => {
-                    loaderContainer.remove();
-                    styleEl.remove();
-                    if (onComplete) onComplete();
-                }
-            });
+            // Si c'est dans un conteneur cible (écran de chargement),
+            // faire disparaître juste le loader orbital, pas le fond
+            if (targetContainer) {
+                // Faire disparaître progressivement le loader orbital
+                gsap.to(loaderContainer, {
+                    opacity: 0,
+                    duration: 2,
+                    onComplete: () => {
+                        loaderContainer.remove();
+                        styleEl.remove();
+                    }
+                });
+                // Appeler le callback immédiatement pour que la disparition du fond commence
+                if (onComplete) onComplete();
+            } else {
+                // Comportement normal : tout disparaît ensemble
+                gsap.to(loaderContainer, {
+                    opacity: 0,
+                    duration: 1,
+                    onComplete: () => {
+                        loaderContainer.remove();
+                        styleEl.remove();
+                        if (onComplete) onComplete();
+                    }
+                });
+            }
         }, duration * 1000);
     }
     

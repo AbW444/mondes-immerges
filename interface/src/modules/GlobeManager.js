@@ -651,15 +651,35 @@ export class GlobeManager {
     }
     
     addHotspots(hotspots) {
+        // Nettoyer tous les anciens hotspots et leurs labels
         this.hotspotObjects.forEach(hotspot => {
             this.scene.remove(hotspot);
-            
+
+            // Supprimer le labelContainer du DOM de manière robuste
             if (hotspot.userData.labelContainer) {
-                document.body.removeChild(hotspot.userData.labelContainer);
+                try {
+                    if (hotspot.userData.labelContainer.parentNode) {
+                        hotspot.userData.labelContainer.parentNode.removeChild(hotspot.userData.labelContainer);
+                    }
+                } catch (e) {
+                    console.warn('Erreur lors de la suppression du label:', e);
+                }
             }
         });
         this.hotspotObjects = [];
-        
+
+        // Nettoyage supplémentaire : supprimer tous les labelContainers orphelins
+        const orphanLabels = document.querySelectorAll('.hotspot-label-container');
+        orphanLabels.forEach(label => {
+            try {
+                if (label.parentNode) {
+                    label.parentNode.removeChild(label);
+                }
+            } catch (e) {
+                console.warn('Erreur lors du nettoyage des labels orphelins:', e);
+            }
+        });
+
         hotspots.forEach(hotspot => {
             const { position, title } = hotspot;
             
