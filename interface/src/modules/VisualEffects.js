@@ -257,7 +257,18 @@ export class VisualEffects {
         // Animer l'entrée
         gsap.fromTo(loaderContainer,
             { opacity: 0 },
-            { opacity: 1, duration: 0.5 }
+            {
+                opacity: 1,
+                duration: 0.5,
+                onComplete: () => {
+                    // Une fois que l'orbital est complètement visible,
+                    // démarrer la transition du fond noir si on est dans un targetContainer
+                    if (targetContainer && onComplete) {
+                        console.log('🎨 Orbital loader visible, début transition fond noir');
+                        onComplete();
+                    }
+                }
+            }
         );
 
         // Définir un timer pour la sortie
@@ -272,10 +283,9 @@ export class VisualEffects {
                     onComplete: () => {
                         loaderContainer.remove();
                         styleEl.remove();
+                        console.log('✅ Orbital loader supprimé');
                     }
                 });
-                // Appeler le callback immédiatement pour que la disparition du fond commence
-                if (onComplete) onComplete();
             } else {
                 // Comportement normal : tout disparaît ensemble
                 gsap.to(loaderContainer, {

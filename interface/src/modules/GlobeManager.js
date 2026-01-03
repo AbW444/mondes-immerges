@@ -655,30 +655,33 @@ export class GlobeManager {
         this.hotspotObjects.forEach(hotspot => {
             this.scene.remove(hotspot);
 
-            // Supprimer le labelContainer du DOM de manière robuste
-            if (hotspot.userData.labelContainer) {
-                try {
-                    if (hotspot.userData.labelContainer.parentNode) {
-                        hotspot.userData.labelContainer.parentNode.removeChild(hotspot.userData.labelContainer);
-                    }
-                } catch (e) {
-                    console.warn('Erreur lors de la suppression du label:', e);
-                }
+            // Supprimer les event listeners pour éviter les fuites mémoire
+            if (hotspot.userData.label && hotspot.userData.labelHandlers) {
+                const { onMouseEnter, onMouseLeave, onClick } = hotspot.userData.labelHandlers;
+                hotspot.userData.label.removeEventListener('mouseenter', onMouseEnter);
+                hotspot.userData.label.removeEventListener('mouseleave', onMouseLeave);
+                hotspot.userData.label.removeEventListener('click', onClick);
+            }
+
+            // Supprimer les éléments DOM
+            if (hotspot.userData.label && hotspot.userData.label.parentNode) {
+                hotspot.userData.label.parentNode.removeChild(hotspot.userData.label);
+            }
+            if (hotspot.userData.connectorSvg && hotspot.userData.connectorSvg.parentNode) {
+                hotspot.userData.connectorSvg.parentNode.removeChild(hotspot.userData.connectorSvg);
+            }
+
+            // Ancienne méthode de cleanup pour compatibilité
+            if (hotspot.userData.labelContainer && hotspot.userData.labelContainer.parentNode) {
+                hotspot.userData.labelContainer.parentNode.removeChild(hotspot.userData.labelContainer);
             }
         });
         this.hotspotObjects = [];
 
-        // Nettoyage supplémentaire : supprimer tous les labelContainers orphelins
-        const orphanLabels = document.querySelectorAll('.hotspot-label-container');
-        orphanLabels.forEach(label => {
-            try {
-                if (label.parentNode) {
-                    label.parentNode.removeChild(label);
-                }
-            } catch (e) {
-                console.warn('Erreur lors du nettoyage des labels orphelins:', e);
-            }
-        });
+        // Nettoyage complet de tous les éléments orphelins
+        document.querySelectorAll('.hotspot-label').forEach(el => el.remove());
+        document.querySelectorAll('.hotspot-label-container').forEach(el => el.remove());
+        document.querySelectorAll('.connector-line').forEach(el => el.remove());
 
         hotspots.forEach(hotspot => {
             const { position, title } = hotspot;
@@ -723,185 +726,83 @@ export class GlobeManager {
     }
     
     addHotspotLabel(marker, text, position) {
-        const labelContainer = document.createElement('div');
-        labelContainer.className = 'hotspot-label-container';
-        labelContainer.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 10;
-        `;
-
+        // Créer le label
         const labelDiv = document.createElement('div');
         labelDiv.className = 'hotspot-label';
         labelDiv.textContent = text;
         labelDiv.style.cssText = `
-            position: absolute;
-            background-color: rgba(0, 0, 0, 0.7);
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0.8);
             color: #ffcc00;
-            padding: 5px 10px;
+            padding: 6px 12px;
             border-radius: 4px;
             font-family: 'Roboto Mono', monospace;
             font-size: 12px;
             white-space: nowrap;
             opacity: 0;
-            transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.2s ease;
             border: 1px solid rgba(255, 204, 0, 0.7);
-            z-index: 11;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(2px);
-            text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+            z-index: 1000;
             pointer-events: auto;
             cursor: pointer;
+            transition: all 0.3s ease;
         `;
 
-        // Ajouter les effets de survol
-        labelDiv.addEventListener('mouseenter', () => {
+        // Créer le connector line en SVG pour de meilleures performances
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0;
+        `;
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('stroke', 'rgba(255, 204, 0, 0.6)');
+        line.setAttribute('stroke-width', '1.5');
+        line.setAttribute('stroke-dasharray', '4, 4');
+        svg.appendChild(line);
+
+        // Ajouter au DOM
+        document.body.appendChild(labelDiv);
+        document.body.appendChild(svg);
+
+        // Handlers d'événements
+        const onMouseEnter = () => {
             labelDiv.style.backgroundColor = 'rgba(255, 204, 0, 0.9)';
             labelDiv.style.color = '#000';
             labelDiv.style.transform = 'scale(1.05)';
-        });
+        };
 
-        labelDiv.addEventListener('mouseleave', () => {
-            labelDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        const onMouseLeave = () => {
+            labelDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
             labelDiv.style.color = '#ffcc00';
             labelDiv.style.transform = 'scale(1)';
-        });
+        };
 
-        // Rendre le label cliquable avec le même comportement que le hotspot
-        labelDiv.addEventListener('click', (e) => {
-            e.stopPropagation(); // Empêcher la propagation au conteneur
+        const onClick = (e) => {
+            e.stopPropagation();
             const hotspot = marker.userData.hotspot;
             if (hotspot) {
                 console.log(`Label cliqué: ${hotspot.title}`);
                 this.activateHotspot(hotspot);
             }
-        });
-        
-        const connector = document.createElement('div');
-        connector.className = 'connector-line';
-        connector.style.cssText = `
-            position: absolute;
-            background: linear-gradient(to right, rgba(255, 204, 0, 0.9), rgba(255, 204, 0, 0.3));
-            height: 1.5px;
-            transform-origin: 0 0;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: 10;
-            box-shadow: 0 0 4px rgba(255, 204, 0, 0.5);
-        `;
-        
-        labelContainer.appendChild(labelDiv);
-        labelContainer.appendChild(connector);
-        document.body.appendChild(labelContainer);
-        
+        };
+
+        labelDiv.addEventListener('mouseenter', onMouseEnter);
+        labelDiv.addEventListener('mouseleave', onMouseLeave);
+        labelDiv.addEventListener('click', onClick);
+
+        // Stocker les références
         marker.userData.label = labelDiv;
-        marker.userData.connector = connector;
-        marker.userData.labelContainer = labelContainer;
+        marker.userData.connectorSvg = svg;
+        marker.userData.connectorLine = line;
         marker.userData.worldPosition = position.clone();
-        
-        const isPointVisibleToCamera = (pointPosition) => {
-            const worldToLocal = new THREE.Vector3().copy(pointPosition).project(this.camera);
-            
-            if (worldToLocal.z > 1) return false;
-            
-            if (worldToLocal.x < -1 || worldToLocal.x > 1 || worldToLocal.y < -1 || worldToLocal.y > 1) return false;
-            
-            const direction = new THREE.Vector3().subVectors(pointPosition, this.camera.position).normalize();
-            const raycaster = new THREE.Raycaster(this.camera.position, direction);
-            const intersects = raycaster.intersectObject(this.globe);
-            
-            if (intersects.length > 0) {
-                const distanceToIntersection = intersects[0].distance;
-                const distanceToPoint = this.camera.position.distanceTo(pointPosition);
-                
-                return distanceToIntersection > distanceToPoint - 0.1;
-            }
-            
-            return true;
-        };
-        
-        marker.onBeforeRender = () => {
-            if (!marker.userData.label || !marker.userData.connector) return;
-            
-            const isVisible = isPointVisibleToCamera(marker.userData.worldPosition);
-            
-            if (isVisible && !this.orbitParams.inHotspotMode) {
-                const vector = marker.userData.worldPosition.clone();
-                vector.project(this.camera);
-                
-                const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-                const y = (-vector.y * 0.5 + 0.5) * window.innerHeight;
-                
-                const centerX = window.innerWidth / 2;
-                const centerY = window.innerHeight / 2;
-                
-                const distFromCenter = Math.sqrt(
-                    Math.pow(x - centerX, 2) + 
-                    Math.pow(y - centerY, 2)
-                );
-                
-                const angle = Math.atan2(y - centerY, x - centerX);
-                
-                const minDistance = Math.min(centerX, centerY) * 0.6;
-                
-                let labelX, labelY;
-                if (distFromCenter < minDistance) {
-                    const offsetDistance = minDistance + 60 + (Math.sin(angle * 5) * 20);
-                    labelX = centerX + Math.cos(angle) * offsetDistance;
-                    labelY = centerY + Math.sin(angle) * offsetDistance;
-                    
-                    const padding = 20;
-                    if (labelX < padding) labelX = padding;
-                    if (labelX > window.innerWidth - padding) labelX = window.innerWidth - padding;
-                    if (labelY < padding) labelY = padding;
-                    if (labelY > window.innerHeight - padding) labelY = window.innerHeight - padding;
-                } else {
-                    const textWidth = text.length * 8;
-                    const offsetX = 25 + textWidth * 0.25;
-                    const offsetY = 10;
-                    
-                    if (x + offsetX + textWidth > window.innerWidth - 20) {
-                        labelX = x - offsetX - textWidth;
-                    } else {
-                        labelX = x + offsetX;
-                    }
-                    
-                    if (y - offsetY - 30 < 20) {
-                        labelY = y + offsetY;
-                    } else {
-                        labelY = y - offsetY;
-                    }
-                }
-                
-                marker.userData.label.style.left = `${labelX}px`;
-                marker.userData.label.style.top = `${labelY}px`;
-                marker.userData.label.style.opacity = '1';
-                
-                connector.style.left = `${x}px`;
-                connector.style.top = `${y}px`;
-                
-                const lineLength = Math.sqrt(
-                    Math.pow(labelX - x, 2) + 
-                    Math.pow(labelY - y, 2)
-                );
-                
-                const lineAngle = Math.atan2(labelY - y, labelX - x);
-                
-                connector.style.width = `${lineLength}px`;
-                connector.style.transform = `rotate(${lineAngle}rad)`;
-                connector.style.opacity = '1';
-                
-                connector.style.animation = "pulseConnector 2s infinite alternate";
-            } else {
-                marker.userData.label.style.opacity = '0';
-                connector.style.opacity = '0';
-            }
-        };
+        marker.userData.labelHandlers = { onMouseEnter, onMouseLeave, onClick };
+        marker.userData.labelText = text;
     }
     
     onMouseClick(event) {
@@ -1255,7 +1156,90 @@ export class GlobeManager {
    setHotspotExitCallback(callback) {
        this.onHotspotExit = callback;
    }
-   
+
+   /**
+    * Met à jour les positions de tous les labels et connector lines de manière optimisée
+    */
+   updateHotspotLabels() {
+       if (this.orbitParams.inHotspotMode) {
+           // Cacher tous les labels en mode hotspot
+           this.hotspotObjects.forEach(marker => {
+               if (marker.userData.label) marker.userData.label.style.opacity = '0';
+               if (marker.userData.connectorSvg) marker.userData.connectorSvg.style.opacity = '0';
+           });
+           return;
+       }
+
+       this.hotspotObjects.forEach(marker => {
+           if (!marker.userData.label || !marker.userData.worldPosition) return;
+
+           const worldPos = marker.userData.worldPosition;
+
+           // Vérifier si le point est visible
+           const projected = worldPos.clone().project(this.camera);
+
+           // Hors de l'écran
+           if (projected.z > 1 || projected.x < -1 || projected.x > 1 ||
+               projected.y < -1 || projected.y > 1) {
+               marker.userData.label.style.opacity = '0';
+               marker.userData.connectorSvg.style.opacity = '0';
+               return;
+           }
+
+           // Vérifier occlusion par le globe
+           const direction = new THREE.Vector3().subVectors(worldPos, this.camera.position).normalize();
+           const raycaster = new THREE.Raycaster(this.camera.position, direction);
+           const intersects = raycaster.intersectObject(this.globe);
+
+           if (intersects.length > 0) {
+               const distToIntersection = intersects[0].distance;
+               const distToPoint = this.camera.position.distanceTo(worldPos);
+
+               if (distToIntersection < distToPoint - 0.1) {
+                   marker.userData.label.style.opacity = '0';
+                   marker.userData.connectorSvg.style.opacity = '0';
+                   return;
+               }
+           }
+
+           // Le point est visible, calculer sa position à l'écran
+           const x = (projected.x * 0.5 + 0.5) * window.innerWidth;
+           const y = (-projected.y * 0.5 + 0.5) * window.innerHeight;
+
+           // Position du label avec offset simple
+           const textWidth = marker.userData.labelText.length * 7;
+           const offsetX = 40;
+           const offsetY = -15;
+
+           let labelX = x + offsetX;
+           let labelY = y + offsetY;
+
+           // Garder le label dans l'écran
+           const padding = 10;
+           if (labelX + textWidth > window.innerWidth - padding) {
+               labelX = x - offsetX - textWidth;
+           }
+           if (labelX < padding) labelX = padding;
+           if (labelY < padding) labelY = padding;
+           if (labelY > window.innerHeight - padding) labelY = window.innerHeight - padding;
+
+           // Mettre à jour le label
+           marker.userData.label.style.left = `${labelX}px`;
+           marker.userData.label.style.top = `${labelY}px`;
+           marker.userData.label.style.opacity = '1';
+
+           // Mettre à jour le connector line (SVG)
+           const line = marker.userData.connectorLine;
+           if (line) {
+               line.setAttribute('x1', x);
+               line.setAttribute('y1', y);
+               line.setAttribute('x2', labelX);
+               line.setAttribute('y2', labelY + 10); // Offset pour centrer sur le label
+               marker.userData.connectorSvg.style.opacity = '1';
+           }
+       });
+   }
+
    animate() {
        requestAnimationFrame(this.animate.bind(this));
        
@@ -1275,17 +1259,17 @@ export class GlobeManager {
            this.updateAtmosphereUniforms();
        }
        
+       // Animer les halos des hotspots
        this.hotspotObjects.forEach(hotspot => {
            if (hotspot.children.length > 0) {
                const halo = hotspot.children[0];
                const scale = 1 + 0.2 * Math.sin(time * 0.003);
                halo.scale.set(scale, scale, scale);
            }
-           
-           if (hotspot.userData.label && hotspot.userData.worldPosition) {
-               hotspot.onBeforeRender();
-           }
        });
+
+       // Mettre à jour les labels et connector lines (méthode optimisée)
+       this.updateHotspotLabels();
        
        if (this.clouds) {
            this.clouds.rotation.y += 0.0001;

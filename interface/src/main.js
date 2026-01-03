@@ -183,19 +183,22 @@ async function startApplication() {
                 console.log('🎬 Séquence de démarrage...');
                 // Passer la fonction de fin au startupSequence
                 app.startupSequence(() => {
-                    // Cette fonction sera appelée quand l'animation orbital est terminée
+                    // Cette fonction sera appelée quand l'orbital loader apparaît
                     hideLoadingScreenGradually();
 
-                    // Démarrer l'exploration après
+                    // CRITIQUE: Démarrer l'exploration APRÈS la fin complète de la transition (6s)
+                    // pour éviter le freeze pendant la transition
                     setTimeout(() => {
                         console.log('🌊 Démarrage exploration...');
                         app.startExploration(true);
-                    }, 1000);
+                    }, 6500);
                 });
             } else {
                 console.log('🌊 Démarrage direct...');
                 hideLoadingScreenGradually();
-                app.startExploration(true);
+                setTimeout(() => {
+                    app.startExploration(true);
+                }, 6500);
             }
         }, 300);
 
@@ -245,28 +248,33 @@ function prepareMainContainer() {
 
 /**
  * Masque progressivement l'écran de chargement
+ * La durée doit correspondre à toute la durée de l'orbital loader
+ * (duration=4s + fade=2s = 6s total)
  */
 function hideLoadingScreenGradually() {
     const loadingScreen = document.getElementById('loading-screen');
     if (!loadingScreen) return;
 
-    // Transition progressive sur 2 secondes
-    loadingScreen.style.transition = 'opacity 2s cubic-bezier(0.19, 1, 0.22, 1)';
+    console.log('🌑 Début transition fond noir (100% → 0% sur 6s)');
+
+    // Transition progressive sur 6 secondes pour synchroniser avec l'orbital loader
+    loadingScreen.style.transition = 'opacity 6s cubic-bezier(0.19, 1, 0.22, 1)';
     loadingScreen.style.opacity = '0';
 
-    // Afficher progressivement le conteneur principal en même temps
+    // Afficher progressivement le conteneur principal pendant la transition
     const mainContainer = document.getElementById('main-container');
     if (mainContainer) {
         setTimeout(() => {
             mainContainer.style.opacity = '1';
-        }, 500);
+        }, 2000);
     }
 
+    // Nettoyer après la transition complète
     setTimeout(() => {
         loadingScreen.style.display = 'none';
         loadingScreen.classList.add('hidden');
         console.log('✅ Écran de chargement complètement masqué');
-    }, 2000);
+    }, 6000);
 }
 
 /**
