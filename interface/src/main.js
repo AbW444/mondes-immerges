@@ -282,9 +282,9 @@ function initialize() {
             updateProgress();
         }, delay * (index + 1));
     });
-    
-    // Créer un arrière-plan étoilé pour le conteneur principal
-    createStarfieldAnimation();
+
+    // DÉSACTIVÉ: Créer un arrière-plan étoilé pour le conteneur principal
+    // createStarfieldAnimation(); // Supprimé car génère des particules blanches fixes à l'écran
 }
 
 /**
@@ -439,17 +439,21 @@ function triggerStartupSequence(app) {
             }
             
             console.log('🎭 Conteneur principal rendu visible');
-            
+
             // Démarrer la séquence d'initialisation
             if (app.startupSequence && typeof app.startupSequence === 'function') {
                 console.log('🚀 Lancement de la séquence de démarrage...');
+
+                // CORRECTION: Marquer l'application comme "en exploration" immédiatement
+                // pour éviter les doubles transitions
+                app.isExploring = true;
+
+                // Lancer la séquence d'initialisation qui gère tout (loader orbital + finalizeStartup)
                 app.startupSequence();
-                
-                // Après la séquence, lancer l'exploration
-                setTimeout(() => {
-                    console.log('🌊 Démarrage de l\'exploration...');
-                    app.startExploration(true);
-                }, 5000);
+
+                // SUPPRIMÉ: L'appel à startExploration() après 5 secondes causait
+                // un flash noir indésirable (micro refresh). La séquence startupSequence()
+                // gère déjà toute la logique de démarrage via finalizeStartup().
             } else {
                 // Fallback si la méthode n'existe pas
                 console.log('⚠️  Méthode startupSequence non trouvée, démarrage direct');

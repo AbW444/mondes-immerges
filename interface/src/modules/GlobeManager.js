@@ -807,34 +807,36 @@ export class GlobeManager {
         
         marker.onBeforeRender = () => {
             if (!marker.userData.label || !marker.userData.connector) return;
-            
+
             const isVisible = isPointVisibleToCamera(marker.userData.worldPosition);
-            
+
+            // CORRECTION: Toujours cacher les labels et connecteurs en mode hotspot
+            // et s'assurer qu'ils sont toujours synchronisés
             if (isVisible && !this.orbitParams.inHotspotMode) {
                 const vector = marker.userData.worldPosition.clone();
                 vector.project(this.camera);
-                
+
                 const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
                 const y = (-vector.y * 0.5 + 0.5) * window.innerHeight;
-                
+
                 const centerX = window.innerWidth / 2;
                 const centerY = window.innerHeight / 2;
-                
+
                 const distFromCenter = Math.sqrt(
-                    Math.pow(x - centerX, 2) + 
+                    Math.pow(x - centerX, 2) +
                     Math.pow(y - centerY, 2)
                 );
-                
+
                 const angle = Math.atan2(y - centerY, x - centerX);
-                
+
                 const minDistance = Math.min(centerX, centerY) * 0.6;
-                
+
                 let labelX, labelY;
                 if (distFromCenter < minDistance) {
                     const offsetDistance = minDistance + 60 + (Math.sin(angle * 5) * 20);
                     labelX = centerX + Math.cos(angle) * offsetDistance;
                     labelY = centerY + Math.sin(angle) * offsetDistance;
-                    
+
                     const padding = 20;
                     if (labelX < padding) labelX = padding;
                     if (labelX > window.innerWidth - padding) labelX = window.innerWidth - padding;
@@ -844,42 +846,50 @@ export class GlobeManager {
                     const textWidth = text.length * 8;
                     const offsetX = 25 + textWidth * 0.25;
                     const offsetY = 10;
-                    
+
                     if (x + offsetX + textWidth > window.innerWidth - 20) {
                         labelX = x - offsetX - textWidth;
                     } else {
                         labelX = x + offsetX;
                     }
-                    
+
                     if (y - offsetY - 30 < 20) {
                         labelY = y + offsetY;
                     } else {
                         labelY = y - offsetY;
                     }
                 }
-                
+
                 marker.userData.label.style.left = `${labelX}px`;
                 marker.userData.label.style.top = `${labelY}px`;
                 marker.userData.label.style.opacity = '1';
-                
+                marker.userData.label.style.visibility = 'visible'; // Réactiver la visibilité
+
                 connector.style.left = `${x}px`;
                 connector.style.top = `${y}px`;
-                
+
                 const lineLength = Math.sqrt(
-                    Math.pow(labelX - x, 2) + 
+                    Math.pow(labelX - x, 2) +
                     Math.pow(labelY - y, 2)
                 );
-                
+
                 const lineAngle = Math.atan2(labelY - y, labelX - x);
-                
+
                 connector.style.width = `${lineLength}px`;
                 connector.style.transform = `rotate(${lineAngle}rad)`;
                 connector.style.opacity = '1';
-                
+                connector.style.visibility = 'visible'; // Réactiver la visibilité
+
                 connector.style.animation = "pulseConnector 2s infinite alternate";
             } else {
+                // CORRECTION: S'assurer que les labels ET les connecteurs disparaissent ensemble
+                // Forcer display:none en plus de l'opacité pour éviter l'accumulation
                 marker.userData.label.style.opacity = '0';
+                marker.userData.label.style.visibility = 'hidden';
                 connector.style.opacity = '0';
+                connector.style.visibility = 'hidden';
+                // Réinitialiser l'animation pour éviter les artéfacts
+                connector.style.animation = 'none';
             }
         };
     }

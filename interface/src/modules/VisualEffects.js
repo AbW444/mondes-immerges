@@ -233,13 +233,22 @@ export class VisualEffects {
         document.head.appendChild(styleEl);
         
         this.effectsContainer.appendChild(loaderContainer);
-        
+
         // Animer l'entrée
-        gsap.fromTo(loaderContainer, 
-            { opacity: 0 }, 
+        gsap.fromTo(loaderContainer,
+            { opacity: 0 },
             { opacity: 1, duration: 0.5 }
         );
-        
+
+        // NOUVEAU: Animer la disparition progressive du fond noir pendant l'animation
+        // Le fond commence à disparaître après 30% de la durée et disparaît complètement à la fin
+        gsap.to(loaderContainer, {
+            backgroundColor: 'rgba(0, 0, 0, 0)',
+            duration: duration * 0.7, // 70% de la durée totale pour la transition
+            delay: duration * 0.3,     // Commence après 30% de la durée
+            ease: 'power2.out'
+        });
+
         // Définir un timer pour la sortie
         setTimeout(() => {
             // Animer la sortie
