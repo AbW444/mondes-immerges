@@ -194,7 +194,7 @@ async function startApplication() {
 
                         // Faire apparaître les éléments UI 0.25s après la fin du fond noir
                         setTimeout(() => {
-                            showInterfaceElements();
+                            showInterfaceElements(app);
                         }, 250);
                     }, 4000);
                 });
@@ -204,7 +204,7 @@ async function startApplication() {
                 setTimeout(() => {
                     app.startExploration(true);
                     setTimeout(() => {
-                        showInterfaceElements();
+                        showInterfaceElements(app);
                     }, 250);
                 }, 4000);
             }
@@ -285,8 +285,9 @@ function prepareMainContainer() {
  * Fait apparaître les éléments de l'interface avec animation
  * Appelé 0.25s après la fin de la transition du fond noir
  * Inclut les HUD, crosshair, contrôles, scanner, hotspots ET leurs traits jaunes (connector lines)
+ * @param {Object} appInstance - L'instance de l'application pour accéder au GlobeManager
  */
-function showInterfaceElements() {
+function showInterfaceElements(appInstance) {
     const uiControls = document.getElementById('ui-controls');
     const huds = document.querySelectorAll('.satellite-hud, .coordinates-display');
     const crosshair = document.querySelector('.satellite-crosshair');
@@ -297,9 +298,8 @@ function showInterfaceElements() {
     console.log('✨ Apparition des éléments UI + hotspots + connector lines');
 
     // IMPORTANT: Activer l'affichage des labels dans le GlobeManager
-    const app = getAppInstance();
-    if (app && app.globeManager) {
-        app.globeManager.showLabels();
+    if (appInstance && appInstance.globeManager) {
+        appInstance.globeManager.showLabels();
     }
 
     // Réactiver les interactions
