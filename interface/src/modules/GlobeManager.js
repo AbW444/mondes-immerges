@@ -780,29 +780,55 @@ export class GlobeManager {
             
             console.log(`Hotspot ${title}: GPS(${position.lat}, ${position.lng}) -> 3D(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
 
-            // Hotspot original avec halo
-            const markerGeometry = new THREE.SphereGeometry(0.05, 16, 16);
+            // Créer un vecteur normal pour orienter le hotspot vers l'extérieur
+            const normal = new THREE.Vector3(x, y, z).normalize();
+
+            // Hotspot aplati sur la surface du globe - Cercle au lieu de sphère
+            const markerGeometry = new THREE.CircleGeometry(0.05, 32);
             const markerMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffcc00,
+                color: 0xffcc00, // Jaune pur de la DA
                 transparent: true,
-                opacity: 0.8
+                opacity: 0, // Commence invisible, apparaîtra avec les autres UI
+                side: THREE.DoubleSide,
+                depthTest: true,
+                depthWrite: false
             });
 
             const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-            marker.position.set(x, y, z);
+
+            // Positionner légèrement au-dessus de la surface du globe
+            const surfaceOffset = 2.12; // Globe = 2.0, hotspot = 2.12
+            marker.position.set(
+                normal.x * surfaceOffset,
+                normal.y * surfaceOffset,
+                normal.z * surfaceOffset
+            );
+
+            // Orienter le hotspot pour qu'il fasse face à l'extérieur (perpendiculaire à la surface)
+            marker.lookAt(
+                normal.x * (surfaceOffset + 1),
+                normal.y * (surfaceOffset + 1),
+                normal.z * (surfaceOffset + 1)
+            );
+
             marker.userData = { hotspot };
 
-            // Ajouter le halo
-            const haloGeometry = new THREE.SphereGeometry(0.08, 16, 16);
+            // Ajouter le halo (anneau autour du cercle principal)
+            const haloGeometry = new THREE.RingGeometry(0.05, 0.08, 32);
             const haloMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffcc00,
+                color: 0xffcc00, // Jaune pur de la DA
                 transparent: true,
-                opacity: 0.5,
-                side: THREE.BackSide
+                opacity: 0, // Commence invisible
+                side: THREE.DoubleSide,
+                depthTest: true,
+                depthWrite: false
             });
 
             const halo = new THREE.Mesh(haloGeometry, haloMaterial);
             marker.add(halo);
+
+            // Stocker les matériaux pour pouvoir les animer lors de l'apparition
+            marker.userData.materials = [markerMaterial, haloMaterial];
 
             this.addHotspotLabel(marker, title, new THREE.Vector3(x, y, z));
 
@@ -1364,7 +1390,24 @@ export class GlobeManager {
     */
    showLabels() {
        this.labelsVisible = true;
-       console.log('✅ Labels de hotspots activés');
+       console.log('✅ Labels de hotspots activés + animation des markers');
+
+       // Animer l'apparition des hotspots (markers) avec GSAP
+       this.hotspotObjects.forEach((marker, index) => {
+           if (marker.userData.materials) {
+               // Animer chaque matériau (cercle principal + halo)
+               marker.userData.materials.forEach((material, matIndex) => {
+                   const targetOpacity = matIndex === 0 ? 0.8 : 0.5; // Principal = 0.8, Halo = 0.5
+
+                   gsap.to(material, {
+                       opacity: targetOpacity,
+                       duration: 0.8,
+                       delay: index * 0.1, // Délai progressif pour chaque hotspot
+                       ease: "power2.out"
+                   });
+               });
+           }
+       });
    }
 
    animate() {
