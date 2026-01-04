@@ -187,15 +187,15 @@ async function startApplication() {
                     hideLoadingScreenGradually();
 
                     // Démarrer l'exploration APRÈS la fin de la transition (4s)
-                    // Les éléments UI apparaissent 0.5s après (4.5s total)
+                    // Les éléments UI apparaissent 0.25s après (4.25s total) - délai divisé par 2
                     setTimeout(() => {
                         console.log('🌊 Démarrage exploration...');
                         app.startExploration(true);
 
-                        // Faire apparaître les éléments UI 0.5s après la fin du fond noir
+                        // Faire apparaître les éléments UI 0.25s après la fin du fond noir
                         setTimeout(() => {
                             showInterfaceElements();
-                        }, 500);
+                        }, 250);
                     }, 4000);
                 });
             } else {
@@ -205,7 +205,7 @@ async function startApplication() {
                     app.startExploration(true);
                     setTimeout(() => {
                         showInterfaceElements();
-                    }, 500);
+                    }, 250);
                 }, 4000);
             }
         }, 300);
@@ -283,17 +283,18 @@ function prepareMainContainer() {
 
 /**
  * Fait apparaître les éléments de l'interface avec animation
- * Appelé 0.5s après la fin de la transition du fond noir
- * Inclut les HUD, crosshair, contrôles, scanner ET les hotspots (labels)
+ * Appelé 0.25s après la fin de la transition du fond noir
+ * Inclut les HUD, crosshair, contrôles, scanner, hotspots ET leurs traits jaunes (connector lines)
  */
 function showInterfaceElements() {
     const uiControls = document.getElementById('ui-controls');
     const huds = document.querySelectorAll('.satellite-hud, .coordinates-display');
     const crosshair = document.querySelector('.satellite-crosshair');
     const hotspotLabels = document.querySelectorAll('.hotspot-label');
+    const connectorSvgs = document.querySelectorAll('svg'); // Tous les SVG sont des connector lines
     const scannerEffect = document.querySelector('.scanner-effect');
 
-    console.log('✨ Apparition des éléments UI + hotspots');
+    console.log('✨ Apparition des éléments UI + hotspots + connector lines');
 
     // Réactiver les interactions
     if (uiControls) {
@@ -318,11 +319,10 @@ function showInterfaceElements() {
             ease: "power2.out"
         });
 
-        // Animer les hotspots avec un léger délai pour l'effet
-        gsap.to([...hotspotLabels], {
+        // Animer les hotspots ET leurs connector lines en même temps
+        gsap.to([...hotspotLabels, ...connectorSvgs], {
             opacity: 1,
             duration: 0.8,
-            delay: 0.2,
             ease: "power2.out"
         });
     } else {
@@ -349,8 +349,13 @@ function showInterfaceElements() {
         }
 
         hotspotLabels.forEach(label => {
-            label.style.transition = 'opacity 0.8s ease 0.2s';
+            label.style.transition = 'opacity 0.8s ease';
             label.style.opacity = '1';
+        });
+
+        connectorSvgs.forEach(svg => {
+            svg.style.transition = 'opacity 0.8s ease';
+            svg.style.opacity = '1';
         });
     }
 }
