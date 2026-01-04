@@ -39,8 +39,8 @@ export class GlobeManager {
             inclination: Math.PI / 6,
             orbitAngle: 0,
             zoomLevel: 1,
-            maxZoomLevel: 0.7,      // Réduit à 0.7x maximum
-            minZoomLevel: 0.5,      // Réduit de 0.6 à 0.5 pour permettre plus de dézoom
+            maxZoomLevel: 2.0,      // Permet de dézoomer largement
+            minZoomLevel: 0.7,      // Limite le zoom à x0.7 (pas plus proche)
             inHotspotMode: false,
             orbitHistory: []
         };
@@ -672,85 +672,77 @@ export class GlobeManager {
             
             console.log(`Hotspot ${title}: GPS(${position.lat}, ${position.lng}) -> 3D(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
 
-            // Créer un canvas pour la texture du hotspot
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
-            const ctx = canvas.getContext('2d');
+            // Position légèrement au-dessus de la surface pour éviter la traversée
+            const surfaceRadius = 2.1;
+            const hotspotRadius = 2.12; // Légèrement au-dessus
+            const hx = hotspotRadius * Math.cos(lat) * Math.cos(lon);
+            const hy = hotspotRadius * Math.sin(lat);
+            const hz = hotspotRadius * Math.cos(lat) * Math.sin(lon);
 
-            // Dessiner le point central et les anneaux avec dégradé radial
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
-            // Point central lumineux
-            const gradient1 = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 20);
-            gradient1.addColorStop(0, 'rgba(255, 204, 0, 1)');
-            gradient1.addColorStop(1, 'rgba(255, 204, 0, 0.9)');
-            ctx.fillStyle = gradient1;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Premier anneau
-            ctx.strokeStyle = 'rgba(255, 204, 0, 0.7)';
-            ctx.lineWidth = 6;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 40, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Deuxième anneau
-            ctx.strokeStyle = 'rgba(255, 204, 0, 0.4)';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 65, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Créer la texture et le sprite
-            const texture = new THREE.CanvasTexture(canvas);
-            const spriteMaterial = new THREE.SpriteMaterial({
-                map: texture,
-                transparent: true,
-                depthTest: true,
-                depthWrite: false,
-                sizeAttenuation: true
-            });
-
-            const marker = new THREE.Sprite(spriteMaterial);
-            marker.position.set(x, y, z);
-            marker.scale.set(0.35, 0.35, 1); // Ajuster la taille
+            // Créer un conteneur pour le hotspot
+            const marker = new THREE.Group();
+            marker.position.set(hx, hy, hz);
             marker.userData = { hotspot };
 
-            // Créer les anneaux d'ondes animés (aussi en sprites)
+            // Orienter le marqueur pour qu'il soit tangent à la surface du globe
+            marker.lookAt(0, 0, 0);
+            marker.rotateX(Math.PI);
+
+            // Point central aplati - JAUNE PUR sans éclairage
+            const centerGeometry = new THREE.CircleGeometry(0.05, 32);
+            const centerMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffcc00,
+                transparent: true,
+                opacity: 1.0,
+                side: THREE.DoubleSide,
+                depthTest: true,
+                depthWrite: false
+            });
+            const centerDot = new THREE.Mesh(centerGeometry, centerMaterial);
+            marker.add(centerDot);
+
+            // Premier anneau - JAUNE PUR
+            const ring1Geometry = new THREE.RingGeometry(0.06, 0.08, 32);
+            const ring1Material = new THREE.MeshBasicMaterial({
+                color: 0xffcc00,
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide,
+                depthTest: true,
+                depthWrite: false
+            });
+            const ring1 = new THREE.Mesh(ring1Geometry, ring1Material);
+            marker.add(ring1);
+
+            // Deuxième anneau - JAUNE PUR
+            const ring2Geometry = new THREE.RingGeometry(0.10, 0.12, 32);
+            const ring2Material = new THREE.MeshBasicMaterial({
+                color: 0xffcc00,
+                transparent: true,
+                opacity: 0.4,
+                side: THREE.DoubleSide,
+                depthTest: true,
+                depthWrite: false
+            });
+            const ring2 = new THREE.Mesh(ring2Geometry, ring2Material);
+            marker.add(ring2);
+
+            // Anneaux d'ondes animés - JAUNE PUR
             const waveRings = [];
             for (let i = 0; i < 3; i++) {
-                // Canvas pour l'anneau d'onde
-                const waveCanvas = document.createElement('canvas');
-                waveCanvas.width = 256;
-                waveCanvas.height = 256;
-                const waveCtx = waveCanvas.getContext('2d');
-
-                // Dessiner un anneau simple
-                waveCtx.strokeStyle = 'rgba(255, 204, 0, 0.8)';
-                waveCtx.lineWidth = 8;
-                waveCtx.beginPath();
-                waveCtx.arc(128, 128, 40, 0, Math.PI * 2);
-                waveCtx.stroke();
-
-                const waveTexture = new THREE.CanvasTexture(waveCanvas);
-                const waveMaterial = new THREE.SpriteMaterial({
-                    map: waveTexture,
+                const waveGeometry = new THREE.RingGeometry(0.05, 0.07, 32);
+                const waveMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xffcc00,
                     transparent: true,
                     opacity: 0,
+                    side: THREE.DoubleSide,
                     depthTest: true,
                     depthWrite: false
                 });
-
-                const wave = new THREE.Sprite(waveMaterial);
-                wave.position.set(x, y, z);
-                wave.scale.set(0.1, 0.1, 1);
+                const wave = new THREE.Mesh(waveGeometry, waveMaterial);
                 wave.userData.initialDelay = i * 0.8;
                 wave.userData.waveTime = 0;
-                this.scene.add(wave);
+                marker.add(wave);
                 waveRings.push(wave);
             }
 
@@ -1355,11 +1347,14 @@ export class GlobeManager {
                        const waveDuration = 2.5;
                        const progress = (relativeTime % waveDuration) / waveDuration;
 
-                       // Expansion progressive du sprite
-                       const minScale = 0.1;
-                       const maxScale = 0.8;
-                       const currentScale = minScale + (maxScale - minScale) * progress;
-                       wave.scale.set(currentScale, currentScale, 1);
+                       // Expansion de l'anneau
+                       const minRadius = 0.05;
+                       const maxRadius = 0.18;
+                       const currentRadius = minRadius + (maxRadius - minRadius) * progress;
+
+                       // Recréer la géométrie avec le nouveau rayon
+                       wave.geometry.dispose();
+                       wave.geometry = new THREE.RingGeometry(currentRadius, currentRadius + 0.02, 32);
 
                        // Opacité qui diminue avec l'expansion
                        wave.material.opacity = 0.7 * (1 - progress);
