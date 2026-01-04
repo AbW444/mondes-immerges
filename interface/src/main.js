@@ -139,6 +139,7 @@ function initCustomCursor() {
 async function playTransitionVideo() {
     return new Promise((resolve) => {
         const jellyLoader = document.querySelector('l-jelly');
+        const loaderContainer = jellyLoader ? jellyLoader.closest('div[style*="flex"]') : null;
         const transitionVideo = document.getElementById('transition-video');
 
         if (!transitionVideo) {
@@ -149,11 +150,12 @@ async function playTransitionVideo() {
 
         console.log('🎬 Lecture vidéo de transition en reverse...');
 
-        // Cacher le jelly loader
-        if (jellyLoader) {
-            jellyLoader.style.transition = 'opacity 0.3s ease';
-            jellyLoader.style.opacity = '0';
-            setTimeout(() => jellyLoader.remove(), 300);
+        // Cacher le jelly loader et son conteneur
+        const elementToHide = loaderContainer || jellyLoader;
+        if (elementToHide) {
+            elementToHide.style.transition = 'opacity 0.3s ease';
+            elementToHide.style.opacity = '0';
+            setTimeout(() => elementToHide.remove(), 300);
         }
 
         // Préparer la vidéo pour lecture inversée
