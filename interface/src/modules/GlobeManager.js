@@ -426,17 +426,47 @@ export class GlobeManager {
             video.preload = 'auto'; // Forcer le préchargement complet
             this.videoElement = video;
 
-            console.log('📦 Préchargement de la vidéo du globe...');
+            console.log('📦 Préchargement de la vidéo du globe...', this.currentVideoPath);
+
+            let resolved = false;
+
+            // Timeout de sécurité: si pas chargé en 10 secondes, continuer quand même
+            const timeout = setTimeout(() => {
+                if (!resolved) {
+                    console.warn('⚠️ Timeout préchargement vidéo - continuation');
+                    resolved = true;
+                    resolve();
+                }
+            }, 10000);
 
             // Résoudre la promesse quand la vidéo est prête à être jouée
             video.addEventListener('canplaythrough', () => {
-                console.log('✅ Vidéo du globe préchargée et prête');
-                resolve();
+                if (!resolved) {
+                    console.log('✅ Vidéo du globe préchargée et prête');
+                    resolved = true;
+                    clearTimeout(timeout);
+                    resolve();
+                }
+            }, { once: true });
+
+            // Alternative: résoudre dès que suffisamment de données sont chargées
+            video.addEventListener('canplay', () => {
+                if (!resolved) {
+                    console.log('✅ Vidéo du globe peut être jouée');
+                    resolved = true;
+                    clearTimeout(timeout);
+                    resolve();
+                }
             }, { once: true });
 
             video.addEventListener('error', (e) => {
-                console.error('❌ Erreur chargement vidéo globe:', e);
-                reject(e);
+                if (!resolved) {
+                    console.error('❌ Erreur chargement vidéo globe:', e);
+                    console.warn('Continuation malgré l\'erreur');
+                    resolved = true;
+                    clearTimeout(timeout);
+                    resolve(); // Résoudre au lieu de rejeter pour ne pas bloquer
+                }
             });
 
             video.addEventListener('ended', () => {
@@ -574,28 +604,48 @@ export class GlobeManager {
             const loader = new THREE.TextureLoader();
             const skyTexturePath = `${import.meta.env.BASE_URL}images/night-sky.png`;
 
-            console.log('📦 Préchargement de la skybox...');
+            console.log('📦 Préchargement de la skybox...', skyTexturePath);
+
+            let resolved = false;
+
+            // Timeout de sécurité: si pas chargé en 8 secondes, continuer quand même
+            const timeout = setTimeout(() => {
+                if (!resolved) {
+                    console.warn('⚠️ Timeout préchargement skybox - utilisation couleur par défaut');
+                    this.scene.background = new THREE.Color(0x000011);
+                    resolved = true;
+                    resolve();
+                }
+            }, 8000);
 
             loader.load(
                 skyTexturePath,
                 (texture) => {
-                    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-                    this.renderer.toneMappingExposure = 0.3;
+                    if (!resolved) {
+                        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                        this.renderer.toneMappingExposure = 0.3;
 
-                    const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
-                    rt.fromEquirectangularTexture(this.renderer, texture);
-                    this.scene.background = rt.texture;
+                        const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
+                        rt.fromEquirectangularTexture(this.renderer, texture);
+                        this.scene.background = rt.texture;
 
-                    this.scene.fog = new THREE.FogExp2(0x000011, 0.00008);
+                        this.scene.fog = new THREE.FogExp2(0x000011, 0.00008);
 
-                    console.log('✅ Skybox chargée');
-                    resolve();
+                        console.log('✅ Skybox chargée');
+                        resolved = true;
+                        clearTimeout(timeout);
+                        resolve();
+                    }
                 },
                 undefined,
                 (error) => {
-                    console.error('❌ Erreur chargement skybox:', error);
-                    this.scene.background = new THREE.Color(0x000011);
-                    resolve(); // Résoudre quand même pour ne pas bloquer
+                    if (!resolved) {
+                        console.error('❌ Erreur chargement skybox:', error);
+                        this.scene.background = new THREE.Color(0x000011);
+                        resolved = true;
+                        clearTimeout(timeout);
+                        resolve(); // Résoudre quand même pour ne pas bloquer
+                    }
                 }
             );
         });
