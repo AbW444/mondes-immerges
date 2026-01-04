@@ -1,7 +1,7 @@
 // Point d'entrée principal de l'application Mondes Immergés - VERSION OPTIMISÉE
 import './styles/main.css';
 import { initApp, getAppInstance } from './app.js';
-import { jelly } from 'ldrs';
+// ldrs (jelly loader) est chargé via script tag dans index.html
 
 // État global de l'application
 const APP_STATE = {
@@ -68,6 +68,7 @@ function showWebGLError() {
 
 /**
  * Initialise le spinner de chargement
+ * NOTE: Le jelly loader est déjà dans le HTML, cette fonction n'est plus utilisée
  */
 function initLoadingSpinner() {
     const loadingScreen = document.getElementById('loading-screen');
@@ -79,22 +80,8 @@ function initLoadingSpinner() {
         oldSpinner.remove();
     }
 
-    try {
-        jelly.register();
-
-        const spinner = document.createElement('l-jelly');
-        spinner.setAttribute('size', '60');
-        spinner.setAttribute('speed', '0.9');
-        spinner.setAttribute('color', '#ffcc00');
-
-        loadingScreen.insertBefore(spinner, loadingScreen.firstChild);
-        console.log('✅ Spinner initialisé');
-    } catch (error) {
-        console.warn('⚠️  Fallback spinner CSS');
-        const fallbackSpinner = document.createElement('div');
-        fallbackSpinner.className = 'spinner';
-        loadingScreen.insertBefore(fallbackSpinner, loadingScreen.firstChild);
-    }
+    // Le jelly loader est déjà dans le HTML via <l-jelly>
+    console.log('✅ Spinner déjà présent dans le HTML');
 }
 
 /**
