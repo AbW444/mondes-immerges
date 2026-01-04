@@ -230,7 +230,7 @@ class MondesImmergesApp {
 
     /**
      * Ajoute le logo National Geographic en haut au centre
-     * Avec vérification pour éviter les duplications
+     * Avec vérification pour éviter les duplications - SANS fond
      */
     addNatGeoLogo() {
         // Vérifier si le logo existe déjà pour éviter les duplications
@@ -240,7 +240,7 @@ class MondesImmergesApp {
             return;
         }
 
-        // Créer le conteneur du logo avec une classe identifiable
+        // Créer le conteneur du logo avec une classe identifiable - SANS FOND
         const logoContainer = document.createElement('div');
         logoContainer.className = 'nat-geo-logo-container';
         logoContainer.style.cssText = `
@@ -249,25 +249,18 @@ class MondesImmergesApp {
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
-            padding: 15px 25px;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 204, 0, 0.2);
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         `;
 
-        // Créer l'élément image du logo
+        // Créer l'élément image du logo (PNG transparent, taille réduite)
         const logo = document.createElement('img');
         logo.src = `${import.meta.env.BASE_URL}images/nat-geo-logo.png`;
         logo.alt = 'National Geographic';
         logo.className = 'nat-geo-logo';
         logo.style.cssText = `
-            height: 60px;
+            height: 50px;
             width: auto;
             display: block;
-            filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.3));
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
         `;
 
         // Ajouter le logo au conteneur puis au document

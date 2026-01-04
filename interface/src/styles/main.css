@@ -59,11 +59,16 @@
   --title-font: 'Abyss', serif;
 }
 
-/* Reset et styles de base - curseur personnalisé */
+/* Reset et styles de base - curseur personnalisé FORCÉ partout */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  cursor: none !important;
+}
+
+/* Forcer le curseur none sur TOUS les éléments interactifs */
+button, a, input, select, textarea, label, [role="button"], .hotspot-label {
   cursor: none !important;
 }
 
@@ -538,19 +543,7 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 15px;
-
-  /* GLASSMORPHISME */
-  background: rgba(0, 10, 20, 0.45);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-
-  padding: 20px;
-  border-radius: 16px;
-  border: 1.5px solid rgba(255, 204, 0, 0.3);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(255, 204, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  /* FOND SUPPRIMÉ - Boutons transparents */
 }
 
 #navigation-controls button {
@@ -651,41 +644,44 @@ h2 {
 }
 
 .overlay-content {
-  /* GLASSMORPHISME */
-  background: rgba(0, 15, 30, 0.6);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  /* GLASSMORPHISME AMÉLIORÉ */
+  background: rgba(0, 15, 30, 0.75);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
 
-  padding: 50px;
-  border-radius: 20px;
-  max-width: 800px;
+  padding: 60px;
+  border-radius: 24px;
+  max-width: 900px;
   text-align: center;
   position: relative;
-  border: 2px solid rgba(255, 204, 0, 0.3);
+  border: 2px solid rgba(255, 204, 0, 0.4);
   box-shadow:
-    0 16px 60px rgba(0, 0, 0, 0.6),
-    0 0 40px rgba(255, 204, 0, 0.15),
-    inset 0 2px 0 rgba(255, 255, 255, 0.1);
+    0 20px 80px rgba(0, 0, 0, 0.7),
+    0 0 60px rgba(255, 204, 0, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.15);
 }
 
 .overlay-content h3 {
   font-family: var(--title-font);
-  font-size: 2rem;
-  margin-bottom: 30px;
+  font-size: 2.5rem;
+  margin-bottom: 35px;
   color: var(--nat-geo-yellow);
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   text-transform: uppercase;
   font-weight: normal;
-  text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+  text-shadow: 0 0 15px rgba(255, 204, 0, 0.6), 0 0 5px rgba(255, 204, 0, 0.3);
 }
 
 .overlay-content p {
-  margin-bottom: 25px;
-  line-height: 1.8;
-  color: #e0e0e0;
-  font-size: 1.1rem;
+  margin-bottom: 28px;
+  line-height: 1.9;
+  color: #f0f0f0;
+  font-size: 1.15rem;
   font-family: var(--primary-font);
-  text-align: justify;
+  text-align: center;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 #close-info {
@@ -815,7 +811,7 @@ h2 {
   font-family: 'Geograph', monospace;
 }
 
-/* Style pour les étiquettes des hotspots - GLASSMORPHISME */
+/* Style pour les étiquettes des hotspots - GLASSMORPHISME avec texte centré */
 .hotspot-label {
   /* GLASSMORPHISME */
   background: rgba(0, 10, 20, 0.6) !important;
@@ -824,15 +820,15 @@ h2 {
 
   color: var(--nat-geo-yellow) !important;
   border: 1.5px solid rgba(255, 204, 0, 0.4) !important;
-  padding: 10px 18px !important;
+  padding: 12px 20px !important; /* Padding augmenté pour centrage */
   border-radius: 8px !important;
   font-family: var(--title-font) !important;
-  font-size: 13px !important;
+  font-size: 15px !important; /* Typo augmentée de 13px à 15px */
   font-weight: 500 !important;
   white-space: nowrap !important;
   z-index: 100 !important;
   pointer-events: auto !important;
-  cursor: pointer !important;
+  cursor: none !important; /* Curseur perso forcé */
   box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.4) !important,
     0 0 15px rgba(255, 204, 0, 0.15) !important,
@@ -841,6 +837,12 @@ h2 {
   text-shadow: 0 0 8px rgba(255, 204, 0, 0.5), 0 0 3px rgba(0, 0, 0, 0.8) !important;
   text-transform: uppercase !important;
   transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1) !important;
+
+  /* CENTRAGE VERTICAL DU TEXTE */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
 }
 
 .hotspot-label:hover {

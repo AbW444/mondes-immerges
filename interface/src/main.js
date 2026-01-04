@@ -186,17 +186,17 @@ async function startApplication() {
                     // Cette fonction sera appelée quand l'orbital loader apparaît
                     hideLoadingScreenGradually();
 
-                    // Démarrer l'exploration APRÈS la fin de la transition (4s)
-                    // Les éléments UI apparaissent 0.25s après (4.25s total) - délai divisé par 2
+                    // Démarrer l'exploration APRÈS la fin de la transition (2.5s au lieu de 4s)
+                    // Les éléments UI apparaissent 0.2s après (2.7s total)
                     setTimeout(() => {
                         console.log('🌊 Démarrage exploration...');
                         app.startExploration(true);
 
-                        // Faire apparaître les éléments UI 0.25s après la fin du fond noir
+                        // Faire apparaître les éléments UI 0.2s après la fin du fond noir
                         setTimeout(() => {
                             showInterfaceElements(app);
-                        }, 250);
-                    }, 4000);
+                        }, 200);
+                    }, 2500);
                 });
             } else {
                 console.log('🌊 Démarrage direct...');
@@ -205,8 +205,8 @@ async function startApplication() {
                     app.startExploration(true);
                     setTimeout(() => {
                         showInterfaceElements(app);
-                    }, 250);
-                }, 4000);
+                    }, 200);
+                }, 2500);
             }
         }, 300);
 
@@ -386,8 +386,8 @@ function hideLoadingScreenGradually() {
         mainContainer.style.opacity = '1';
     }
 
-    // Transition progressive sur 4 secondes (durée de l'orbital)
-    loadingScreen.style.transition = 'opacity 4s cubic-bezier(0.19, 1, 0.22, 1)';
+    // Transition progressive sur 2.5 secondes (durée réduite)
+    loadingScreen.style.transition = 'opacity 2.5s cubic-bezier(0.19, 1, 0.22, 1)';
     loadingScreen.style.opacity = '0';
 
     // Nettoyer après la transition complète
@@ -395,7 +395,7 @@ function hideLoadingScreenGradually() {
         loadingScreen.style.display = 'none';
         loadingScreen.classList.add('hidden');
         console.log('✅ Écran de chargement complètement masqué');
-    }, 4000);
+    }, 2500);
 }
 
 /**

@@ -26,7 +26,7 @@ export class GlobeManager {
         this.alternateVideoPath = `${import.meta.env.BASE_URL}videos/globe-video-aberration.webm`;
         this.isAlternateVideo = false;
         
-        // Paramètres pour l'orbite ellipsoïdale
+        // Paramètres pour l'orbite ellipsoïdale - ZOOM AUGMENTÉ
         this.orbitParams = {
             isOrbiting: true,
             baseSpeed: 0.0004,
@@ -34,13 +34,13 @@ export class GlobeManager {
             maxSpeed: 0.002,
             accelerationFactor: 1.3,
             decelerationFactor: 0.9,
-            ellipseMajorAxis: 12,
-            ellipseMinorAxis: 8,
+            ellipseMajorAxis: 9.5,  // Réduit de 12 à 9.5 pour zoom de base plus proche
+            ellipseMinorAxis: 6.5,  // Réduit de 8 à 6.5 pour zoom de base plus proche
             inclination: Math.PI / 6,
             orbitAngle: 0,
             zoomLevel: 1,
-            maxZoomLevel: 1.1,
-            minZoomLevel: 0.6,
+            maxZoomLevel: 1.3,      // Augmenté de 1.1 à 1.3 pour permettre plus de zoom
+            minZoomLevel: 0.5,      // Réduit de 0.6 à 0.5 pour permettre plus de dézoom
             inHotspotMode: false,
             orbitHistory: []
         };
@@ -525,9 +525,9 @@ export class GlobeManager {
         });
     }
     
-    // MÉTHODE CORRIGÉE: Atmosphère avec shader compatible
+    // ATMOSPHÈRE AMÉLIORÉE: Plus réaliste et visible
     createAtmosphere() {
-        const atmosphereGeometry = new THREE.SphereGeometry(2.08, 64, 64);
+        const atmosphereGeometry = new THREE.SphereGeometry(2.15, 64, 64); // Plus grande pour effet prononcé
         const atmosphereMaterial = new THREE.ShaderMaterial({
             vertexShader: `
                 varying vec3 vNormal;
@@ -542,23 +542,24 @@ export class GlobeManager {
                 #ifdef GL_ES
                 precision mediump float;
                 #endif
-                
+
                 uniform vec3 cameraPosition;
                 varying vec3 vNormal;
                 varying vec3 vWorldPosition;
-                
+
                 void main() {
                     vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
                     float fresnel = 1.0 - abs(dot(viewDirection, vNormal));
-                    
+
                     float distance = length(cameraPosition - vWorldPosition);
-                    float attenuation = 1.0 / (1.0 + distance * 0.05);
-                    
-                    vec3 atmosphereColor = vec3(0.3, 0.6, 1.0);
-                    
-                    float intensity = pow(fresnel, 1.5) * attenuation;
-                    
-                    gl_FragColor = vec4(atmosphereColor, intensity * 0.3);
+                    float attenuation = 1.0 / (1.0 + distance * 0.03); // Réduit pour plus de portée
+
+                    // Couleur atmosphérique plus saturée et bleue
+                    vec3 atmosphereColor = vec3(0.4, 0.7, 1.0);
+
+                    float intensity = pow(fresnel, 1.2) * attenuation; // Exposant réduit pour effet plus visible
+
+                    gl_FragColor = vec4(atmosphereColor, intensity * 0.55); // Intensité augmentée de 0.3 à 0.55
                 }
             `,
             uniforms: {
@@ -697,27 +698,41 @@ export class GlobeManager {
             
             console.log(`Hotspot ${title}: GPS(${position.lat}, ${position.lng}) -> 3D(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
             
-            const markerGeometry = new THREE.SphereGeometry(0.05, 16, 16);
+            // Hotspot amélioré - Plus visible et attractif
+            const markerGeometry = new THREE.SphereGeometry(0.06, 32, 32); // Plus gros et plus détaillé
             const markerMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffcc00,
+                color: 0xffdd00,
                 transparent: true,
-                opacity: 0.8
+                opacity: 1.0,
+                emissive: 0xffcc00,
+                emissiveIntensity: 0.8
             });
-            
+
             const marker = new THREE.Mesh(markerGeometry, markerMaterial);
             marker.position.set(x, y, z);
             marker.userData = { hotspot };
-            
-            const haloGeometry = new THREE.SphereGeometry(0.08, 16, 16);
-            const haloMaterial = new THREE.MeshBasicMaterial({
+
+            // Halo interne brillant
+            const haloGeometry1 = new THREE.SphereGeometry(0.10, 32, 32);
+            const haloMaterial1 = new THREE.MeshBasicMaterial({
                 color: 0xffcc00,
                 transparent: true,
-                opacity: 0.5,
+                opacity: 0.4,
                 side: THREE.BackSide
             });
-            
-            const halo = new THREE.Mesh(haloGeometry, haloMaterial);
-            marker.add(halo);
+            const halo1 = new THREE.Mesh(haloGeometry1, haloMaterial1);
+            marker.add(halo1);
+
+            // Halo externe diffus
+            const haloGeometry2 = new THREE.SphereGeometry(0.15, 32, 32);
+            const haloMaterial2 = new THREE.MeshBasicMaterial({
+                color: 0xffdd00,
+                transparent: true,
+                opacity: 0.2,
+                side: THREE.BackSide
+            });
+            const halo2 = new THREE.Mesh(haloGeometry2, haloMaterial2);
+            marker.add(halo2);
             
             this.addHotspotLabel(marker, title, new THREE.Vector3(x, y, z));
             
