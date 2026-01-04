@@ -296,6 +296,12 @@ function showInterfaceElements() {
 
     console.log('✨ Apparition des éléments UI + hotspots + connector lines');
 
+    // IMPORTANT: Activer l'affichage des labels dans le GlobeManager
+    const app = getAppInstance();
+    if (app && app.globeManager) {
+        app.globeManager.showLabels();
+    }
+
     // Réactiver les interactions
     if (uiControls) {
         uiControls.style.pointerEvents = 'auto';

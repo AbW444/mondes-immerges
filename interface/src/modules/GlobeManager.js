@@ -19,7 +19,8 @@ export class GlobeManager {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.clock = new THREE.Clock();
-        
+        this.labelsVisible = false; // Flag pour contrôler l'apparition des labels
+
         // NOUVEAU: Variables pour la gestion des vidéos
         this.currentVideoPath = `${import.meta.env.BASE_URL}videos/globe-video.webm`;
         this.alternateVideoPath = `${import.meta.env.BASE_URL}videos/globe-video-aberration.webm`;
@@ -1226,7 +1227,10 @@ export class GlobeManager {
            // Mettre à jour le label
            marker.userData.label.style.left = `${labelX}px`;
            marker.userData.label.style.top = `${labelY}px`;
-           marker.userData.label.style.opacity = '1';
+           // Ne rendre visible que si le flag labelsVisible est true
+           if (this.labelsVisible) {
+               marker.userData.label.style.opacity = '1';
+           }
 
            // Mettre à jour le connector line (SVG)
            const line = marker.userData.connectorLine;
@@ -1235,14 +1239,26 @@ export class GlobeManager {
                line.setAttribute('y1', y);
                line.setAttribute('x2', labelX);
                line.setAttribute('y2', labelY + 10); // Offset pour centrer sur le label
-               marker.userData.connectorSvg.style.opacity = '1';
+               // Ne rendre visible que si le flag labelsVisible est true
+               if (this.labelsVisible) {
+                   marker.userData.connectorSvg.style.opacity = '1';
+               }
            }
        });
    }
 
+   /**
+    * Active l'affichage des labels de hotspots
+    * Appelé quand les éléments UI doivent apparaître
+    */
+   showLabels() {
+       this.labelsVisible = true;
+       console.log('✅ Labels de hotspots activés');
+   }
+
    animate() {
        requestAnimationFrame(this.animate.bind(this));
-       
+
        const delta = this.clock.getDelta();
        const time = this.clock.getElapsedTime() * 1000;
        
