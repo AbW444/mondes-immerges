@@ -158,7 +158,7 @@ class MondesImmergesApp {
      */
     startExploration(skipStartupAnimation = false) {
         if (this.isExploring) return;
-        
+
         // Masquer l'écran d'accueil et afficher le conteneur principal
         if (this.welcomeScreen) {
             this.welcomeScreen.classList.add('hidden');
@@ -166,20 +166,21 @@ class MondesImmergesApp {
         if (this.mainContainer) {
             this.mainContainer.classList.remove('hidden');
         }
-        
-        // Transition visuelle
-        this.visualEffects.transitionIn();
-        
-        // Si skipStartupAnimation est true, on saute la séquence d'initialisation
+
+        // Si skipStartupAnimation est true, on saute complètement la transition
+        // pour éviter le flash noir qui coupe l'animation de chargement
         if (skipStartupAnimation) {
-            console.log("Séquence de démarrage fictive ignorée");
+            console.log("Séquence de démarrage fictive ignorée - pas de transition");
             this.isExploring = true;
         } else {
+            // Transition visuelle normale
+            this.visualEffects.transitionIn();
+
             // Attendre la fin de la transition pour démarrer la séquence d'initialisation
             setTimeout(() => {
                 this.startupSequence();
             }, 1000);
-            
+
             this.isExploring = true;
         }
     }

@@ -258,6 +258,7 @@ function prepareMainContainer() {
     const uiControls = document.getElementById('ui-controls');
     const huds = document.querySelectorAll('.satellite-hud, .coordinates-display');
     const crosshair = document.querySelector('.satellite-crosshair');
+    const scannerEffect = document.querySelector('.scanner-effect');
 
     if (uiControls) {
         uiControls.style.opacity = '0';
@@ -273,19 +274,26 @@ function prepareMainContainer() {
         crosshair.style.opacity = '0';
     }
 
+    if (scannerEffect) {
+        scannerEffect.style.opacity = '0';
+    }
+
     console.log('✅ Interface initialisée en mode clear');
 }
 
 /**
  * Fait apparaître les éléments de l'interface avec animation
- * Appelé 1 seconde après la fin de la transition du fond noir
+ * Appelé 0.5s après la fin de la transition du fond noir
+ * Inclut les HUD, crosshair, contrôles, scanner ET les hotspots (labels)
  */
 function showInterfaceElements() {
     const uiControls = document.getElementById('ui-controls');
     const huds = document.querySelectorAll('.satellite-hud, .coordinates-display');
     const crosshair = document.querySelector('.satellite-crosshair');
+    const hotspotLabels = document.querySelectorAll('.hotspot-label');
+    const scannerEffect = document.querySelector('.scanner-effect');
 
-    console.log('✨ Apparition des éléments UI');
+    console.log('✨ Apparition des éléments UI + hotspots');
 
     // Réactiver les interactions
     if (uiControls) {
@@ -303,9 +311,18 @@ function showInterfaceElements() {
             });
         }
 
-        gsap.to([...huds, crosshair].filter(Boolean), {
+        // Animer tous les éléments UI
+        gsap.to([...huds, crosshair, scannerEffect].filter(Boolean), {
             opacity: 1,
             duration: 0.8,
+            ease: "power2.out"
+        });
+
+        // Animer les hotspots avec un léger délai pour l'effet
+        gsap.to([...hotspotLabels], {
+            opacity: 1,
+            duration: 0.8,
+            delay: 0.2,
             ease: "power2.out"
         });
     } else {
@@ -325,6 +342,16 @@ function showInterfaceElements() {
             crosshair.style.transition = 'opacity 0.8s ease';
             crosshair.style.opacity = '1';
         }
+
+        if (scannerEffect) {
+            scannerEffect.style.transition = 'opacity 0.8s ease';
+            scannerEffect.style.opacity = '1';
+        }
+
+        hotspotLabels.forEach(label => {
+            label.style.transition = 'opacity 0.8s ease 0.2s';
+            label.style.opacity = '1';
+        });
     }
 }
 
