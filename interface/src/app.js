@@ -258,8 +258,9 @@ class MondesImmergesApp {
         logo.src = `${import.meta.env.BASE_URL}images/nat-geo-logo.png`;
         logo.alt = 'National Geographic';
         logo.style.cssText = `
-            height: 40px;
+            max-height: 40px;
             width: auto;
+            object-fit: contain;
             filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.7));
         `;
         

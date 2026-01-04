@@ -493,12 +493,14 @@ function enhanceLoadingScreen() {
         jelly.register();
         
         const customSpinner = document.createElement('l-jelly');
-        customSpinner.setAttribute('size', '60');
+        customSpinner.setAttribute('size', '80');
         customSpinner.setAttribute('speed', '0.9');
         customSpinner.setAttribute('color', '#ffcc00');
         customSpinner.style.cssText = `
-            margin-bottom: 30px;
             display: block;
+            margin: 0 auto;
+            z-index: 1000;
+            position: relative;
         `;
 
         // Insérer le spinner

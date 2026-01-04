@@ -558,6 +558,18 @@ h2 {
   transform: scale(1.1);
 }
 
+#navigation-controls button:focus,
+#navigation-controls button:active {
+  outline: none;
+  border-color: #ffcc00 !important;
+  box-shadow: var(--glow-effect);
+}
+
+#navigation-controls button:focus-visible {
+  outline: 2px solid #ffcc00;
+  outline-offset: 2px;
+}
+
 #info-button {
   width: 55px;
   height: 55px;
@@ -582,6 +594,18 @@ h2 {
   border-color: #ffcc00;
   box-shadow: var(--glow-effect), 0 0 20px rgba(255, 204, 0, 0.4);
   transform: scale(1.1);
+}
+
+#info-button:focus,
+#info-button:active {
+  outline: none;
+  border-color: #ffcc00 !important;
+  box-shadow: var(--glow-effect);
+}
+
+#info-button:focus-visible {
+  outline: 2px solid #ffcc00;
+  outline-offset: 2px;
 }
 
 /* Overlay d'informations avec fond noir */
@@ -697,7 +721,8 @@ h2 {
   width: 80px;
   height: 80px;
   position: relative;
-  margin-bottom: 0;
+  margin: 0 auto 30px auto;
+  z-index: 1000;
 }
 
 .spinner::before, 
@@ -786,6 +811,10 @@ h2 {
   text-shadow: 0 0 5px rgba(0, 0, 0, 0.8) !important;
   text-transform: uppercase !important;
   transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
 }
 
 .hotspot-label:hover {

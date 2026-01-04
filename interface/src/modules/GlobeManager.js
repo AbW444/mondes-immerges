@@ -352,8 +352,9 @@ export class GlobeManager {
         logo.src = `${import.meta.env.BASE_URL}images/nat-geo-logo.png`;
         logo.alt = 'National Geographic';
         logo.style.cssText = `
-            height: 40px;
+            max-height: 40px;
             width: auto;
+            object-fit: contain;
             filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
         `;
         
@@ -675,20 +676,20 @@ export class GlobeManager {
             
             const markerGeometry = new THREE.SphereGeometry(0.05, 16, 16);
             const markerMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffcc00,
+                color: 0xffee00, // Jaune plus vif et brillant
                 transparent: true,
-                opacity: 0.8
+                opacity: 1.0 // Opacité maximale
             });
-            
+
             const marker = new THREE.Mesh(markerGeometry, markerMaterial);
             marker.position.set(x, y, z);
             marker.userData = { hotspot };
-            
+
             const haloGeometry = new THREE.SphereGeometry(0.08, 16, 16);
             const haloMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffcc00,
+                color: 0xffdd00, // Halo aussi plus vif
                 transparent: true,
-                opacity: 0.5,
+                opacity: 0.7, // Un peu plus opaque pour plus de visibilité
                 side: THREE.BackSide
             });
             
