@@ -40,10 +40,7 @@ class MondesImmergesApp {
         
         if (this.isInitialized) return;
         this.isInitialized = true;
-        
-        // DÉSACTIVÉ: Fond étoilé supprimé pour éviter les particules blanches fixes
-        // this.createStarryBackground();
-        
+
         // Initialiser les effets visuels en premier
         this.visualEffects = new VisualEffects({
             container: this.mainContainer
@@ -161,7 +158,7 @@ class MondesImmergesApp {
      */
     startExploration(skipStartupAnimation = false) {
         if (this.isExploring) return;
-        
+
         // Masquer l'écran d'accueil et afficher le conteneur principal
         if (this.welcomeScreen) {
             this.welcomeScreen.classList.add('hidden');
@@ -169,20 +166,21 @@ class MondesImmergesApp {
         if (this.mainContainer) {
             this.mainContainer.classList.remove('hidden');
         }
-        
-        // Transition visuelle
-        this.visualEffects.transitionIn();
-        
-        // Si skipStartupAnimation est true, on saute la séquence d'initialisation
+
+        // Si skipStartupAnimation est true, on saute complètement la transition
+        // pour éviter le flash noir qui coupe l'animation de chargement
         if (skipStartupAnimation) {
-            console.log("Séquence de démarrage fictive ignorée");
+            console.log("Séquence de démarrage fictive ignorée - pas de transition");
             this.isExploring = true;
         } else {
+            // Transition visuelle normale
+            this.visualEffects.transitionIn();
+
             // Attendre la fin de la transition pour démarrer la séquence d'initialisation
             setTimeout(() => {
                 this.startupSequence();
             }, 1000);
-            
+
             this.isExploring = true;
         }
     }
@@ -229,43 +227,47 @@ class MondesImmergesApp {
         
         // Autres ajustements responsive si nécessaire
     }
-    
-    /**
-     * Crée un arrière-plan étoilé
-     */
-    createStarryBackground() {
-        const background = document.createElement('div');
-        background.className = 'starry-background';
-        this.mainContainer.appendChild(background);
-    }
-    
+
     /**
      * Ajoute le logo National Geographic en haut au centre
+     * Avec vérification pour éviter les duplications - SANS fond
      */
     addNatGeoLogo() {
-        // Créer le conteneur du logo
+        // Vérifier si le logo existe déjà pour éviter les duplications
+        const existingLogo = this.mainContainer.querySelector('.nat-geo-logo-container');
+        if (existingLogo) {
+            console.log('Logo déjà présent, mise à jour uniquement');
+            return;
+        }
+
+        // Créer le conteneur du logo avec une classe identifiable - SANS FOND
         const logoContainer = document.createElement('div');
+        logoContainer.className = 'nat-geo-logo-container';
         logoContainer.style.cssText = `
             position: absolute;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 100;
+            z-index: 1000;
         `;
-        
-        // Créer l'élément image du logo
+
+        // Créer l'élément image du logo (PNG transparent, taille réduite)
         const logo = document.createElement('img');
         logo.src = `${import.meta.env.BASE_URL}images/nat-geo-logo.png`;
         logo.alt = 'National Geographic';
+        logo.className = 'nat-geo-logo';
         logo.style.cssText = `
-            height: 40px;
+            height: 50px;
             width: auto;
-            filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.7));
+            display: block;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
         `;
-        
+
         // Ajouter le logo au conteneur puis au document
         logoContainer.appendChild(logo);
         this.mainContainer.appendChild(logoContainer);
+
+        console.log('✅ Logo National Geographic ajouté');
     }
     
     /**
@@ -357,12 +359,19 @@ class MondesImmergesApp {
     /**
      * Exécute une séquence de démarrage stylisée
      */
-    startupSequence() {
-        // Créer l'effet de chargement orbital seulement - pas de texte, pas de barre
+    startupSequence(onComplete) {
+        // Créer l'effet de chargement orbital dans l'écran de chargement existant
+        const loadingScreen = document.getElementById('loading-screen');
+
         this.visualEffects.createOrbitalLoaderEffect(() => {
             // Cette fonction sera appelée une fois l'animation terminée
             this.finalizeStartup();
-        }, 1.5);
+
+            // Appeler le callback si fourni
+            if (onComplete && typeof onComplete === 'function') {
+                onComplete();
+            }
+        }, 3, loadingScreen); // Durée de 3 secondes et utiliser l'écran de chargement
 
         // Pas de messages - loader uniquement
     }
@@ -373,12 +382,6 @@ class MondesImmergesApp {
     finalizeStartup() {
         // Afficher des messages système après le chargement
         this.showSystemMessages();
-
-        // DÉSACTIVÉ: Particules d'arrière-plan supprimées pour éviter le freeze
-        // this.visualEffects.addBackgroundParticles({
-        //     count: 30,
-        //     container: this.mainContainer
-        // });
 
         // Afficher une notification de bienvenue
         setTimeout(() => {
@@ -474,9 +477,6 @@ class MondesImmergesApp {
         if (this.interfaceUI && this.interfaceUI.setUIVisibility) {
             this.interfaceUI.setUIVisibility(false);
         }
-        
-        // Afficher une notification
-        this.visualEffects.showNotification(`Exploration de: ${hotspot.title}`, 'info', 3000);
     }
     
     /**
@@ -571,12 +571,7 @@ class MondesImmergesApp {
         if (this.interfaceUI && this.interfaceUI.setUIVisibility) {
             this.interfaceUI.setUIVisibility(true);
         }
-        
-        // Afficher une notification
-        if (this.visualEffects) {
-            this.visualEffects.showNotification("Retour à l'exploration globale", "info", 3000);
-        }
-        
+
         // Réinitialiser l'état actuel
         this.currentHotspot = null;
     }

@@ -19,13 +19,14 @@ export class GlobeManager {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.clock = new THREE.Clock();
-        
+        this.labelsVisible = false; // Flag pour contrôler l'apparition des labels
+
         // NOUVEAU: Variables pour la gestion des vidéos
         this.currentVideoPath = `${import.meta.env.BASE_URL}videos/globe-video.webm`;
         this.alternateVideoPath = `${import.meta.env.BASE_URL}videos/globe-video-aberration.webm`;
         this.isAlternateVideo = false;
         
-        // Paramètres pour l'orbite ellipsoïdale
+        // Paramètres pour l'orbite ellipsoïdale - ZOOM AUGMENTÉ
         this.orbitParams = {
             isOrbiting: true,
             baseSpeed: 0.0004,
@@ -33,13 +34,13 @@ export class GlobeManager {
             maxSpeed: 0.002,
             accelerationFactor: 1.3,
             decelerationFactor: 0.9,
-            ellipseMajorAxis: 12,
-            ellipseMinorAxis: 8,
+            ellipseMajorAxis: 9.5,  // Réduit de 12 à 9.5 pour zoom de base plus proche
+            ellipseMinorAxis: 6.5,  // Réduit de 8 à 6.5 pour zoom de base plus proche
             inclination: Math.PI / 6,
             orbitAngle: 0,
             zoomLevel: 1,
-            maxZoomLevel: 1.1,
-            minZoomLevel: 0.6,
+            maxZoomLevel: 2.0,      // Permet de dézoomer largement
+            minZoomLevel: 0.8,      // Limite le zoom à x0.8 (pas plus proche)
             inHotspotMode: false,
             orbitHistory: []
         };
@@ -105,15 +106,15 @@ export class GlobeManager {
             return;
         }
         
-        // Créer l'arrière-plan étoilé
-        this.createSkybox();
-        
+        // L'arrière-plan étoilé sera créé via preloadAllAssets()
+        this.skyboxLoaded = false;
+
         // Créer l'éclairage
         this.setupLighting();
-        
-        // Créer le globe
-        this.createGlobe();
-        
+
+        // NOTE: Le globe et la skybox seront créés via preloadAllAssets()
+        // Ne pas les créer ici pour éviter les duplications
+
         // Créer le soleil et la lune
         this.createCelestialBodies();
         
@@ -126,9 +127,6 @@ export class GlobeManager {
         
         // NOUVEAU: Ajouter l'écouteur pour la touche Entrée
         document.addEventListener('keydown', this.onKeyDown.bind(this));
-        
-        // Ajouter le logo
-        this.addLogo();
     }
     
     // Méthode pour gérer les erreurs WebGL
@@ -338,29 +336,6 @@ export class GlobeManager {
             });
     }
     
-    addLogo() {
-        const logoContainer = document.createElement('div');
-        logoContainer.style.cssText = `
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-        `;
-        
-        const logo = document.createElement('img');
-        logo.src = `${import.meta.env.BASE_URL}images/nat-geo-logo.png`;
-        logo.alt = 'National Geographic';
-        logo.style.cssText = `
-            height: 40px;
-            width: auto;
-            filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
-        `;
-        
-        logoContainer.appendChild(logo);
-        this.container.appendChild(logoContainer);
-    }
-    
     setupLighting() {
         const ambientLight = new THREE.AmbientLight(0x404050, 0.5);
         this.scene.add(ambientLight);
@@ -439,94 +414,138 @@ export class GlobeManager {
     }
     
     createGlobe() {
-        const video = document.createElement('video');
-        // Utiliser la vidéo par défaut au démarrage
-        video.src = this.currentVideoPath;
-        video.loop = true;
-        video.muted = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.crossOrigin = 'anonymous';
-        this.videoElement = video;
-        
-        video.addEventListener('ended', () => {
-            video.play();
-        });
-        
-        setInterval(() => {
-            if (video.paused && !video.ended) {
-                console.log("Vidéo en pause, relance...");
-                video.play().catch(e => {
-                    console.error("Impossible de relancer la vidéo:", e);
-                });
-            }
-        }, 1000);
-        
-        this.videoTexture = new THREE.VideoTexture(video);
-        this.videoTexture.minFilter = THREE.LinearFilter;
-        this.videoTexture.magFilter = THREE.LinearFilter;
-        this.videoTexture.format = THREE.RGBAFormat;
-        this.videoTexture.colorSpace = THREE.SRGBColorSpace;
-        
-        const depthGeometry = new THREE.SphereGeometry(1.99, 64, 64);
-        const depthMaterial = new THREE.MeshBasicMaterial({
-            color: 0x000000,
-            transparent: true,
-            opacity: 0.0,
-            colorWrite: false,
-            depthWrite: true,
-            side: THREE.FrontSide
-        });
-        
-        const depthSphere = new THREE.Mesh(depthGeometry, depthMaterial);
-        depthSphere.renderOrder = 0;
-        this.scene.add(depthSphere);
-        this.depthSphere = depthSphere;
-        
-        const globeGeometry = new THREE.SphereGeometry(2, 64, 64);
-        
-        const globeMaterial = new THREE.MeshBasicMaterial({
-            map: this.videoTexture,
-            transparent: true,
-            opacity: 1,
-            side: THREE.FrontSide,
-            depthTest: true,
-            depthWrite: false,
-            color: 0xffffff,
-            toneMapped: false
-        });
-        
-        this.globe = new THREE.Mesh(globeGeometry, globeMaterial);
-        this.globe.castShadow = true;
-        this.globe.receiveShadow = true;
-        this.globe.renderOrder = 1;
-        this.scene.add(this.globe);
-        
-        this.createAtmosphere();
-        
-        const cloudsGeometry = new THREE.SphereGeometry(2.02, 64, 64);
-        const cloudsMaterial = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity: 0.4,
-            alphaTest: 0.1,
-            depthTest: true,
-            depthWrite: false
-        });
-        
-        this.clouds = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
-        this.clouds.renderOrder = 2;
-        this.scene.add(this.clouds);
-        
-        video.play().catch(e => {
-            console.error('Erreur lors de la lecture de la vidéo:', e);
-            this.handleVideoError();
+        return new Promise((resolve, reject) => {
+            const video = document.createElement('video');
+            // Utiliser la vidéo par défaut au démarrage
+            video.src = this.currentVideoPath;
+            video.loop = true;
+            video.muted = true;
+            video.autoplay = false; // Désactiver autoplay pour contrôler le préchargement
+            video.playsInline = true;
+            video.crossOrigin = 'anonymous';
+            video.preload = 'auto'; // Forcer le préchargement complet
+            this.videoElement = video;
+
+            console.log('📦 Préchargement de la vidéo du globe...', this.currentVideoPath);
+
+            let resolved = false;
+
+            // Timeout de sécurité: si pas chargé en 10 secondes, continuer quand même
+            const timeout = setTimeout(() => {
+                if (!resolved) {
+                    console.warn('⚠️ Timeout préchargement vidéo - continuation');
+                    resolved = true;
+                    resolve();
+                }
+            }, 10000);
+
+            // Résoudre la promesse quand la vidéo est prête à être jouée
+            video.addEventListener('canplaythrough', () => {
+                if (!resolved) {
+                    console.log('✅ Vidéo du globe préchargée et prête');
+                    resolved = true;
+                    clearTimeout(timeout);
+                    resolve();
+                }
+            }, { once: true });
+
+            // Alternative: résoudre dès que suffisamment de données sont chargées
+            video.addEventListener('canplay', () => {
+                if (!resolved) {
+                    console.log('✅ Vidéo du globe peut être jouée');
+                    resolved = true;
+                    clearTimeout(timeout);
+                    resolve();
+                }
+            }, { once: true });
+
+            video.addEventListener('error', (e) => {
+                if (!resolved) {
+                    console.error('❌ Erreur chargement vidéo globe:', e);
+                    console.warn('Continuation malgré l\'erreur');
+                    resolved = true;
+                    clearTimeout(timeout);
+                    resolve(); // Résoudre au lieu de rejeter pour ne pas bloquer
+                }
+            });
+
+            video.addEventListener('ended', () => {
+                video.play();
+            });
+
+            setInterval(() => {
+                if (video.paused && !video.ended) {
+                    console.log("Vidéo en pause, relance...");
+                    video.play().catch(e => {
+                        console.error("Impossible de relancer la vidéo:", e);
+                    });
+                }
+            }, 1000);
+
+            this.videoTexture = new THREE.VideoTexture(video);
+            this.videoTexture.minFilter = THREE.LinearFilter;
+            this.videoTexture.magFilter = THREE.LinearFilter;
+            this.videoTexture.format = THREE.RGBAFormat;
+            this.videoTexture.colorSpace = THREE.SRGBColorSpace;
+
+            const depthGeometry = new THREE.SphereGeometry(1.99, 64, 64);
+            const depthMaterial = new THREE.MeshBasicMaterial({
+                color: 0x000000,
+                transparent: true,
+                opacity: 0.0,
+                colorWrite: false,
+                depthWrite: true,
+                side: THREE.FrontSide
+            });
+
+            const depthSphere = new THREE.Mesh(depthGeometry, depthMaterial);
+            depthSphere.renderOrder = 0;
+            this.scene.add(depthSphere);
+            this.depthSphere = depthSphere;
+
+            const globeGeometry = new THREE.SphereGeometry(2, 64, 64);
+
+            const globeMaterial = new THREE.MeshBasicMaterial({
+                map: this.videoTexture,
+                transparent: true,
+                opacity: 1,
+                side: THREE.FrontSide,
+                depthTest: true,
+                depthWrite: false,
+                color: 0xffffff,
+                toneMapped: false
+            });
+
+            this.globe = new THREE.Mesh(globeGeometry, globeMaterial);
+            this.globe.castShadow = true;
+            this.globe.receiveShadow = true;
+            this.globe.renderOrder = 1;
+            this.scene.add(this.globe);
+
+            this.createAtmosphere();
+
+            const cloudsGeometry = new THREE.SphereGeometry(2.02, 64, 64);
+            const cloudsMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.4,
+                alphaTest: 0.1,
+                depthTest: true,
+                depthWrite: false
+            });
+
+            this.clouds = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
+            this.clouds.renderOrder = 2;
+            this.scene.add(this.clouds);
+
+            // Charger la vidéo - la promesse se résoudra quand canplaythrough se déclenchera
+            video.load();
         });
     }
     
-    // MÉTHODE CORRIGÉE: Atmosphère avec shader compatible
+    // ATMOSPHÈRE AMÉLIORÉE: Plus réaliste et visible
     createAtmosphere() {
-        const atmosphereGeometry = new THREE.SphereGeometry(2.08, 64, 64);
+        const atmosphereGeometry = new THREE.SphereGeometry(2.15, 64, 64); // Plus grande pour effet prononcé
         const atmosphereMaterial = new THREE.ShaderMaterial({
             vertexShader: `
                 varying vec3 vNormal;
@@ -541,23 +560,24 @@ export class GlobeManager {
                 #ifdef GL_ES
                 precision mediump float;
                 #endif
-                
+
                 uniform vec3 cameraPosition;
                 varying vec3 vNormal;
                 varying vec3 vWorldPosition;
-                
+
                 void main() {
                     vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
                     float fresnel = 1.0 - abs(dot(viewDirection, vNormal));
-                    
+
                     float distance = length(cameraPosition - vWorldPosition);
-                    float attenuation = 1.0 / (1.0 + distance * 0.05);
-                    
-                    vec3 atmosphereColor = vec3(0.3, 0.6, 1.0);
-                    
-                    float intensity = pow(fresnel, 1.5) * attenuation;
-                    
-                    gl_FragColor = vec4(atmosphereColor, intensity * 0.3);
+                    float attenuation = 1.0 / (1.0 + distance * 0.03); // Réduit pour plus de portée
+
+                    // Couleur atmosphérique plus saturée et bleue
+                    vec3 atmosphereColor = vec3(0.4, 0.7, 1.0);
+
+                    float intensity = pow(fresnel, 1.2) * attenuation; // Exposant réduit pour effet plus visible
+
+                    gl_FragColor = vec4(atmosphereColor, intensity * 0.55); // Intensité augmentée de 0.3 à 0.55
                 }
             `,
             uniforms: {
@@ -580,23 +600,87 @@ export class GlobeManager {
     }
     
     createSkybox() {
-        const loader = new THREE.TextureLoader();
-        const skyTexturePath = `${import.meta.env.BASE_URL}images/night-sky.png`;
-        
-        loader.load(skyTexturePath, (texture) => {
-            this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            this.renderer.toneMappingExposure = 0.3;
-            
-            const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
-            rt.fromEquirectangularTexture(this.renderer, texture);
-            this.scene.background = rt.texture;
-            
-            this.scene.fog = new THREE.FogExp2(0x000011, 0.00008);
-        }, 
-        undefined, 
-        (error) => {
-            console.error('Erreur lors du chargement de la texture du ciel:', error);
-            this.scene.background = new THREE.Color(0x000011);
+        return new Promise((resolve, reject) => {
+            const loader = new THREE.TextureLoader();
+            const skyTexturePath = `${import.meta.env.BASE_URL}images/night-sky.png`;
+
+            console.log('📦 Préchargement de la skybox...', skyTexturePath);
+
+            let resolved = false;
+
+            // Timeout de sécurité: si pas chargé en 8 secondes, continuer quand même
+            const timeout = setTimeout(() => {
+                if (!resolved) {
+                    console.warn('⚠️ Timeout préchargement skybox - utilisation couleur par défaut');
+                    this.scene.background = new THREE.Color(0x000011);
+                    resolved = true;
+                    resolve();
+                }
+            }, 8000);
+
+            loader.load(
+                skyTexturePath,
+                (texture) => {
+                    if (!resolved) {
+                        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                        this.renderer.toneMappingExposure = 0.3;
+
+                        const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
+                        rt.fromEquirectangularTexture(this.renderer, texture);
+                        this.scene.background = rt.texture;
+
+                        this.scene.fog = new THREE.FogExp2(0x000011, 0.00008);
+
+                        console.log('✅ Skybox chargée');
+                        resolved = true;
+                        clearTimeout(timeout);
+                        resolve();
+                    }
+                },
+                undefined,
+                (error) => {
+                    if (!resolved) {
+                        console.error('❌ Erreur chargement skybox:', error);
+                        this.scene.background = new THREE.Color(0x000011);
+                        resolved = true;
+                        clearTimeout(timeout);
+                        resolve(); // Résoudre quand même pour ne pas bloquer
+                    }
+                }
+            );
+        });
+    }
+
+    /**
+     * Précharge TOUS les assets avant l'affichage de l'interface
+     * Retourne une Promise qui se résout quand tout est prêt
+     */
+    preloadAllAssets() {
+        console.log('🎬 DÉBUT DU PRÉCHARGEMENT COMPLET...');
+
+        return Promise.all([
+            this.createGlobe(),
+            this.createSkybox()
+        ]).then(() => {
+            console.log('✅ PRÉCHARGEMENT COMPLET TERMINÉ');
+            console.log('   - Vidéo du globe: PRÊTE');
+            console.log('   - Skybox étoilée: PRÊTE');
+            console.log('   - Tous les assets: PRÊTS À AFFICHER');
+
+            // Démarrer la lecture de la vidéo maintenant que tout est chargé
+            if (this.videoElement) {
+                this.videoElement.play().catch(e => {
+                    console.error('Erreur lecture vidéo:', e);
+                });
+            }
+        }).catch((error) => {
+            console.error('❌ Erreur durant le préchargement:', error);
+            // Continuer quand même pour ne pas bloquer l'application
+            if (this.videoElement) {
+                this.videoElement.play().catch(e => {
+                    console.error('Erreur lecture vidéo:', e);
+                });
+            }
         });
     }
     
@@ -651,15 +735,38 @@ export class GlobeManager {
     }
     
     addHotspots(hotspots) {
+        // Nettoyer tous les anciens hotspots et leurs labels
         this.hotspotObjects.forEach(hotspot => {
             this.scene.remove(hotspot);
-            
-            if (hotspot.userData.labelContainer) {
-                document.body.removeChild(hotspot.userData.labelContainer);
+
+            // Supprimer les event listeners pour éviter les fuites mémoire
+            if (hotspot.userData.label && hotspot.userData.labelHandlers) {
+                const { onMouseEnter, onMouseLeave, onClick } = hotspot.userData.labelHandlers;
+                hotspot.userData.label.removeEventListener('mouseenter', onMouseEnter);
+                hotspot.userData.label.removeEventListener('mouseleave', onMouseLeave);
+                hotspot.userData.label.removeEventListener('click', onClick);
+            }
+
+            // Supprimer les éléments DOM
+            if (hotspot.userData.label && hotspot.userData.label.parentNode) {
+                hotspot.userData.label.parentNode.removeChild(hotspot.userData.label);
+            }
+            if (hotspot.userData.connectorSvg && hotspot.userData.connectorSvg.parentNode) {
+                hotspot.userData.connectorSvg.parentNode.removeChild(hotspot.userData.connectorSvg);
+            }
+
+            // Ancienne méthode de cleanup pour compatibilité
+            if (hotspot.userData.labelContainer && hotspot.userData.labelContainer.parentNode) {
+                hotspot.userData.labelContainer.parentNode.removeChild(hotspot.userData.labelContainer);
             }
         });
         this.hotspotObjects = [];
-        
+
+        // Nettoyage complet de tous les éléments orphelins
+        document.querySelectorAll('.hotspot-label').forEach(el => el.remove());
+        document.querySelectorAll('.hotspot-label-container').forEach(el => el.remove());
+        document.querySelectorAll('.connector-line').forEach(el => el.remove());
+
         hotspots.forEach(hotspot => {
             const { position, title } = hotspot;
             
@@ -672,233 +779,129 @@ export class GlobeManager {
             const z = radius * Math.cos(lat) * Math.sin(lon);
             
             console.log(`Hotspot ${title}: GPS(${position.lat}, ${position.lng}) -> 3D(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
-            
+
+            // Positionner au-dessus de la surface pour ne pas traverser le globe
+            const surfaceOffset = 2.12; // Globe = 2.0, hotspot légèrement au-dessus
+            const surfaceX = (surfaceOffset / radius) * x;
+            const surfaceY = (surfaceOffset / radius) * y;
+            const surfaceZ = (surfaceOffset / radius) * z;
+
+            // Hotspot sphérique avec jaune pur
             const markerGeometry = new THREE.SphereGeometry(0.05, 16, 16);
             const markerMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffcc00,
+                color: 0xffcc00, // Jaune pur de la DA
                 transparent: true,
-                opacity: 0.8
+                opacity: 0, // Commence invisible, apparaîtra avec les autres UI
+                depthTest: true,
+                depthWrite: false
             });
-            
+
             const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-            marker.position.set(x, y, z);
+            marker.position.set(surfaceX, surfaceY, surfaceZ);
             marker.userData = { hotspot };
-            
+
+            // Ajouter le halo
             const haloGeometry = new THREE.SphereGeometry(0.08, 16, 16);
             const haloMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffcc00,
+                color: 0xffcc00, // Jaune pur de la DA
                 transparent: true,
-                opacity: 0.5,
-                side: THREE.BackSide
+                opacity: 0, // Commence invisible
+                side: THREE.BackSide,
+                depthTest: true,
+                depthWrite: false
             });
-            
+
             const halo = new THREE.Mesh(haloGeometry, haloMaterial);
             marker.add(halo);
-            
-            this.addHotspotLabel(marker, title, new THREE.Vector3(x, y, z));
-            
+
+            // Stocker les matériaux pour pouvoir les animer lors de l'apparition
+            marker.userData.materials = [markerMaterial, haloMaterial];
+
+            this.addHotspotLabel(marker, title, new THREE.Vector3(surfaceX, surfaceY, surfaceZ));
+
             this.scene.add(marker);
             this.hotspotObjects.push(marker);
         });
     }
     
     addHotspotLabel(marker, text, position) {
-        const labelContainer = document.createElement('div');
-        labelContainer.className = 'hotspot-label-container';
-        labelContainer.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 10;
-        `;
-
+        // Créer le label
         const labelDiv = document.createElement('div');
         labelDiv.className = 'hotspot-label';
         labelDiv.textContent = text;
         labelDiv.style.cssText = `
-            position: absolute;
-            background-color: rgba(0, 0, 0, 0.7);
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0.8);
             color: #ffcc00;
-            padding: 5px 10px;
+            padding: 6px 12px;
             border-radius: 4px;
             font-family: 'Roboto Mono', monospace;
             font-size: 12px;
             white-space: nowrap;
             opacity: 0;
-            transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.2s ease;
             border: 1px solid rgba(255, 204, 0, 0.7);
-            z-index: 11;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(2px);
-            text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+            z-index: 1000;
             pointer-events: auto;
             cursor: pointer;
+            transition: all 0.3s ease;
         `;
 
-        // Ajouter les effets de survol
-        labelDiv.addEventListener('mouseenter', () => {
+        // Créer le connector line en SVG pour de meilleures performances
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0;
+        `;
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('stroke', 'rgba(255, 204, 0, 0.6)');
+        line.setAttribute('stroke-width', '1.5');
+        line.setAttribute('stroke-dasharray', '4, 4');
+        svg.appendChild(line);
+
+        // Ajouter au DOM
+        document.body.appendChild(labelDiv);
+        document.body.appendChild(svg);
+
+        // Handlers d'événements
+        const onMouseEnter = () => {
             labelDiv.style.backgroundColor = 'rgba(255, 204, 0, 0.9)';
             labelDiv.style.color = '#000';
             labelDiv.style.transform = 'scale(1.05)';
-        });
+        };
 
-        labelDiv.addEventListener('mouseleave', () => {
-            labelDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        const onMouseLeave = () => {
+            labelDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
             labelDiv.style.color = '#ffcc00';
             labelDiv.style.transform = 'scale(1)';
-        });
+        };
 
-        // Rendre le label cliquable avec le même comportement que le hotspot
-        labelDiv.addEventListener('click', (e) => {
-            e.stopPropagation(); // Empêcher la propagation au conteneur
+        const onClick = (e) => {
+            e.stopPropagation();
             const hotspot = marker.userData.hotspot;
             if (hotspot) {
                 console.log(`Label cliqué: ${hotspot.title}`);
                 this.activateHotspot(hotspot);
             }
-        });
-        
-        const connector = document.createElement('div');
-        connector.className = 'connector-line';
-        connector.style.cssText = `
-            position: absolute;
-            background: linear-gradient(to right, rgba(255, 204, 0, 0.9), rgba(255, 204, 0, 0.3));
-            height: 1.5px;
-            transform-origin: 0 0;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: 10;
-            box-shadow: 0 0 4px rgba(255, 204, 0, 0.5);
-        `;
-        
-        labelContainer.appendChild(labelDiv);
-        labelContainer.appendChild(connector);
-        document.body.appendChild(labelContainer);
-        
+        };
+
+        labelDiv.addEventListener('mouseenter', onMouseEnter);
+        labelDiv.addEventListener('mouseleave', onMouseLeave);
+        labelDiv.addEventListener('click', onClick);
+
+        // Stocker les références
         marker.userData.label = labelDiv;
-        marker.userData.connector = connector;
-        marker.userData.labelContainer = labelContainer;
+        marker.userData.connectorSvg = svg;
+        marker.userData.connectorLine = line;
         marker.userData.worldPosition = position.clone();
-        
-        const isPointVisibleToCamera = (pointPosition) => {
-            const worldToLocal = new THREE.Vector3().copy(pointPosition).project(this.camera);
-            
-            if (worldToLocal.z > 1) return false;
-            
-            if (worldToLocal.x < -1 || worldToLocal.x > 1 || worldToLocal.y < -1 || worldToLocal.y > 1) return false;
-            
-            const direction = new THREE.Vector3().subVectors(pointPosition, this.camera.position).normalize();
-            const raycaster = new THREE.Raycaster(this.camera.position, direction);
-            const intersects = raycaster.intersectObject(this.globe);
-            
-            if (intersects.length > 0) {
-                const distanceToIntersection = intersects[0].distance;
-                const distanceToPoint = this.camera.position.distanceTo(pointPosition);
-                
-                return distanceToIntersection > distanceToPoint - 0.1;
-            }
-            
-            return true;
-        };
-        
-        marker.onBeforeRender = () => {
-            if (!marker.userData.label || !marker.userData.connector) return;
-
-            const isVisible = isPointVisibleToCamera(marker.userData.worldPosition);
-
-            // Si en mode hotspot ou non visible, supprimer les éléments du DOM
-            if (!isVisible || this.orbitParams.inHotspotMode) {
-                // Supprimer les éléments du DOM au lieu de juste les cacher
-                if (marker.userData.label) {
-                    marker.userData.label.style.opacity = '0';
-                    marker.userData.label.style.display = 'none';
-                }
-                if (marker.userData.connector) {
-                    marker.userData.connector.style.opacity = '0';
-                    marker.userData.connector.style.display = 'none';
-                }
-                return;
-            }
-
-            // Réafficher les éléments si nécessaire
-            if (marker.userData.label) {
-                marker.userData.label.style.display = 'block';
-            }
-            if (marker.userData.connector) {
-                marker.userData.connector.style.display = 'block';
-            }
-
-            const vector = marker.userData.worldPosition.clone();
-            vector.project(this.camera);
-
-            const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-            const y = (-vector.y * 0.5 + 0.5) * window.innerHeight;
-
-            const centerX = window.innerWidth / 2;
-            const centerY = window.innerHeight / 2;
-
-            const distFromCenter = Math.sqrt(
-                Math.pow(x - centerX, 2) +
-                Math.pow(y - centerY, 2)
-            );
-
-            const angle = Math.atan2(y - centerY, x - centerX);
-
-            const minDistance = Math.min(centerX, centerY) * 0.6;
-
-            let labelX, labelY;
-            if (distFromCenter < minDistance) {
-                const offsetDistance = minDistance + 60 + (Math.sin(angle * 5) * 20);
-                labelX = centerX + Math.cos(angle) * offsetDistance;
-                labelY = centerY + Math.sin(angle) * offsetDistance;
-
-                const padding = 20;
-                if (labelX < padding) labelX = padding;
-                if (labelX > window.innerWidth - padding) labelX = window.innerWidth - padding;
-                if (labelY < padding) labelY = padding;
-                if (labelY > window.innerHeight - padding) labelY = window.innerHeight - padding;
-            } else {
-                const textWidth = text.length * 8;
-                const offsetX = 25 + textWidth * 0.25;
-                const offsetY = 10;
-
-                if (x + offsetX + textWidth > window.innerWidth - 20) {
-                    labelX = x - offsetX - textWidth;
-                } else {
-                    labelX = x + offsetX;
-                }
-
-                if (y - offsetY - 30 < 20) {
-                    labelY = y + offsetY;
-                } else {
-                    labelY = y - offsetY;
-                }
-            }
-
-            marker.userData.label.style.left = `${labelX}px`;
-            marker.userData.label.style.top = `${labelY}px`;
-            marker.userData.label.style.opacity = '1';
-
-            connector.style.left = `${x}px`;
-            connector.style.top = `${y}px`;
-
-            const lineLength = Math.sqrt(
-                Math.pow(labelX - x, 2) +
-                Math.pow(labelY - y, 2)
-            );
-
-            const lineAngle = Math.atan2(labelY - y, labelX - x);
-
-            connector.style.width = `${lineLength}px`;
-            connector.style.transform = `rotate(${lineAngle}rad)`;
-            connector.style.opacity = '1';
-
-            connector.style.animation = "pulseConnector 2s infinite alternate";
-        };
+        marker.userData.labelHandlers = { onMouseEnter, onMouseLeave, onClick };
+        marker.userData.labelText = text;
     }
     
     onMouseClick(event) {
@@ -984,42 +987,68 @@ export class GlobeManager {
         
         // Créer l'effet de scan
         this.createScanEffect(hotspot.position);
-        
+
         // Arrêter l'orbite
         this.orbitParams.isOrbiting = false;
-        
-        // Calculer la position de la caméra - DIRECTEMENT AU-DESSUS
-        const cameraDistance = 3.5; // Distance fixe au-dessus du hotspot
+
+        // Position actuelle de la caméra
+        const currentCameraPos = this.camera.position.clone();
+
+        // Calculer la position finale au-dessus du hotspot
+        const cameraDistance = 3.5;
         const normalizedPos = hotspotPos.clone().normalize();
-        const cameraPosition = normalizedPos.multiplyScalar(cameraDistance);
-        
-        // Animation de la caméra vers la position verticale
-        gsap.to(this.camera.position, {
-            x: cameraPosition.x,
-            y: cameraPosition.y,
-            z: cameraPosition.z,
-            duration: 1.5,
-            ease: "power2.inOut",
+        const finalPosition = normalizedPos.multiplyScalar(cameraDistance);
+
+        // Calculer une position intermédiaire HAUTE (arc parabolique)
+        // Point milieu entre position actuelle et finale, mais plus haut
+        const midPoint = new THREE.Vector3()
+            .addVectors(currentCameraPos, finalPosition)
+            .multiplyScalar(0.5);
+
+        // Pousser le point milieu plus loin du centre pour créer un arc
+        const arcHeight = 1.8; // Hauteur supplémentaire de l'arc
+        midPoint.normalize().multiplyScalar(midPoint.length() + arcHeight);
+
+        // Animation en 2 étapes : d'abord vers le haut, puis descente vers le hotspot
+        const timeline = gsap.timeline();
+
+        // Étape 1 : Montée parabolique vers le point intermédiaire
+        timeline.to(this.camera.position, {
+            x: midPoint.x,
+            y: midPoint.y,
+            z: midPoint.z,
+            duration: 1.0,
+            ease: "power1.inOut",
             onUpdate: () => {
-                // Toujours regarder le centre du globe
+                this.camera.lookAt(0, 0, 0);
+            }
+        });
+
+        // Étape 2 : Descente fluide vers le hotspot avec zoom
+        timeline.to(this.camera.position, {
+            x: finalPosition.x,
+            y: finalPosition.y,
+            z: finalPosition.z,
+            duration: 1.2,
+            ease: "power2.out",
+            onUpdate: () => {
                 this.camera.lookAt(0, 0, 0);
             },
             onComplete: () => {
-                // Une fois en position, rediriger vers la page externe
                 this.orbitParams.inHotspotMode = true;
                 this._redirectToExternalPage(hotspot);
             }
-        });
-        
-        // Animer le zoom pour se rapprocher
-        gsap.to(this.camera, {
-            fov: 40, // Réduire le champ de vision pour un effet de zoom
-            duration: 1.5,
-            ease: "power2.inOut",
+        }, "-=0.3"); // Overlap pour fluidité
+
+        // Zoom progressif pendant la descente
+        timeline.to(this.camera, {
+            fov: 40,
+            duration: 1.2,
+            ease: "power2.out",
             onUpdate: () => {
                 this.camera.updateProjectionMatrix();
             }
-        });
+        }, "-=1.2"); // Commence avec la descente
     }
     
     // Fonction de redirection
@@ -1252,10 +1281,125 @@ export class GlobeManager {
    setHotspotExitCallback(callback) {
        this.onHotspotExit = callback;
    }
-   
+
+   /**
+    * Met à jour les positions de tous les labels et connector lines de manière optimisée
+    */
+   updateHotspotLabels() {
+       if (this.orbitParams.inHotspotMode) {
+           // Cacher tous les labels en mode hotspot
+           this.hotspotObjects.forEach(marker => {
+               if (marker.userData.label) marker.userData.label.style.opacity = '0';
+               if (marker.userData.connectorSvg) marker.userData.connectorSvg.style.opacity = '0';
+           });
+           return;
+       }
+
+       this.hotspotObjects.forEach(marker => {
+           if (!marker.userData.label || !marker.userData.worldPosition) return;
+
+           const worldPos = marker.userData.worldPosition;
+
+           // Vérifier si le point est visible
+           const projected = worldPos.clone().project(this.camera);
+
+           // Hors de l'écran
+           if (projected.z > 1 || projected.x < -1 || projected.x > 1 ||
+               projected.y < -1 || projected.y > 1) {
+               marker.userData.label.style.opacity = '0';
+               marker.userData.connectorSvg.style.opacity = '0';
+               return;
+           }
+
+           // Vérifier occlusion par le globe
+           const direction = new THREE.Vector3().subVectors(worldPos, this.camera.position).normalize();
+           const raycaster = new THREE.Raycaster(this.camera.position, direction);
+           const intersects = raycaster.intersectObject(this.globe);
+
+           if (intersects.length > 0) {
+               const distToIntersection = intersects[0].distance;
+               const distToPoint = this.camera.position.distanceTo(worldPos);
+
+               if (distToIntersection < distToPoint - 0.1) {
+                   marker.userData.label.style.opacity = '0';
+                   marker.userData.connectorSvg.style.opacity = '0';
+                   return;
+               }
+           }
+
+           // Le point est visible, calculer sa position à l'écran
+           const x = (projected.x * 0.5 + 0.5) * window.innerWidth;
+           const y = (-projected.y * 0.5 + 0.5) * window.innerHeight;
+
+           // Position du label avec offset simple
+           const textWidth = marker.userData.labelText.length * 7;
+           const offsetX = 40;
+           const offsetY = -15;
+
+           let labelX = x + offsetX;
+           let labelY = y + offsetY;
+
+           // Garder le label dans l'écran
+           const padding = 10;
+           if (labelX + textWidth > window.innerWidth - padding) {
+               labelX = x - offsetX - textWidth;
+           }
+           if (labelX < padding) labelX = padding;
+           if (labelY < padding) labelY = padding;
+           if (labelY > window.innerHeight - padding) labelY = window.innerHeight - padding;
+
+           // Mettre à jour le label
+           marker.userData.label.style.left = `${labelX}px`;
+           marker.userData.label.style.top = `${labelY}px`;
+           // Ne rendre visible que si le flag labelsVisible est true
+           if (this.labelsVisible) {
+               marker.userData.label.style.opacity = '1';
+           }
+
+           // Mettre à jour le connector line (SVG)
+           const line = marker.userData.connectorLine;
+           if (line) {
+               line.setAttribute('x1', x);
+               line.setAttribute('y1', y);
+               line.setAttribute('x2', labelX);
+               line.setAttribute('y2', labelY + 10); // Offset pour centrer sur le label
+               // Ne rendre visible que si le flag labelsVisible est true
+               if (this.labelsVisible) {
+                   marker.userData.connectorSvg.style.opacity = '1';
+               }
+           }
+       });
+   }
+
+   /**
+    * Active l'affichage des labels de hotspots
+    * Appelé quand les éléments UI doivent apparaître
+    */
+   showLabels() {
+       this.labelsVisible = true;
+       console.log('✅ Labels de hotspots activés + animation des markers');
+
+       // Animer l'apparition des hotspots (markers) avec GSAP
+       this.hotspotObjects.forEach((marker, index) => {
+           if (marker.userData.materials) {
+               // Animer chaque matériau (cercle principal + halo)
+               marker.userData.materials.forEach((material, matIndex) => {
+                   const targetOpacity = matIndex === 0 ? 0.8 : 0.5; // Principal = 0.8, Halo = 0.5
+
+                   gsap.to(material, {
+                       opacity: targetOpacity,
+                       duration: 0.8,
+                       delay: index * 0.1, // Délai progressif pour chaque hotspot
+                       ease: "power2.out"
+                   });
+               });
+           }
+       });
+   }
+
    animate() {
        requestAnimationFrame(this.animate.bind(this));
-       
+
        const delta = this.clock.getDelta();
        const time = this.clock.getElapsedTime() * 1000;
        
@@ -1272,17 +1416,40 @@ export class GlobeManager {
            this.updateAtmosphereUniforms();
        }
        
+       // Animer les ondes des hotspots (sprites)
        this.hotspotObjects.forEach(hotspot => {
-           if (hotspot.children.length > 0) {
-               const halo = hotspot.children[0];
-               const scale = 1 + 0.2 * Math.sin(time * 0.003);
-               halo.scale.set(scale, scale, scale);
-           }
-           
-           if (hotspot.userData.label && hotspot.userData.worldPosition) {
-               hotspot.onBeforeRender();
+           const waveRings = hotspot.userData.waveRings;
+           if (waveRings) {
+               waveRings.forEach(wave => {
+                   // Incrémenter le temps de vague
+                   wave.userData.waveTime += delta;
+
+                   // Temps relatif avec délai initial
+                   const relativeTime = wave.userData.waveTime - wave.userData.initialDelay;
+
+                   if (relativeTime > 0) {
+                       // Durée d'une vague complète
+                       const waveDuration = 2.5;
+                       const progress = (relativeTime % waveDuration) / waveDuration;
+
+                       // Expansion de l'anneau
+                       const minRadius = 0.05;
+                       const maxRadius = 0.18;
+                       const currentRadius = minRadius + (maxRadius - minRadius) * progress;
+
+                       // Recréer la géométrie avec le nouveau rayon
+                       wave.geometry.dispose();
+                       wave.geometry = new THREE.RingGeometry(currentRadius, currentRadius + 0.02, 32);
+
+                       // Opacité qui diminue avec l'expansion
+                       wave.material.opacity = 0.7 * (1 - progress);
+                   }
+               });
            }
        });
+
+       // Mettre à jour les labels et connector lines (méthode optimisée)
+       this.updateHotspotLabels();
        
        if (this.clouds) {
            this.clouds.rotation.y += 0.0001;
