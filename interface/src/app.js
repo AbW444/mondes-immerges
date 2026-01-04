@@ -133,11 +133,18 @@ class MondesImmergesApp {
         
         // Raccourcis clavier globaux
         document.addEventListener('keydown', (event) => {
+            // Désactiver les touches fléchées et empêcher leur comportement par défaut
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+                event.preventDefault();
+                console.log(`Touche ${event.key} désactivée`);
+                return;
+            }
+
             // Touche Espace pour démarrer l'exploration depuis l'écran d'accueil
             if (event.key === ' ' && !this.isExploring) {
                 this.startExploration();
             }
-            
+
             // Touche Échap pour quitter le mode hotspot ou revenir à l'écran d'accueil
             if (event.key === 'Escape') {
                 if (this.currentHotspot) {
@@ -381,6 +388,9 @@ class MondesImmergesApp {
         //     container: this.mainContainer
         // });
 
+        // Jouer la vidéo de transition inversée (entrée sur le site)
+        this.playTransitionVideoReversed();
+
         // Afficher une notification de bienvenue
         setTimeout(() => {
             this.visualEffects.showNotification(
@@ -389,6 +399,57 @@ class MondesImmergesApp {
                 4000
             );
         }, 1000);
+    }
+
+    /**
+     * Joue la vidéo de transition inversée (à l'entrée sur le site)
+     */
+    playTransitionVideoReversed() {
+        const video = document.getElementById('transitionVideo');
+        if (!video) {
+            console.warn('Vidéo de transition non trouvée');
+            return;
+        }
+
+        console.log('🎬 Lecture de la vidéo de transition (inversée)');
+
+        // Afficher la vidéo
+        video.classList.add('active');
+
+        // Attendre que les métadonnées soient chargées
+        video.addEventListener('loadedmetadata', () => {
+            // Démarrer à la fin pour jouer à l'envers
+            video.currentTime = video.duration;
+            video.playbackRate = -1; // Jouer à l'envers
+
+            // Lancer la vidéo
+            video.play().then(() => {
+                console.log('✅ Vidéo de transition inversée lancée');
+
+                // Écouter la fin (début en fait, car inversée)
+                const checkEnded = setInterval(() => {
+                    if (video.currentTime <= 0.1) {
+                        clearInterval(checkEnded);
+                        console.log('✅ Vidéo de transition inversée terminée');
+
+                        // Masquer la vidéo
+                        video.classList.remove('active');
+                        video.pause();
+                    }
+                }, 100);
+            }).catch(e => {
+                console.error('Erreur lors de la lecture de la vidéo:', e);
+                video.classList.remove('active');
+            });
+        }, { once: true });
+
+        // Charger la vidéo si nécessaire
+        if (video.readyState < 2) {
+            video.load();
+        } else {
+            // Si déjà chargée, déclencher l'événement
+            video.dispatchEvent(new Event('loadedmetadata'));
+        }
     }
     
     /**

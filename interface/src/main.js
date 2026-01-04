@@ -650,5 +650,92 @@ window.addEventListener('error', (e) => {
     }
 }, true);
 
+/**
+ * Joue la vidéo de transition inversée (à l'entrée sur le site)
+ */
+function playTransitionVideoReversed() {
+    const video = document.getElementById('transitionVideo');
+    if (!video) {
+        console.warn('Vidéo de transition non trouvée');
+        return;
+    }
+
+    console.log('🎬 Lecture de la vidéo de transition (inversée)');
+
+    // Afficher la vidéo
+    video.classList.add('active');
+
+    // Attendre que les métadonnées soient chargées
+    video.addEventListener('loadedmetadata', () => {
+        // Démarrer à la fin pour jouer à l'envers
+        video.currentTime = video.duration;
+        video.playbackRate = -1; // Jouer à l'envers
+
+        // Lancer la vidéo
+        video.play().then(() => {
+            console.log('✅ Vidéo de transition inversée lancée');
+
+            // Écouter la fin (début en fait, car inversée)
+            const checkEnded = setInterval(() => {
+                if (video.currentTime <= 0.1) {
+                    clearInterval(checkEnded);
+                    console.log('✅ Vidéo de transition inversée terminée');
+
+                    // Masquer la vidéo
+                    video.classList.remove('active');
+                    video.pause();
+                }
+            }, 100);
+        }).catch(e => {
+            console.error('Erreur lors de la lecture de la vidéo:', e);
+            video.classList.remove('active');
+        });
+    }, { once: true });
+
+    // Charger la vidéo si nécessaire
+    if (video.readyState < 2) {
+        video.load();
+    } else {
+        // Si déjà chargée, déclencher l'événement
+        video.dispatchEvent(new Event('loadedmetadata'));
+    }
+}
+
+/**
+ * Joue la vidéo de transition normale (à la sortie vers une autre page)
+ * @param {Function} onComplete - Callback appelé quand la vidéo est terminée
+ */
+export function playTransitionVideoNormal(onComplete) {
+    const video = document.getElementById('transitionVideo');
+    if (!video) {
+        console.warn('Vidéo de transition non trouvée');
+        if (onComplete) onComplete();
+        return;
+    }
+
+    console.log('🎬 Lecture de la vidéo de transition (normale)');
+
+    // Afficher la vidéo
+    video.classList.add('active');
+    video.currentTime = 0;
+    video.playbackRate = 1; // Jouer normalement
+
+    // Lancer la vidéo
+    video.play().then(() => {
+        console.log('✅ Vidéo de transition normale lancée');
+
+        // Écouter la fin
+        video.addEventListener('ended', () => {
+            console.log('✅ Vidéo de transition terminée');
+            video.classList.remove('active');
+            if (onComplete) onComplete();
+        }, { once: true });
+    }).catch(e => {
+        console.error('Erreur lors de la lecture de la vidéo:', e);
+        video.classList.remove('active');
+        if (onComplete) onComplete();
+    });
+}
+
 // Export pour utilisation dans d'autres modules
-export { initialize, createStarfieldAnimation, initCustomCursor };
+export { initialize, createStarfieldAnimation, initCustomCursor, playTransitionVideoReversed };

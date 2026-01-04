@@ -1026,36 +1026,43 @@ export class GlobeManager {
     // Fonction de redirection
    _redirectToExternalPage(hotspot) {
        console.log("=== REDIRECTION VERS PAGE EXTERNE ===");
-       
-       // Créer un overlay de transition
-       const transitionOverlay = document.createElement('div');
-       transitionOverlay.style.cssText = `
-           position: fixed;
-           top: 0;
-           left: 0;
-           width: 100%;
-           height: 100%;
-           background-color: rgba(0, 0, 0, 0);
-           z-index: 9999;
-           pointer-events: none;
-       `;
-       
-       document.body.appendChild(transitionOverlay);
-       
-       // Animer l'overlay
-       gsap.to(transitionOverlay, {
-           backgroundColor: 'rgba(0, 0, 0, 1)',
-           duration: 1,
-           ease: "power2.inOut",
-           onComplete: () => {
-               // Utiliser la fonction getRedirectUrl pour obtenir l'URL
-               const redirectUrl = getRedirectUrl(hotspot.id);
-               console.log(`Redirection vers: ${redirectUrl}`);
-               
-               // Effectuer la redirection
+
+       // Obtenir l'URL de redirection
+       const redirectUrl = getRedirectUrl(hotspot.id);
+       console.log(`Redirection vers: ${redirectUrl}`);
+
+       // Jouer la vidéo de transition (normale) avant de rediriger
+       const video = document.getElementById('transitionVideo');
+       if (video) {
+           console.log('🎬 Lecture de la vidéo de transition (normale)');
+
+           // Afficher la vidéo
+           video.classList.add('active');
+           video.currentTime = 0;
+           video.playbackRate = 1; // Jouer normalement
+
+           // Lancer la vidéo
+           video.play().then(() => {
+               console.log('✅ Vidéo de transition normale lancée');
+
+               // Écouter la fin
+               video.addEventListener('ended', () => {
+                   console.log('✅ Vidéo de transition terminée - Redirection...');
+                   video.classList.remove('active');
+
+                   // Effectuer la redirection
+                   window.location.href = redirectUrl;
+               }, { once: true });
+           }).catch(e => {
+               console.error('Erreur lors de la lecture de la vidéo:', e);
+               // En cas d'erreur, redirection immédiate
                window.location.href = redirectUrl;
-           }
-       });
+           });
+       } else {
+           // Si pas de vidéo, redirection immédiate
+           console.warn('Vidéo de transition non trouvée - Redirection immédiate');
+           window.location.href = redirectUrl;
+       }
    }
    
    // MÉTHODE CORRIGÉE: Effet de scan avec shader compatible
@@ -1193,14 +1200,24 @@ export class GlobeManager {
    
    zoom(zoomIn) {
        const zoomFactor = zoomIn ? 0.85 : 1.15;
-       
+
        const newZoomLevel = this.orbitParams.zoomLevel * zoomFactor;
-       
-       this.orbitParams.zoomLevel = Math.min(
+
+       // Calculer le zoom level limité
+       const clampedZoomLevel = Math.min(
            Math.max(newZoomLevel, this.orbitParams.minZoomLevel),
            this.orbitParams.maxZoomLevel
        );
-       
+
+       // Si le zoom level ne change pas (déjà au max/min), ne rien faire
+       if (clampedZoomLevel === this.orbitParams.zoomLevel) {
+           console.log(`Zoom ${zoomIn ? 'in' : 'out'} ignoré - Déjà au ${zoomIn ? 'minimum' : 'maximum'}`);
+           return;
+       }
+
+       // Mettre à jour le zoom level
+       this.orbitParams.zoomLevel = clampedZoomLevel;
+
        gsap.to(this.camera.position, {
            x: this.camera.position.x * zoomFactor,
            y: this.camera.position.y * zoomFactor,
