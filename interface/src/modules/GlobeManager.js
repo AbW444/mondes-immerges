@@ -843,7 +843,7 @@ export class GlobeManager {
             z-index: 1000;
             pointer-events: auto;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: opacity 0.3s ease;
         `;
 
         // Créer le connector line en SVG pour de meilleures performances

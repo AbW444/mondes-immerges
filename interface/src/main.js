@@ -147,7 +147,7 @@ async function playTransitionVideo() {
             return;
         }
 
-        console.log('🎬 Lecture vidéo de transition...');
+        console.log('🎬 Lecture vidéo de transition en reverse...');
 
         // Cacher le jelly loader
         if (jellyLoader) {
@@ -156,21 +156,41 @@ async function playTransitionVideo() {
             setTimeout(() => jellyLoader.remove(), 300);
         }
 
-        // Afficher et jouer la vidéo
-        transitionVideo.style.opacity = '1';
-        transitionVideo.play().catch(e => {
-            console.warn('⚠️ Erreur lecture vidéo transition:', e);
-            resolve();
-        });
+        // Préparer la vidéo pour lecture inversée
+        transitionVideo.addEventListener('loadedmetadata', () => {
+            // Démarrer à la fin pour jouer en reverse
+            transitionVideo.currentTime = transitionVideo.duration;
+            transitionVideo.playbackRate = -1; // Lecture inversée
 
-        // Résoudre quand la vidéo se termine
+            // Afficher et jouer la vidéo
+            transitionVideo.style.opacity = '1';
+            transitionVideo.play().catch(e => {
+                console.warn('⚠️ Erreur lecture vidéo transition:', e);
+                resolve();
+            });
+        }, { once: true });
+
+        // Charger la vidéo si pas encore chargée
+        if (transitionVideo.readyState >= 1) {
+            transitionVideo.currentTime = transitionVideo.duration;
+            transitionVideo.playbackRate = -1;
+            transitionVideo.style.opacity = '1';
+            transitionVideo.play().catch(e => {
+                console.warn('⚠️ Erreur lecture vidéo transition:', e);
+                resolve();
+            });
+        } else {
+            transitionVideo.load();
+        }
+
+        // Résoudre quand la vidéo atteint le début (car reverse)
         transitionVideo.addEventListener('ended', () => {
             console.log('✅ Vidéo de transition terminée');
             transitionVideo.style.opacity = '0';
             setTimeout(() => resolve(), 300);
         }, { once: true });
 
-        // Timeout de sécurité si la vidéo ne se termine pas
+        // Timeout de sécurité
         setTimeout(() => {
             console.warn('⚠️ Timeout vidéo transition');
             resolve();
