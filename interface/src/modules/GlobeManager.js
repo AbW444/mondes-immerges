@@ -672,62 +672,85 @@ export class GlobeManager {
             
             console.log(`Hotspot ${title}: GPS(${position.lat}, ${position.lng}) -> 3D(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
 
-            // Créer un conteneur pour le hotspot
-            const marker = new THREE.Group();
+            // Créer un canvas pour la texture du hotspot
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            // Dessiner le point central et les anneaux avec dégradé radial
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            // Point central lumineux
+            const gradient1 = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 20);
+            gradient1.addColorStop(0, 'rgba(255, 204, 0, 1)');
+            gradient1.addColorStop(1, 'rgba(255, 204, 0, 0.9)');
+            ctx.fillStyle = gradient1;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Premier anneau
+            ctx.strokeStyle = 'rgba(255, 204, 0, 0.7)';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 40, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Deuxième anneau
+            ctx.strokeStyle = 'rgba(255, 204, 0, 0.4)';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 65, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Créer la texture et le sprite
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMaterial = new THREE.SpriteMaterial({
+                map: texture,
+                transparent: true,
+                depthTest: true,
+                depthWrite: false,
+                sizeAttenuation: true
+            });
+
+            const marker = new THREE.Sprite(spriteMaterial);
             marker.position.set(x, y, z);
+            marker.scale.set(0.35, 0.35, 1); // Ajuster la taille
             marker.userData = { hotspot };
 
-            // Orienter le marqueur pour qu'il soit tangent à la surface du globe
-            marker.lookAt(0, 0, 0);
-            marker.rotateX(Math.PI);
-
-            // Point central aplati sur le globe
-            const centerGeometry = new THREE.CircleGeometry(0.04, 32);
-            const centerMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffcc00,
-                transparent: true,
-                opacity: 1.0,
-                side: THREE.DoubleSide
-            });
-            const centerDot = new THREE.Mesh(centerGeometry, centerMaterial);
-            marker.add(centerDot);
-
-            // Premier anneau - fixe
-            const ring1Geometry = new THREE.RingGeometry(0.05, 0.07, 32);
-            const ring1Material = new THREE.MeshBasicMaterial({
-                color: 0xffcc00,
-                transparent: true,
-                opacity: 0.6,
-                side: THREE.DoubleSide
-            });
-            const ring1 = new THREE.Mesh(ring1Geometry, ring1Material);
-            marker.add(ring1);
-
-            // Deuxième anneau - fixe
-            const ring2Geometry = new THREE.RingGeometry(0.09, 0.10, 32);
-            const ring2Material = new THREE.MeshBasicMaterial({
-                color: 0xffcc00,
-                transparent: true,
-                opacity: 0.3,
-                side: THREE.DoubleSide
-            });
-            const ring2 = new THREE.Mesh(ring2Geometry, ring2Material);
-            marker.add(ring2);
-
-            // Anneaux d'ondes animés
+            // Créer les anneaux d'ondes animés (aussi en sprites)
             const waveRings = [];
             for (let i = 0; i < 3; i++) {
-                const waveGeometry = new THREE.RingGeometry(0.04, 0.06, 32);
-                const waveMaterial = new THREE.MeshBasicMaterial({
-                    color: 0xffcc00,
+                // Canvas pour l'anneau d'onde
+                const waveCanvas = document.createElement('canvas');
+                waveCanvas.width = 256;
+                waveCanvas.height = 256;
+                const waveCtx = waveCanvas.getContext('2d');
+
+                // Dessiner un anneau simple
+                waveCtx.strokeStyle = 'rgba(255, 204, 0, 0.8)';
+                waveCtx.lineWidth = 8;
+                waveCtx.beginPath();
+                waveCtx.arc(128, 128, 40, 0, Math.PI * 2);
+                waveCtx.stroke();
+
+                const waveTexture = new THREE.CanvasTexture(waveCanvas);
+                const waveMaterial = new THREE.SpriteMaterial({
+                    map: waveTexture,
                     transparent: true,
                     opacity: 0,
-                    side: THREE.DoubleSide
+                    depthTest: true,
+                    depthWrite: false
                 });
-                const wave = new THREE.Mesh(waveGeometry, waveMaterial);
-                wave.userData.initialDelay = i * 0.8; // Décalage pour chaque vague
+
+                const wave = new THREE.Sprite(waveMaterial);
+                wave.position.set(x, y, z);
+                wave.scale.set(0.1, 0.1, 1);
+                wave.userData.initialDelay = i * 0.8;
                 wave.userData.waveTime = 0;
-                marker.add(wave);
+                this.scene.add(wave);
                 waveRings.push(wave);
             }
 
@@ -904,42 +927,68 @@ export class GlobeManager {
         
         // Créer l'effet de scan
         this.createScanEffect(hotspot.position);
-        
+
         // Arrêter l'orbite
         this.orbitParams.isOrbiting = false;
-        
-        // Calculer la position de la caméra - DIRECTEMENT AU-DESSUS
-        const cameraDistance = 3.5; // Distance fixe au-dessus du hotspot
+
+        // Position actuelle de la caméra
+        const currentCameraPos = this.camera.position.clone();
+
+        // Calculer la position finale au-dessus du hotspot
+        const cameraDistance = 3.5;
         const normalizedPos = hotspotPos.clone().normalize();
-        const cameraPosition = normalizedPos.multiplyScalar(cameraDistance);
-        
-        // Animation de la caméra vers la position verticale
-        gsap.to(this.camera.position, {
-            x: cameraPosition.x,
-            y: cameraPosition.y,
-            z: cameraPosition.z,
-            duration: 1.5,
-            ease: "power2.inOut",
+        const finalPosition = normalizedPos.multiplyScalar(cameraDistance);
+
+        // Calculer une position intermédiaire HAUTE (arc parabolique)
+        // Point milieu entre position actuelle et finale, mais plus haut
+        const midPoint = new THREE.Vector3()
+            .addVectors(currentCameraPos, finalPosition)
+            .multiplyScalar(0.5);
+
+        // Pousser le point milieu plus loin du centre pour créer un arc
+        const arcHeight = 1.8; // Hauteur supplémentaire de l'arc
+        midPoint.normalize().multiplyScalar(midPoint.length() + arcHeight);
+
+        // Animation en 2 étapes : d'abord vers le haut, puis descente vers le hotspot
+        const timeline = gsap.timeline();
+
+        // Étape 1 : Montée parabolique vers le point intermédiaire
+        timeline.to(this.camera.position, {
+            x: midPoint.x,
+            y: midPoint.y,
+            z: midPoint.z,
+            duration: 1.0,
+            ease: "power1.inOut",
             onUpdate: () => {
-                // Toujours regarder le centre du globe
+                this.camera.lookAt(0, 0, 0);
+            }
+        });
+
+        // Étape 2 : Descente fluide vers le hotspot avec zoom
+        timeline.to(this.camera.position, {
+            x: finalPosition.x,
+            y: finalPosition.y,
+            z: finalPosition.z,
+            duration: 1.2,
+            ease: "power2.out",
+            onUpdate: () => {
                 this.camera.lookAt(0, 0, 0);
             },
             onComplete: () => {
-                // Une fois en position, rediriger vers la page externe
                 this.orbitParams.inHotspotMode = true;
                 this._redirectToExternalPage(hotspot);
             }
-        });
-        
-        // Animer le zoom pour se rapprocher
-        gsap.to(this.camera, {
-            fov: 40, // Réduire le champ de vision pour un effet de zoom
-            duration: 1.5,
-            ease: "power2.inOut",
+        }, "-=0.3"); // Overlap pour fluidité
+
+        // Zoom progressif pendant la descente
+        timeline.to(this.camera, {
+            fov: 40,
+            duration: 1.2,
+            ease: "power2.out",
             onUpdate: () => {
                 this.camera.updateProjectionMatrix();
             }
-        });
+        }, "-=1.2"); // Commence avec la descente
     }
     
     // Fonction de redirection
@@ -1290,7 +1339,7 @@ export class GlobeManager {
            this.updateAtmosphereUniforms();
        }
        
-       // Animer les ondes des hotspots
+       // Animer les ondes des hotspots (sprites)
        this.hotspotObjects.forEach(hotspot => {
            const waveRings = hotspot.userData.waveRings;
            if (waveRings) {
@@ -1303,20 +1352,17 @@ export class GlobeManager {
 
                    if (relativeTime > 0) {
                        // Durée d'une vague complète
-                       const waveDuration = 2.0;
+                       const waveDuration = 2.5;
                        const progress = (relativeTime % waveDuration) / waveDuration;
 
-                       // Expansion de l'anneau
-                       const minRadius = 0.04;
-                       const maxRadius = 0.15;
-                       const currentRadius = minRadius + (maxRadius - minRadius) * progress;
-
-                       // Recréer la géométrie avec le nouveau rayon
-                       wave.geometry.dispose();
-                       wave.geometry = new THREE.RingGeometry(currentRadius, currentRadius + 0.02, 32);
+                       // Expansion progressive du sprite
+                       const minScale = 0.1;
+                       const maxScale = 0.8;
+                       const currentScale = minScale + (maxScale - minScale) * progress;
+                       wave.scale.set(currentScale, currentScale, 1);
 
                        // Opacité qui diminue avec l'expansion
-                       wave.material.opacity = 0.6 * (1 - progress);
+                       wave.material.opacity = 0.7 * (1 - progress);
                    }
                });
            }
