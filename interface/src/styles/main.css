@@ -823,7 +823,7 @@ h2 {
   padding: 12px 20px !important; /* Padding augmenté pour centrage */
   border-radius: 8px !important;
   font-family: var(--title-font) !important;
-  font-size: 15px !important; /* Typo augmentée de 13px à 15px */
+  font-size: 18px !important; /* Typo augmentée pour meilleure visibilité */
   font-weight: 500 !important;
   white-space: nowrap !important;
   z-index: 100 !important;

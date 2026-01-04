@@ -40,7 +40,7 @@ export class GlobeManager {
             orbitAngle: 0,
             zoomLevel: 1,
             maxZoomLevel: 2.0,      // Permet de dézoomer largement
-            minZoomLevel: 0.7,      // Limite le zoom à x0.7 (pas plus proche)
+            minZoomLevel: 0.8,      // Limite le zoom à x0.8 (pas plus proche)
             inHotspotMode: false,
             orbitHistory: []
         };
@@ -106,20 +106,15 @@ export class GlobeManager {
             return;
         }
         
-        // L'arrière-plan étoilé sera créé de manière asynchrone
+        // L'arrière-plan étoilé sera créé via preloadAllAssets()
         this.skyboxLoaded = false;
 
         // Créer l'éclairage
         this.setupLighting();
 
-        // Précharger la skybox immédiatement
-        this.createSkybox().then(() => {
-            this.skyboxLoaded = true;
-        });
-        
-        // Créer le globe
-        this.createGlobe();
-        
+        // NOTE: Le globe et la skybox seront créés via preloadAllAssets()
+        // Ne pas les créer ici pour éviter les duplications
+
         // Créer le soleil et la lune
         this.createCelestialBodies();
         
@@ -419,88 +414,102 @@ export class GlobeManager {
     }
     
     createGlobe() {
-        const video = document.createElement('video');
-        // Utiliser la vidéo par défaut au démarrage
-        video.src = this.currentVideoPath;
-        video.loop = true;
-        video.muted = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.crossOrigin = 'anonymous';
-        this.videoElement = video;
-        
-        video.addEventListener('ended', () => {
-            video.play();
-        });
-        
-        setInterval(() => {
-            if (video.paused && !video.ended) {
-                console.log("Vidéo en pause, relance...");
-                video.play().catch(e => {
-                    console.error("Impossible de relancer la vidéo:", e);
-                });
-            }
-        }, 1000);
-        
-        this.videoTexture = new THREE.VideoTexture(video);
-        this.videoTexture.minFilter = THREE.LinearFilter;
-        this.videoTexture.magFilter = THREE.LinearFilter;
-        this.videoTexture.format = THREE.RGBAFormat;
-        this.videoTexture.colorSpace = THREE.SRGBColorSpace;
-        
-        const depthGeometry = new THREE.SphereGeometry(1.99, 64, 64);
-        const depthMaterial = new THREE.MeshBasicMaterial({
-            color: 0x000000,
-            transparent: true,
-            opacity: 0.0,
-            colorWrite: false,
-            depthWrite: true,
-            side: THREE.FrontSide
-        });
-        
-        const depthSphere = new THREE.Mesh(depthGeometry, depthMaterial);
-        depthSphere.renderOrder = 0;
-        this.scene.add(depthSphere);
-        this.depthSphere = depthSphere;
-        
-        const globeGeometry = new THREE.SphereGeometry(2, 64, 64);
-        
-        const globeMaterial = new THREE.MeshBasicMaterial({
-            map: this.videoTexture,
-            transparent: true,
-            opacity: 1,
-            side: THREE.FrontSide,
-            depthTest: true,
-            depthWrite: false,
-            color: 0xffffff,
-            toneMapped: false
-        });
-        
-        this.globe = new THREE.Mesh(globeGeometry, globeMaterial);
-        this.globe.castShadow = true;
-        this.globe.receiveShadow = true;
-        this.globe.renderOrder = 1;
-        this.scene.add(this.globe);
-        
-        this.createAtmosphere();
-        
-        const cloudsGeometry = new THREE.SphereGeometry(2.02, 64, 64);
-        const cloudsMaterial = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity: 0.4,
-            alphaTest: 0.1,
-            depthTest: true,
-            depthWrite: false
-        });
-        
-        this.clouds = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
-        this.clouds.renderOrder = 2;
-        this.scene.add(this.clouds);
-        
-        video.play().catch(e => {
-            console.error('Erreur lors de la lecture de la vidéo:', e);
-            this.handleVideoError();
+        return new Promise((resolve, reject) => {
+            const video = document.createElement('video');
+            // Utiliser la vidéo par défaut au démarrage
+            video.src = this.currentVideoPath;
+            video.loop = true;
+            video.muted = true;
+            video.autoplay = false; // Désactiver autoplay pour contrôler le préchargement
+            video.playsInline = true;
+            video.crossOrigin = 'anonymous';
+            video.preload = 'auto'; // Forcer le préchargement complet
+            this.videoElement = video;
+
+            console.log('📦 Préchargement de la vidéo du globe...');
+
+            // Résoudre la promesse quand la vidéo est prête à être jouée
+            video.addEventListener('canplaythrough', () => {
+                console.log('✅ Vidéo du globe préchargée et prête');
+                resolve();
+            }, { once: true });
+
+            video.addEventListener('error', (e) => {
+                console.error('❌ Erreur chargement vidéo globe:', e);
+                reject(e);
+            });
+
+            video.addEventListener('ended', () => {
+                video.play();
+            });
+
+            setInterval(() => {
+                if (video.paused && !video.ended) {
+                    console.log("Vidéo en pause, relance...");
+                    video.play().catch(e => {
+                        console.error("Impossible de relancer la vidéo:", e);
+                    });
+                }
+            }, 1000);
+
+            this.videoTexture = new THREE.VideoTexture(video);
+            this.videoTexture.minFilter = THREE.LinearFilter;
+            this.videoTexture.magFilter = THREE.LinearFilter;
+            this.videoTexture.format = THREE.RGBAFormat;
+            this.videoTexture.colorSpace = THREE.SRGBColorSpace;
+
+            const depthGeometry = new THREE.SphereGeometry(1.99, 64, 64);
+            const depthMaterial = new THREE.MeshBasicMaterial({
+                color: 0x000000,
+                transparent: true,
+                opacity: 0.0,
+                colorWrite: false,
+                depthWrite: true,
+                side: THREE.FrontSide
+            });
+
+            const depthSphere = new THREE.Mesh(depthGeometry, depthMaterial);
+            depthSphere.renderOrder = 0;
+            this.scene.add(depthSphere);
+            this.depthSphere = depthSphere;
+
+            const globeGeometry = new THREE.SphereGeometry(2, 64, 64);
+
+            const globeMaterial = new THREE.MeshBasicMaterial({
+                map: this.videoTexture,
+                transparent: true,
+                opacity: 1,
+                side: THREE.FrontSide,
+                depthTest: true,
+                depthWrite: false,
+                color: 0xffffff,
+                toneMapped: false
+            });
+
+            this.globe = new THREE.Mesh(globeGeometry, globeMaterial);
+            this.globe.castShadow = true;
+            this.globe.receiveShadow = true;
+            this.globe.renderOrder = 1;
+            this.scene.add(this.globe);
+
+            this.createAtmosphere();
+
+            const cloudsGeometry = new THREE.SphereGeometry(2.02, 64, 64);
+            const cloudsMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.4,
+                alphaTest: 0.1,
+                depthTest: true,
+                depthWrite: false
+            });
+
+            this.clouds = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
+            this.clouds.renderOrder = 2;
+            this.scene.add(this.clouds);
+
+            // Charger la vidéo - la promesse se résoudra quand canplaythrough se déclenchera
+            video.load();
         });
     }
     
@@ -589,6 +598,39 @@ export class GlobeManager {
                     resolve(); // Résoudre quand même pour ne pas bloquer
                 }
             );
+        });
+    }
+
+    /**
+     * Précharge TOUS les assets avant l'affichage de l'interface
+     * Retourne une Promise qui se résout quand tout est prêt
+     */
+    preloadAllAssets() {
+        console.log('🎬 DÉBUT DU PRÉCHARGEMENT COMPLET...');
+
+        return Promise.all([
+            this.createGlobe(),
+            this.createSkybox()
+        ]).then(() => {
+            console.log('✅ PRÉCHARGEMENT COMPLET TERMINÉ');
+            console.log('   - Vidéo du globe: PRÊTE');
+            console.log('   - Skybox étoilée: PRÊTE');
+            console.log('   - Tous les assets: PRÊTS À AFFICHER');
+
+            // Démarrer la lecture de la vidéo maintenant que tout est chargé
+            if (this.videoElement) {
+                this.videoElement.play().catch(e => {
+                    console.error('Erreur lecture vidéo:', e);
+                });
+            }
+        }).catch((error) => {
+            console.error('❌ Erreur durant le préchargement:', error);
+            // Continuer quand même pour ne pas bloquer l'application
+            if (this.videoElement) {
+                this.videoElement.play().catch(e => {
+                    console.error('Erreur lecture vidéo:', e);
+                });
+            }
         });
     }
     
@@ -688,20 +730,32 @@ export class GlobeManager {
             
             console.log(`Hotspot ${title}: GPS(${position.lat}, ${position.lng}) -> 3D(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
 
-            // Hotspot simple original - juste une sphère jaune
-            const markerGeometry = new THREE.SphereGeometry(0.02, 16, 16);
+            // Hotspot original avec halo
+            const markerGeometry = new THREE.SphereGeometry(0.05, 16, 16);
             const markerMaterial = new THREE.MeshBasicMaterial({
                 color: 0xffcc00,
                 transparent: true,
-                opacity: 0.9
+                opacity: 0.8
             });
 
             const marker = new THREE.Mesh(markerGeometry, markerMaterial);
             marker.position.set(x, y, z);
             marker.userData = { hotspot };
-            
+
+            // Ajouter le halo
+            const haloGeometry = new THREE.SphereGeometry(0.08, 16, 16);
+            const haloMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffcc00,
+                transparent: true,
+                opacity: 0.5,
+                side: THREE.BackSide
+            });
+
+            const halo = new THREE.Mesh(haloGeometry, haloMaterial);
+            marker.add(halo);
+
             this.addHotspotLabel(marker, title, new THREE.Vector3(x, y, z));
-            
+
             this.scene.add(marker);
             this.hotspotObjects.push(marker);
         });

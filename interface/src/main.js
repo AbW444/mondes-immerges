@@ -169,12 +169,22 @@ async function startApplication() {
 
         console.log('✅ Application initialisée');
 
+        // Afficher le conteneur principal en arrière-plan (transparent pour l'instant)
+        prepareMainContainer();
+
+        // CRITIQUE: Précharger TOUS les assets avant de continuer
+        console.log('⏳ PRÉCHARGEMENT DES ASSETS EN COURS...');
+
+        if (app.globeManager && app.globeManager.preloadAllAssets) {
+            await app.globeManager.preloadAllAssets();
+            console.log('✅ TOUS LES ASSETS SONT PRÊTS');
+        } else {
+            console.warn('⚠️  preloadAllAssets non disponible, passage direct');
+        }
+
         // NE PAS masquer l'écran de chargement encore
         // Juste cacher le spinner jelly
         hideJellySpinner();
-
-        // Afficher le conteneur principal en arrière-plan (transparent pour l'instant)
-        prepareMainContainer();
 
         // Démarrer la séquence qui va créer l'effet orbital
         // sur l'écran de chargement toujours visible
