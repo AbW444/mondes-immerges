@@ -106,11 +106,16 @@ export class GlobeManager {
             return;
         }
         
-        // Créer l'arrière-plan étoilé
-        this.createSkybox();
-        
+        // L'arrière-plan étoilé sera créé de manière asynchrone
+        this.skyboxLoaded = false;
+
         // Créer l'éclairage
         this.setupLighting();
+
+        // Précharger la skybox immédiatement
+        this.createSkybox().then(() => {
+            this.skyboxLoaded = true;
+        });
         
         // Créer le globe
         this.createGlobe();
@@ -556,23 +561,34 @@ export class GlobeManager {
     }
     
     createSkybox() {
-        const loader = new THREE.TextureLoader();
-        const skyTexturePath = `${import.meta.env.BASE_URL}images/night-sky.png`;
-        
-        loader.load(skyTexturePath, (texture) => {
-            this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            this.renderer.toneMappingExposure = 0.3;
-            
-            const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
-            rt.fromEquirectangularTexture(this.renderer, texture);
-            this.scene.background = rt.texture;
-            
-            this.scene.fog = new THREE.FogExp2(0x000011, 0.00008);
-        }, 
-        undefined, 
-        (error) => {
-            console.error('Erreur lors du chargement de la texture du ciel:', error);
-            this.scene.background = new THREE.Color(0x000011);
+        return new Promise((resolve, reject) => {
+            const loader = new THREE.TextureLoader();
+            const skyTexturePath = `${import.meta.env.BASE_URL}images/night-sky.png`;
+
+            console.log('📦 Préchargement de la skybox...');
+
+            loader.load(
+                skyTexturePath,
+                (texture) => {
+                    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                    this.renderer.toneMappingExposure = 0.3;
+
+                    const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
+                    rt.fromEquirectangularTexture(this.renderer, texture);
+                    this.scene.background = rt.texture;
+
+                    this.scene.fog = new THREE.FogExp2(0x000011, 0.00008);
+
+                    console.log('✅ Skybox chargée');
+                    resolve();
+                },
+                undefined,
+                (error) => {
+                    console.error('❌ Erreur chargement skybox:', error);
+                    this.scene.background = new THREE.Color(0x000011);
+                    resolve(); // Résoudre quand même pour ne pas bloquer
+                }
+            );
         });
     }
     
@@ -672,82 +688,17 @@ export class GlobeManager {
             
             console.log(`Hotspot ${title}: GPS(${position.lat}, ${position.lng}) -> 3D(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
 
-            // Position légèrement au-dessus de la surface pour éviter la traversée
-            const surfaceRadius = 2.1;
-            const hotspotRadius = 2.12; // Légèrement au-dessus
-            const hx = hotspotRadius * Math.cos(lat) * Math.cos(lon);
-            const hy = hotspotRadius * Math.sin(lat);
-            const hz = hotspotRadius * Math.cos(lat) * Math.sin(lon);
+            // Hotspot simple original - juste une sphère jaune
+            const markerGeometry = new THREE.SphereGeometry(0.02, 16, 16);
+            const markerMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffcc00,
+                transparent: true,
+                opacity: 0.9
+            });
 
-            // Créer un conteneur pour le hotspot
-            const marker = new THREE.Group();
-            marker.position.set(hx, hy, hz);
+            const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+            marker.position.set(x, y, z);
             marker.userData = { hotspot };
-
-            // Orienter le marqueur pour qu'il soit tangent à la surface du globe
-            marker.lookAt(0, 0, 0);
-            marker.rotateX(Math.PI);
-
-            // Point central aplati - JAUNE PUR sans éclairage
-            const centerGeometry = new THREE.CircleGeometry(0.05, 32);
-            const centerMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffcc00,
-                transparent: true,
-                opacity: 1.0,
-                side: THREE.DoubleSide,
-                depthTest: true,
-                depthWrite: false
-            });
-            const centerDot = new THREE.Mesh(centerGeometry, centerMaterial);
-            marker.add(centerDot);
-
-            // Premier anneau - JAUNE PUR
-            const ring1Geometry = new THREE.RingGeometry(0.06, 0.08, 32);
-            const ring1Material = new THREE.MeshBasicMaterial({
-                color: 0xffcc00,
-                transparent: true,
-                opacity: 0.7,
-                side: THREE.DoubleSide,
-                depthTest: true,
-                depthWrite: false
-            });
-            const ring1 = new THREE.Mesh(ring1Geometry, ring1Material);
-            marker.add(ring1);
-
-            // Deuxième anneau - JAUNE PUR
-            const ring2Geometry = new THREE.RingGeometry(0.10, 0.12, 32);
-            const ring2Material = new THREE.MeshBasicMaterial({
-                color: 0xffcc00,
-                transparent: true,
-                opacity: 0.4,
-                side: THREE.DoubleSide,
-                depthTest: true,
-                depthWrite: false
-            });
-            const ring2 = new THREE.Mesh(ring2Geometry, ring2Material);
-            marker.add(ring2);
-
-            // Anneaux d'ondes animés - JAUNE PUR
-            const waveRings = [];
-            for (let i = 0; i < 3; i++) {
-                const waveGeometry = new THREE.RingGeometry(0.05, 0.07, 32);
-                const waveMaterial = new THREE.MeshBasicMaterial({
-                    color: 0xffcc00,
-                    transparent: true,
-                    opacity: 0,
-                    side: THREE.DoubleSide,
-                    depthTest: true,
-                    depthWrite: false
-                });
-                const wave = new THREE.Mesh(waveGeometry, waveMaterial);
-                wave.userData.initialDelay = i * 0.8;
-                wave.userData.waveTime = 0;
-                marker.add(wave);
-                waveRings.push(wave);
-            }
-
-            // Stocker les anneaux pour l'animation
-            marker.userData.waveRings = waveRings;
             
             this.addHotspotLabel(marker, title, new THREE.Vector3(x, y, z));
             

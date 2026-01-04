@@ -565,5 +565,14 @@ window.addEventListener('unhandledrejection', (e) => {
 // Nettoyage avant déchargement
 window.addEventListener('beforeunload', cleanup, { once: true });
 
+// Corriger le bug de retour depuis les pages collection
+// Recharger la page si elle vient du cache (bouton retour)
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        console.log('🔄 Page restaurée depuis le cache, rechargement...');
+        window.location.reload();
+    }
+});
+
 // Export
 export { initialize, initCustomCursor };
