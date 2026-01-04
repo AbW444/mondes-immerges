@@ -230,31 +230,51 @@ class MondesImmergesApp {
 
     /**
      * Ajoute le logo National Geographic en haut au centre
+     * Avec vérification pour éviter les duplications
      */
     addNatGeoLogo() {
-        // Créer le conteneur du logo
+        // Vérifier si le logo existe déjà pour éviter les duplications
+        const existingLogo = this.mainContainer.querySelector('.nat-geo-logo-container');
+        if (existingLogo) {
+            console.log('Logo déjà présent, mise à jour uniquement');
+            return;
+        }
+
+        // Créer le conteneur du logo avec une classe identifiable
         const logoContainer = document.createElement('div');
+        logoContainer.className = 'nat-geo-logo-container';
         logoContainer.style.cssText = `
             position: absolute;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 100;
+            z-index: 1000;
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 204, 0, 0.2);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         `;
-        
+
         // Créer l'élément image du logo
         const logo = document.createElement('img');
         logo.src = `${import.meta.env.BASE_URL}images/nat-geo-logo.png`;
         logo.alt = 'National Geographic';
+        logo.className = 'nat-geo-logo';
         logo.style.cssText = `
             height: 60px;
             width: auto;
-            filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.7));
+            display: block;
+            filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.3));
         `;
-        
+
         // Ajouter le logo au conteneur puis au document
         logoContainer.appendChild(logo);
         this.mainContainer.appendChild(logoContainer);
+
+        console.log('✅ Logo National Geographic ajouté');
     }
     
     /**
