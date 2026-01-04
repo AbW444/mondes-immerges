@@ -557,9 +557,7 @@ export class GlobeManager {
                 }
             `,
             fragmentShader: `
-                #ifdef GL_ES
                 precision mediump float;
-                #endif
 
                 uniform vec3 cameraPosition;
                 varying vec3 vNormal;
@@ -1109,20 +1107,18 @@ export class GlobeManager {
                }
            `,
            fragmentShader: `
-               #ifdef GL_ES
                precision mediump float;
-               #endif
-               
+
                uniform vec3 color;
                uniform float time;
                varying vec2 vUv;
-               
+
                void main() {
                    float distance = length(vUv - vec2(0.5, 0.5)) * 2.0;
                    float alpha = smoothstep(0.8, 1.0, distance) * 0.8;
-                   
+
                    alpha *= (sin(time * 10.0) * 0.2 + 0.8);
-                   
+
                    gl_FragColor = vec4(color, alpha);
                }
            `,
