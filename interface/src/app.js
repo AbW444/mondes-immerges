@@ -477,9 +477,6 @@ class MondesImmergesApp {
         if (this.interfaceUI && this.interfaceUI.setUIVisibility) {
             this.interfaceUI.setUIVisibility(false);
         }
-        
-        // Afficher une notification
-        this.visualEffects.showNotification(`Exploration de: ${hotspot.title}`, 'info', 3000);
     }
     
     /**
@@ -574,12 +571,7 @@ class MondesImmergesApp {
         if (this.interfaceUI && this.interfaceUI.setUIVisibility) {
             this.interfaceUI.setUIVisibility(true);
         }
-        
-        // Afficher une notification
-        if (this.visualEffects) {
-            this.visualEffects.showNotification("Retour à l'exploration globale", "info", 3000);
-        }
-        
+
         // Réinitialiser l'état actuel
         this.currentHotspot = null;
     }

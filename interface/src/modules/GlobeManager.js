@@ -39,7 +39,7 @@ export class GlobeManager {
             inclination: Math.PI / 6,
             orbitAngle: 0,
             zoomLevel: 1,
-            maxZoomLevel: 1.3,      // Augmenté de 1.1 à 1.3 pour permettre plus de zoom
+            maxZoomLevel: 0.7,      // Réduit à 0.7x maximum
             minZoomLevel: 0.5,      // Réduit de 0.6 à 0.5 pour permettre plus de dézoom
             inHotspotMode: false,
             orbitHistory: []
@@ -127,9 +127,6 @@ export class GlobeManager {
         
         // NOUVEAU: Ajouter l'écouteur pour la touche Entrée
         document.addEventListener('keydown', this.onKeyDown.bind(this));
-        
-        // Ajouter le logo
-        this.addLogo();
     }
     
     // Méthode pour gérer les erreurs WebGL
@@ -337,29 +334,6 @@ export class GlobeManager {
                     notification.remove();
                 }
             });
-    }
-    
-    addLogo() {
-        const logoContainer = document.createElement('div');
-        logoContainer.style.cssText = `
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-        `;
-        
-        const logo = document.createElement('img');
-        logo.src = `${import.meta.env.BASE_URL}images/nat-geo-logo.png`;
-        logo.alt = 'National Geographic';
-        logo.style.cssText = `
-            height: 40px;
-            width: auto;
-            filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
-        `;
-        
-        logoContainer.appendChild(logo);
-        this.container.appendChild(logoContainer);
     }
     
     setupLighting() {
@@ -697,42 +671,68 @@ export class GlobeManager {
             const z = radius * Math.cos(lat) * Math.sin(lon);
             
             console.log(`Hotspot ${title}: GPS(${position.lat}, ${position.lng}) -> 3D(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
-            
-            // Hotspot amélioré - Plus visible et attractif
-            const markerGeometry = new THREE.SphereGeometry(0.06, 32, 32); // Plus gros et plus détaillé
-            const markerMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffdd00,
-                transparent: true,
-                opacity: 1.0,
-                emissive: 0xffcc00,
-                emissiveIntensity: 0.8
-            });
 
-            const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+            // Créer un conteneur pour le hotspot
+            const marker = new THREE.Group();
             marker.position.set(x, y, z);
             marker.userData = { hotspot };
 
-            // Halo interne brillant
-            const haloGeometry1 = new THREE.SphereGeometry(0.10, 32, 32);
-            const haloMaterial1 = new THREE.MeshBasicMaterial({
+            // Orienter le marqueur pour qu'il soit tangent à la surface du globe
+            marker.lookAt(0, 0, 0);
+            marker.rotateX(Math.PI);
+
+            // Point central aplati sur le globe
+            const centerGeometry = new THREE.CircleGeometry(0.04, 32);
+            const centerMaterial = new THREE.MeshBasicMaterial({
                 color: 0xffcc00,
                 transparent: true,
-                opacity: 0.4,
-                side: THREE.BackSide
+                opacity: 1.0,
+                side: THREE.DoubleSide
             });
-            const halo1 = new THREE.Mesh(haloGeometry1, haloMaterial1);
-            marker.add(halo1);
+            const centerDot = new THREE.Mesh(centerGeometry, centerMaterial);
+            marker.add(centerDot);
 
-            // Halo externe diffus
-            const haloGeometry2 = new THREE.SphereGeometry(0.15, 32, 32);
-            const haloMaterial2 = new THREE.MeshBasicMaterial({
-                color: 0xffdd00,
+            // Premier anneau - fixe
+            const ring1Geometry = new THREE.RingGeometry(0.05, 0.07, 32);
+            const ring1Material = new THREE.MeshBasicMaterial({
+                color: 0xffcc00,
                 transparent: true,
-                opacity: 0.2,
-                side: THREE.BackSide
+                opacity: 0.6,
+                side: THREE.DoubleSide
             });
-            const halo2 = new THREE.Mesh(haloGeometry2, haloMaterial2);
-            marker.add(halo2);
+            const ring1 = new THREE.Mesh(ring1Geometry, ring1Material);
+            marker.add(ring1);
+
+            // Deuxième anneau - fixe
+            const ring2Geometry = new THREE.RingGeometry(0.09, 0.10, 32);
+            const ring2Material = new THREE.MeshBasicMaterial({
+                color: 0xffcc00,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+            const ring2 = new THREE.Mesh(ring2Geometry, ring2Material);
+            marker.add(ring2);
+
+            // Anneaux d'ondes animés
+            const waveRings = [];
+            for (let i = 0; i < 3; i++) {
+                const waveGeometry = new THREE.RingGeometry(0.04, 0.06, 32);
+                const waveMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xffcc00,
+                    transparent: true,
+                    opacity: 0,
+                    side: THREE.DoubleSide
+                });
+                const wave = new THREE.Mesh(waveGeometry, waveMaterial);
+                wave.userData.initialDelay = i * 0.8; // Décalage pour chaque vague
+                wave.userData.waveTime = 0;
+                marker.add(wave);
+                waveRings.push(wave);
+            }
+
+            // Stocker les anneaux pour l'animation
+            marker.userData.waveRings = waveRings;
             
             this.addHotspotLabel(marker, title, new THREE.Vector3(x, y, z));
             
@@ -1290,12 +1290,35 @@ export class GlobeManager {
            this.updateAtmosphereUniforms();
        }
        
-       // Animer les halos des hotspots
+       // Animer les ondes des hotspots
        this.hotspotObjects.forEach(hotspot => {
-           if (hotspot.children.length > 0) {
-               const halo = hotspot.children[0];
-               const scale = 1 + 0.2 * Math.sin(time * 0.003);
-               halo.scale.set(scale, scale, scale);
+           const waveRings = hotspot.userData.waveRings;
+           if (waveRings) {
+               waveRings.forEach(wave => {
+                   // Incrémenter le temps de vague
+                   wave.userData.waveTime += delta;
+
+                   // Temps relatif avec délai initial
+                   const relativeTime = wave.userData.waveTime - wave.userData.initialDelay;
+
+                   if (relativeTime > 0) {
+                       // Durée d'une vague complète
+                       const waveDuration = 2.0;
+                       const progress = (relativeTime % waveDuration) / waveDuration;
+
+                       // Expansion de l'anneau
+                       const minRadius = 0.04;
+                       const maxRadius = 0.15;
+                       const currentRadius = minRadius + (maxRadius - minRadius) * progress;
+
+                       // Recréer la géométrie avec le nouveau rayon
+                       wave.geometry.dispose();
+                       wave.geometry = new THREE.RingGeometry(currentRadius, currentRadius + 0.02, 32);
+
+                       // Opacité qui diminue avec l'expansion
+                       wave.material.opacity = 0.6 * (1 - progress);
+                   }
+               });
            }
        });
 
