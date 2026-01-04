@@ -780,46 +780,33 @@ export class GlobeManager {
             
             console.log(`Hotspot ${title}: GPS(${position.lat}, ${position.lng}) -> 3D(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
 
-            // Créer un vecteur normal pour orienter le hotspot vers l'extérieur
-            const normal = new THREE.Vector3(x, y, z).normalize();
+            // Positionner au-dessus de la surface pour ne pas traverser le globe
+            const surfaceOffset = 2.12; // Globe = 2.0, hotspot légèrement au-dessus
+            const surfaceX = (surfaceOffset / radius) * x;
+            const surfaceY = (surfaceOffset / radius) * y;
+            const surfaceZ = (surfaceOffset / radius) * z;
 
-            // Hotspot aplati sur la surface du globe - Cercle au lieu de sphère
-            const markerGeometry = new THREE.CircleGeometry(0.05, 32);
+            // Hotspot sphérique avec jaune pur
+            const markerGeometry = new THREE.SphereGeometry(0.05, 16, 16);
             const markerMaterial = new THREE.MeshBasicMaterial({
                 color: 0xffcc00, // Jaune pur de la DA
                 transparent: true,
                 opacity: 0, // Commence invisible, apparaîtra avec les autres UI
-                side: THREE.DoubleSide,
                 depthTest: true,
                 depthWrite: false
             });
 
             const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-
-            // Positionner légèrement au-dessus de la surface du globe
-            const surfaceOffset = 2.12; // Globe = 2.0, hotspot = 2.12
-            marker.position.set(
-                normal.x * surfaceOffset,
-                normal.y * surfaceOffset,
-                normal.z * surfaceOffset
-            );
-
-            // Orienter le hotspot pour qu'il fasse face à l'extérieur (perpendiculaire à la surface)
-            marker.lookAt(
-                normal.x * (surfaceOffset + 1),
-                normal.y * (surfaceOffset + 1),
-                normal.z * (surfaceOffset + 1)
-            );
-
+            marker.position.set(surfaceX, surfaceY, surfaceZ);
             marker.userData = { hotspot };
 
-            // Ajouter le halo (anneau autour du cercle principal)
-            const haloGeometry = new THREE.RingGeometry(0.05, 0.08, 32);
+            // Ajouter le halo
+            const haloGeometry = new THREE.SphereGeometry(0.08, 16, 16);
             const haloMaterial = new THREE.MeshBasicMaterial({
                 color: 0xffcc00, // Jaune pur de la DA
                 transparent: true,
                 opacity: 0, // Commence invisible
-                side: THREE.DoubleSide,
+                side: THREE.BackSide,
                 depthTest: true,
                 depthWrite: false
             });
@@ -830,7 +817,7 @@ export class GlobeManager {
             // Stocker les matériaux pour pouvoir les animer lors de l'apparition
             marker.userData.materials = [markerMaterial, haloMaterial];
 
-            this.addHotspotLabel(marker, title, new THREE.Vector3(x, y, z));
+            this.addHotspotLabel(marker, title, new THREE.Vector3(surfaceX, surfaceY, surfaceZ));
 
             this.scene.add(marker);
             this.hotspotObjects.push(marker);

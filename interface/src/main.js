@@ -147,6 +147,51 @@ function initCustomCursor() {
 }
 
 /**
+ * Joue la vidéo de transition après le préchargement
+ */
+async function playTransitionVideo() {
+    return new Promise((resolve) => {
+        const jellyLoader = document.querySelector('l-jelly');
+        const transitionVideo = document.getElementById('transition-video');
+
+        if (!transitionVideo) {
+            console.warn('⚠️ Vidéo de transition introuvable');
+            resolve();
+            return;
+        }
+
+        console.log('🎬 Lecture vidéo de transition...');
+
+        // Cacher le jelly loader
+        if (jellyLoader) {
+            jellyLoader.style.transition = 'opacity 0.3s ease';
+            jellyLoader.style.opacity = '0';
+            setTimeout(() => jellyLoader.remove(), 300);
+        }
+
+        // Afficher et jouer la vidéo
+        transitionVideo.style.opacity = '1';
+        transitionVideo.play().catch(e => {
+            console.warn('⚠️ Erreur lecture vidéo transition:', e);
+            resolve();
+        });
+
+        // Résoudre quand la vidéo se termine
+        transitionVideo.addEventListener('ended', () => {
+            console.log('✅ Vidéo de transition terminée');
+            transitionVideo.style.opacity = '0';
+            setTimeout(() => resolve(), 300);
+        }, { once: true });
+
+        // Timeout de sécurité si la vidéo ne se termine pas
+        setTimeout(() => {
+            console.warn('⚠️ Timeout vidéo transition');
+            resolve();
+        }, 10000);
+    });
+}
+
+/**
  * Démarre l'application de manière fluide
  */
 async function startApplication() {
@@ -182,9 +227,8 @@ async function startApplication() {
             console.warn('⚠️  preloadAllAssets non disponible, passage direct');
         }
 
-        // NE PAS masquer l'écran de chargement encore
-        // Juste cacher le spinner jelly
-        hideJellySpinner();
+        // Afficher et jouer la vidéo de transition
+        await playTransitionVideo();
 
         // Démarrer la séquence qui va créer l'effet orbital
         // sur l'écran de chargement toujours visible
@@ -504,8 +548,7 @@ function initialize() {
     // Préparer l'environnement
     prepareEnvironment();
 
-    // Initialiser le spinner
-    initLoadingSpinner();
+    // Le spinner jelly est déjà dans le HTML - pas besoin de l'initialiser
 
     // Simulation de chargement simplifiée
     let progress = 0;
