@@ -557,9 +557,7 @@ export class GlobeManager {
                 }
             `,
             fragmentShader: `
-                #ifdef GL_ES
                 precision mediump float;
-                #endif
 
                 uniform vec3 cameraPosition;
                 varying vec3 vNormal;
