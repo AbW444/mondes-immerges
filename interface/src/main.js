@@ -138,7 +138,7 @@ function initCustomCursor() {
  */
 async function playTransitionVideo() {
     return new Promise((resolve) => {
-        const jellyLoader = document.querySelector('l-jelly');
+        const loadingSpinner = document.querySelector('.loading-spinner');
         const transitionVideo = document.getElementById('transition-video');
 
         if (!transitionVideo) {
@@ -149,11 +149,11 @@ async function playTransitionVideo() {
 
         console.log('🎬 Lecture vidéo de transition en reverse...');
 
-        // Cacher le jelly loader
-        if (jellyLoader) {
-            jellyLoader.style.transition = 'opacity 0.3s ease';
-            jellyLoader.style.opacity = '0';
-            setTimeout(() => jellyLoader.remove(), 300);
+        // Cacher le spinner
+        if (loadingSpinner) {
+            loadingSpinner.style.transition = 'opacity 0.3s ease';
+            loadingSpinner.style.opacity = '0';
+            setTimeout(() => loadingSpinner.remove(), 300);
         }
 
         // Variables pour la lecture inverse manuelle

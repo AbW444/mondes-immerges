@@ -559,7 +559,6 @@ export class GlobeManager {
             fragmentShader: `
                 precision mediump float;
 
-                uniform vec3 cameraPosition;
                 varying vec3 vNormal;
                 varying vec3 vWorldPosition;
 
@@ -568,19 +567,14 @@ export class GlobeManager {
                     float fresnel = 1.0 - abs(dot(viewDirection, vNormal));
 
                     float distance = length(cameraPosition - vWorldPosition);
-                    float attenuation = 1.0 / (1.0 + distance * 0.03); // Réduit pour plus de portée
+                    float attenuation = 1.0 / (1.0 + distance * 0.03);
 
-                    // Couleur atmosphérique plus saturée et bleue
                     vec3 atmosphereColor = vec3(0.4, 0.7, 1.0);
+                    float intensity = pow(fresnel, 1.2) * attenuation;
 
-                    float intensity = pow(fresnel, 1.2) * attenuation; // Exposant réduit pour effet plus visible
-
-                    gl_FragColor = vec4(atmosphereColor, intensity * 0.55); // Intensité augmentée de 0.3 à 0.55
+                    gl_FragColor = vec4(atmosphereColor, intensity * 0.55);
                 }
             `,
-            uniforms: {
-                cameraPosition: { value: new THREE.Vector3() }
-            },
             blending: THREE.AdditiveBlending,
             side: THREE.BackSide,
             transparent: true
@@ -589,12 +583,6 @@ export class GlobeManager {
         const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
         this.scene.add(atmosphere);
         this.atmosphere = atmosphere;
-
-        this.updateAtmosphereUniforms = () => {
-            if (this.atmosphere && this.atmosphere.material.uniforms) {
-                this.atmosphere.material.uniforms.cameraPosition.value.copy(this.camera.position);
-            }
-        };
     }
     
     createSkybox() {
@@ -1405,11 +1393,6 @@ export class GlobeManager {
        
        if (this.updateSkyboxTime) {
            this.updateSkyboxTime(time);
-       }
-
-       // Mettre à jour l'atmosphère
-       if (this.updateAtmosphereUniforms) {
-           this.updateAtmosphereUniforms();
        }
 
        // Animer les ondes des hotspots (sprites)
