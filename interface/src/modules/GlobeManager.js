@@ -522,7 +522,8 @@ export class GlobeManager {
             this.globe.renderOrder = 1;
             this.scene.add(this.globe);
 
-            this.createAtmosphere();
+            // Atmosphère désactivée à la demande de l'utilisateur
+            // this.createAtmosphere();
 
             const cloudsGeometry = new THREE.SphereGeometry(2.02, 64, 64);
             const cloudsMaterial = new THREE.MeshBasicMaterial({
