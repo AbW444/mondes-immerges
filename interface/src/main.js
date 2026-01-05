@@ -147,7 +147,7 @@ async function playTransitionVideo() {
             return;
         }
 
-        console.log('🎬 Lecture vidéo de transition en reverse...');
+        console.log('🎬 Préparation vidéo de transition...');
 
         // Cacher le jelly loader
         if (jellyLoader) {
@@ -164,9 +164,23 @@ async function playTransitionVideo() {
 
         // Fonction pour jouer en reverse avec requestAnimationFrame
         const playReverse = () => {
+            console.log(`📹 Durée vidéo: ${transitionVideo.duration}s, ReadyState: ${transitionVideo.readyState}`);
+
+            // Vérifier que la durée est valide
+            if (!transitionVideo.duration || isNaN(transitionVideo.duration)) {
+                console.error('❌ Durée vidéo invalide:', transitionVideo.duration);
+                resolve();
+                return;
+            }
+
+            // Afficher la vidéo AVANT de commencer l'animation
+            transitionVideo.classList.add('active');
+
+            // Mettre la vidéo à la fin
             transitionVideo.pause();
             transitionVideo.currentTime = transitionVideo.duration;
-            transitionVideo.classList.add('active'); // Ajouter classe active comme dans accueil
+
+            console.log(`▶️ Début lecture reverse depuis ${transitionVideo.currentTime.toFixed(2)}s`);
 
             const reverseFrame = (currentTime) => {
                 const elapsed = currentTime - lastTime;
@@ -191,11 +205,13 @@ async function playTransitionVideo() {
             animationFrameId = requestAnimationFrame(reverseFrame);
         };
 
-        // Attendre que la vidéo soit chargée
-        if (transitionVideo.readyState >= 2) {
+        // CRITIQUE: Attendre loadedmetadata pour avoir la durée
+        if (transitionVideo.readyState >= 1 && transitionVideo.duration && !isNaN(transitionVideo.duration)) {
+            console.log('✅ Métadonnées déjà chargées');
             playReverse();
         } else {
-            transitionVideo.addEventListener('loadeddata', playReverse, { once: true });
+            console.log('⏳ Attente chargement métadonnées...');
+            transitionVideo.addEventListener('loadedmetadata', playReverse, { once: true });
             transitionVideo.load();
         }
 
@@ -205,6 +221,7 @@ async function playTransitionVideo() {
                 cancelAnimationFrame(animationFrameId);
             }
             console.warn('⚠️ Timeout vidéo transition');
+            transitionVideo.classList.remove('active');
             resolve();
         }, 10000);
     });
