@@ -805,7 +805,7 @@ export class GlobeManager {
             // Stocker les matériaux pour pouvoir les animer lors de l'apparition
             marker.userData.materials = [markerMaterial, haloMaterial];
 
-            this.addHotspotLabel(marker, title, new THREE.Vector3(surfaceX, surfaceY, surfaceZ));
+            this.addHotspotLabel(marker, title, new THREE.Vector3(x, y, z));
 
             this.scene.add(marker);
             this.hotspotObjects.push(marker);
