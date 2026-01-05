@@ -140,6 +140,8 @@ async function playTransitionVideo() {
     return new Promise((resolve) => {
         const jellyLoader = document.querySelector('l-jelly');
         const transitionVideo = document.getElementById('transition-video');
+        const loadingScreen = document.getElementById('loading-screen');
+        const mainContainer = document.getElementById('main-container');
 
         if (!transitionVideo) {
             console.warn('⚠️ Vidéo de transition introuvable');
@@ -154,6 +156,19 @@ async function playTransitionVideo() {
             jellyLoader.style.transition = 'opacity 0.3s ease';
             jellyLoader.style.opacity = '0';
             setTimeout(() => jellyLoader.remove(), 300);
+        }
+
+        // IMPORTANT: Afficher le globe IMMÉDIATEMENT
+        if (mainContainer) {
+            mainContainer.style.opacity = '1';
+            console.log('🌍 Globe visible immédiatement');
+        }
+
+        // IMPORTANT: Cacher l'écran de chargement IMMÉDIATEMENT
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+            loadingScreen.classList.add('hidden');
+            console.log('✅ Écran de chargement masqué');
         }
 
         // Activer la vidéo de transition - EXACTEMENT comme accueil
@@ -240,41 +255,15 @@ async function startApplication() {
         }
 
         // Afficher et jouer la vidéo de transition
+        // Le globe devient visible dès que la vidéo commence (géré dans playTransitionVideo)
         await playTransitionVideo();
 
-        // Démarrer la séquence qui va créer l'effet orbital
-        // sur l'écran de chargement toujours visible
-        setTimeout(() => {
-            if (app.startupSequence && typeof app.startupSequence === 'function') {
-                console.log('🎬 Séquence de démarrage...');
-                // Passer la fonction de fin au startupSequence
-                app.startupSequence(() => {
-                    // Cette fonction sera appelée quand l'orbital loader apparaît
-                    hideLoadingScreenGradually();
+        // Démarrer l'exploration et afficher l'interface immédiatement
+        console.log('🌊 Démarrage exploration...');
+        app.startExploration(true);
 
-                    // Démarrer l'exploration APRÈS la fin de la transition (2.5s au lieu de 4s)
-                    // Les éléments UI apparaissent 0.2s après (2.7s total)
-                    setTimeout(() => {
-                        console.log('🌊 Démarrage exploration...');
-                        app.startExploration(true);
-
-                        // Faire apparaître les éléments UI 0.2s après la fin du fond noir
-                        setTimeout(() => {
-                            showInterfaceElements(app);
-                        }, 200);
-                    }, 2500);
-                });
-            } else {
-                console.log('🌊 Démarrage direct...');
-                hideLoadingScreenGradually();
-                setTimeout(() => {
-                    app.startExploration(true);
-                    setTimeout(() => {
-                        showInterfaceElements(app);
-                    }, 200);
-                }, 2500);
-            }
-        }, 300);
+        // Afficher les éléments UI immédiatement
+        showInterfaceElements(app);
 
     } catch (error) {
         console.error('❌ Erreur application:', error);
