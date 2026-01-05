@@ -164,11 +164,10 @@ async function playTransitionVideo() {
             console.log('🌍 Globe visible immédiatement');
         }
 
-        // IMPORTANT: Cacher l'écran de chargement IMMÉDIATEMENT
+        // IMPORTANT: Rendre le loading-screen transparent (garder la vidéo visible)
         if (loadingScreen) {
-            loadingScreen.style.display = 'none';
-            loadingScreen.classList.add('hidden');
-            console.log('✅ Écran de chargement masqué');
+            loadingScreen.style.background = 'transparent';
+            console.log('✅ Loading-screen transparent');
         }
 
         // Activer la vidéo de transition - EXACTEMENT comme accueil
@@ -183,6 +182,13 @@ async function playTransitionVideo() {
             transitionVideo.addEventListener('ended', function() {
                 console.log('✅ Vidéo de transition terminée');
                 transitionVideo.classList.remove('active');
+
+                // Cacher le loading-screen APRÈS la vidéo
+                if (loadingScreen) {
+                    loadingScreen.style.display = 'none';
+                    loadingScreen.classList.add('hidden');
+                }
+
                 setTimeout(() => resolve(), 300);
             }, { once: true });
 

@@ -115,9 +115,9 @@ export class GlobeManager {
         // NOTE: Le globe et la skybox seront créés via preloadAllAssets()
         // Ne pas les créer ici pour éviter les duplications
 
-        // Créer le soleil et la lune
-        this.createCelestialBodies();
-        
+        // Soleil et lune supprimés à la demande de l'utilisateur
+        // this.createCelestialBodies();
+
         // Créer la trajectoire de la caméra
         this.createOrbitPath();
         
@@ -756,22 +756,23 @@ export class GlobeManager {
 
         hotspots.forEach(hotspot => {
             const { position, title } = hotspot;
-            
+
             const lat = position.lat * (Math.PI / 180);
             const lon = position.lng * (Math.PI / 180);
-            
-            const radius = 2.1;
-            const x = radius * Math.cos(lat) * Math.cos(lon);
-            const y = radius * Math.sin(lat);
-            const z = radius * Math.cos(lat) * Math.sin(lon);
-            
-            console.log(`Hotspot ${title}: GPS(${position.lat}, ${position.lng}) -> 3D(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
 
-            // Positionner au-dessus de la surface pour ne pas traverser le globe
-            const surfaceOffset = 2.12; // Globe = 2.0, hotspot légèrement au-dessus
-            const surfaceX = (surfaceOffset / radius) * x;
-            const surfaceY = (surfaceOffset / radius) * y;
-            const surfaceZ = (surfaceOffset / radius) * z;
+            // Rayon du globe (défini dans l'application)
+            const globeRadius = 2.0;
+
+            // Offset pour éviter de traverser + petite marge pour être visible
+            const hotspotOffset = 0.15; // Distance fixe au-dessus de la surface
+            const hotspotRadius = globeRadius + hotspotOffset;
+
+            // Position sur la sphère avec offset constant
+            const x = hotspotRadius * Math.cos(lat) * Math.cos(lon);
+            const y = hotspotRadius * Math.sin(lat);
+            const z = hotspotRadius * Math.cos(lat) * Math.sin(lon);
+
+            console.log(`Hotspot ${title}: GPS(${position.lat}, ${position.lng}) -> 3D(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
 
             // Hotspot sphérique avec jaune pur
             const markerGeometry = new THREE.SphereGeometry(0.05, 16, 16);
@@ -780,11 +781,11 @@ export class GlobeManager {
                 transparent: true,
                 opacity: 0, // Commence invisible, apparaîtra avec les autres UI
                 depthTest: true,
-                depthWrite: false
+                depthWrite: true // Activer pour éviter de voir à travers le globe
             });
 
             const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-            marker.position.set(surfaceX, surfaceY, surfaceZ);
+            marker.position.set(x, y, z);
             marker.userData = { hotspot };
 
             // Ajouter le halo
@@ -1041,36 +1042,54 @@ export class GlobeManager {
     // Fonction de redirection
    _redirectToExternalPage(hotspot) {
        console.log("=== REDIRECTION VERS PAGE EXTERNE ===");
-       
-       // Créer un overlay de transition
-       const transitionOverlay = document.createElement('div');
-       transitionOverlay.style.cssText = `
-           position: fixed;
-           top: 0;
-           left: 0;
-           width: 100%;
-           height: 100%;
-           background-color: rgba(0, 0, 0, 0);
-           z-index: 9999;
-           pointer-events: none;
-       `;
-       
-       document.body.appendChild(transitionOverlay);
-       
-       // Animer l'overlay
-       gsap.to(transitionOverlay, {
-           backgroundColor: 'rgba(0, 0, 0, 1)',
-           duration: 1,
-           ease: "power2.inOut",
-           onComplete: () => {
-               // Utiliser la fonction getRedirectUrl pour obtenir l'URL
-               const redirectUrl = getRedirectUrl(hotspot.id);
-               console.log(`Redirection vers: ${redirectUrl}`);
-               
-               // Effectuer la redirection
+
+       // Jouer la vidéo de transition puis rediriger
+       this.playTransitionVideoAndRedirect(hotspot.id);
+   }
+
+   /**
+    * Joue la vidéo de transition puis redirige vers une page
+    */
+   playTransitionVideoAndRedirect(hotspotId) {
+       const transitionVideo = document.getElementById('transition-video');
+
+       if (!transitionVideo) {
+           console.warn('⚠️ Vidéo de transition introuvable, redirection directe');
+           const redirectUrl = getRedirectUrl(hotspotId);
+           window.location.href = redirectUrl;
+           return;
+       }
+
+       console.log('🎬 Lecture vidéo de transition avant redirection...');
+
+       // Activer la vidéo (la rendre visible)
+       transitionVideo.classList.add('active');
+       transitionVideo.currentTime = 0;
+
+       // Lancer la vidéo
+       transitionVideo.play().then(() => {
+           console.log('Vidéo de transition lancée');
+
+           // Écouter la fin de la vidéo pour faire la redirection
+           transitionVideo.addEventListener('ended', () => {
+               console.log('✅ Vidéo terminée, redirection...');
+               const redirectUrl = getRedirectUrl(hotspotId);
                window.location.href = redirectUrl;
-           }
+           }, { once: true });
+
+       }).catch(e => {
+           console.error('❌ Erreur vidéo:', e);
+           // En cas d'erreur, rediriger quand même
+           const redirectUrl = getRedirectUrl(hotspotId);
+           window.location.href = redirectUrl;
        });
+
+       // Timeout de sécurité
+       setTimeout(() => {
+           console.warn('⚠️ Timeout vidéo, redirection forcée');
+           const redirectUrl = getRedirectUrl(hotspotId);
+           window.location.href = redirectUrl;
+       }, 10000);
    }
    
    // MÉTHODE CORRIGÉE: Effet de scan avec shader compatible
