@@ -147,7 +147,7 @@ async function playTransitionVideo() {
             return;
         }
 
-        console.log('🎬 Préparation vidéo de transition...');
+        console.log('>>> DÉCLENCHEMENT DE LA TRANSITION <<<');
 
         // Cacher le jelly loader
         if (jellyLoader) {
@@ -156,74 +156,50 @@ async function playTransitionVideo() {
             setTimeout(() => jellyLoader.remove(), 300);
         }
 
-        // Variables pour la lecture inverse manuelle
-        let animationFrameId;
-        let lastTime = performance.now();
-        const fps = 30;
-        const frameDuration = 1000 / fps;
+        // Activer la vidéo de transition - EXACTEMENT comme accueil
+        transitionVideo.classList.add('active');
+        transitionVideo.currentTime = 0;
 
-        // Fonction pour jouer en reverse avec requestAnimationFrame
-        const playReverse = () => {
-            console.log(`📹 Durée vidéo: ${transitionVideo.duration}s, ReadyState: ${transitionVideo.readyState}`);
+        // Lancer la vidéo
+        transitionVideo.play().then(() => {
+            console.log('Vidéo de transition lancée');
 
-            // Vérifier que la durée est valide
-            if (!transitionVideo.duration || isNaN(transitionVideo.duration)) {
-                console.error('❌ Durée vidéo invalide:', transitionVideo.duration);
-                resolve();
-                return;
-            }
+            // Écouter la fin de la vidéo pour terminer la transition
+            transitionVideo.addEventListener('ended', function() {
+                console.log('✅ Vidéo de transition terminée');
+                transitionVideo.classList.remove('active');
+                setTimeout(() => resolve(), 300);
+            }, { once: true });
 
-            // Afficher la vidéo AVANT de commencer l'animation
-            transitionVideo.classList.add('active');
-
-            // Mettre la vidéo à la fin
-            transitionVideo.pause();
-            transitionVideo.currentTime = transitionVideo.duration;
-
-            console.log(`▶️ Début lecture reverse depuis ${transitionVideo.currentTime.toFixed(2)}s`);
-
-            const reverseFrame = (currentTime) => {
-                const elapsed = currentTime - lastTime;
-
-                if (elapsed >= frameDuration) {
-                    transitionVideo.currentTime -= frameDuration / 1000;
-                    lastTime = currentTime;
-
-                    // Si on a atteint le début
-                    if (transitionVideo.currentTime <= 0) {
-                        cancelAnimationFrame(animationFrameId);
-                        console.log('✅ Vidéo de transition terminée');
-                        transitionVideo.classList.remove('active');
-                        setTimeout(() => resolve(), 300);
-                        return;
-                    }
-                }
-
-                animationFrameId = requestAnimationFrame(reverseFrame);
-            };
-
-            animationFrameId = requestAnimationFrame(reverseFrame);
-        };
-
-        // CRITIQUE: Attendre loadedmetadata pour avoir la durée
-        if (transitionVideo.readyState >= 1 && transitionVideo.duration && !isNaN(transitionVideo.duration)) {
-            console.log('✅ Métadonnées déjà chargées');
-            playReverse();
-        } else {
-            console.log('⏳ Attente chargement métadonnées...');
-            transitionVideo.addEventListener('loadedmetadata', playReverse, { once: true });
-            transitionVideo.load();
-        }
-
-        // Timeout de sécurité
-        setTimeout(() => {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-            }
-            console.warn('⚠️ Timeout vidéo transition');
+        }).catch(e => {
+            console.error('❌ Erreur lors du lancement de la vidéo:', e);
             transitionVideo.classList.remove('active');
             resolve();
-        }, 10000);
+        });
+
+        // Timeout de sécurité basé sur la durée de la vidéo
+        transitionVideo.addEventListener('loadedmetadata', function() {
+            const videoDuration = transitionVideo.duration;
+            console.log('📹 Durée de la vidéo:', videoDuration + 's');
+
+            // Timeout = durée vidéo + 2 secondes de sécurité
+            setTimeout(() => {
+                if (transitionVideo.classList.contains('active')) {
+                    console.warn('⚠️ Timeout vidéo transition');
+                    transitionVideo.classList.remove('active');
+                    resolve();
+                }
+            }, (videoDuration + 2) * 1000);
+        }, { once: true });
+
+        // Fallback ultime : 15 secondes
+        setTimeout(() => {
+            if (transitionVideo.classList.contains('active')) {
+                console.warn('⚠️ Timeout ultime');
+                transitionVideo.classList.remove('active');
+                resolve();
+            }
+        }, 15000);
     });
 }
 
