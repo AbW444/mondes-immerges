@@ -138,7 +138,7 @@ function initCustomCursor() {
  */
 async function playTransitionVideo() {
     return new Promise((resolve) => {
-        const loadingSpinner = document.querySelector('.loading-spinner');
+        const jellyLoader = document.querySelector('l-jelly');
         const transitionVideo = document.getElementById('transition-video');
 
         if (!transitionVideo) {
@@ -149,24 +149,24 @@ async function playTransitionVideo() {
 
         console.log('🎬 Lecture vidéo de transition en reverse...');
 
-        // Cacher le spinner
-        if (loadingSpinner) {
-            loadingSpinner.style.transition = 'opacity 0.3s ease';
-            loadingSpinner.style.opacity = '0';
-            setTimeout(() => loadingSpinner.remove(), 300);
+        // Cacher le jelly loader
+        if (jellyLoader) {
+            jellyLoader.style.transition = 'opacity 0.3s ease';
+            jellyLoader.style.opacity = '0';
+            setTimeout(() => jellyLoader.remove(), 300);
         }
 
         // Variables pour la lecture inverse manuelle
         let animationFrameId;
         let lastTime = performance.now();
-        const fps = 30; // 30 fps pour la lecture inverse
+        const fps = 30;
         const frameDuration = 1000 / fps;
 
         // Fonction pour jouer en reverse avec requestAnimationFrame
         const playReverse = () => {
             transitionVideo.pause();
             transitionVideo.currentTime = transitionVideo.duration;
-            transitionVideo.style.opacity = '1';
+            transitionVideo.classList.add('active'); // Ajouter classe active comme dans accueil
 
             const reverseFrame = (currentTime) => {
                 const elapsed = currentTime - lastTime;
@@ -179,7 +179,7 @@ async function playTransitionVideo() {
                     if (transitionVideo.currentTime <= 0) {
                         cancelAnimationFrame(animationFrameId);
                         console.log('✅ Vidéo de transition terminée');
-                        transitionVideo.style.opacity = '0';
+                        transitionVideo.classList.remove('active');
                         setTimeout(() => resolve(), 300);
                         return;
                     }
