@@ -557,8 +557,11 @@ export class GlobeManager {
                 }
             `,
             fragmentShader: `
+                #ifdef GL_ES
                 precision mediump float;
+                #endif
 
+                uniform vec3 cameraPosition;
                 varying vec3 vNormal;
                 varying vec3 vWorldPosition;
 
@@ -577,14 +580,23 @@ export class GlobeManager {
                     gl_FragColor = vec4(atmosphereColor, intensity * 0.55); // Intensité augmentée de 0.3 à 0.55
                 }
             `,
+            uniforms: {
+                cameraPosition: { value: new THREE.Vector3() }
+            },
             blending: THREE.AdditiveBlending,
             side: THREE.BackSide,
             transparent: true
         });
-        
+
         const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
         this.scene.add(atmosphere);
         this.atmosphere = atmosphere;
+
+        this.updateAtmosphereUniforms = () => {
+            if (this.atmosphere && this.atmosphere.material.uniforms) {
+                this.atmosphere.material.uniforms.cameraPosition.value.copy(this.camera.position);
+            }
+        };
     }
     
     createSkybox() {
@@ -1395,6 +1407,11 @@ export class GlobeManager {
        
        if (this.updateSkyboxTime) {
            this.updateSkyboxTime(time);
+       }
+
+       // Mettre à jour l'atmosphère
+       if (this.updateAtmosphereUniforms) {
+           this.updateAtmosphereUniforms();
        }
 
        // Animer les ondes des hotspots (sprites)
