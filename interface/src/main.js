@@ -148,7 +148,7 @@ async function playTransitionVideo() {
             return;
         }
 
-        console.log('🎬 Lecture vidéo de transition en reverse...');
+        console.log('🎬 Lecture vidéo de transition...');
 
         // Cacher le jelly loader et son conteneur
         const elementToHide = loaderContainer || jellyLoader;
@@ -158,34 +158,29 @@ async function playTransitionVideo() {
             setTimeout(() => elementToHide.remove(), 300);
         }
 
-        // Préparer la vidéo pour lecture inversée
-        transitionVideo.addEventListener('loadedmetadata', () => {
-            // Démarrer à la fin pour jouer en reverse
-            transitionVideo.currentTime = transitionVideo.duration;
-            transitionVideo.playbackRate = -1; // Lecture inversée
-
-            // Afficher et jouer la vidéo
+        // Fonction pour jouer la vidéo
+        const playVideo = () => {
+            // Les navigateurs ne supportent pas playbackRate négatif
+            // Pour avoir l'effet reverse, il faut encoder la vidéo en reverse
+            transitionVideo.currentTime = 0;
+            transitionVideo.playbackRate = 1;
             transitionVideo.style.opacity = '1';
+
             transitionVideo.play().catch(e => {
                 console.warn('⚠️ Erreur lecture vidéo transition:', e);
                 resolve();
             });
-        }, { once: true });
+        };
 
-        // Charger la vidéo si pas encore chargée
-        if (transitionVideo.readyState >= 1) {
-            transitionVideo.currentTime = transitionVideo.duration;
-            transitionVideo.playbackRate = -1;
-            transitionVideo.style.opacity = '1';
-            transitionVideo.play().catch(e => {
-                console.warn('⚠️ Erreur lecture vidéo transition:', e);
-                resolve();
-            });
+        // Attendre que la vidéo soit chargée
+        if (transitionVideo.readyState >= 2) {
+            playVideo();
         } else {
+            transitionVideo.addEventListener('loadeddata', playVideo, { once: true });
             transitionVideo.load();
         }
 
-        // Résoudre quand la vidéo atteint le début (car reverse)
+        // Résoudre quand la vidéo se termine
         transitionVideo.addEventListener('ended', () => {
             console.log('✅ Vidéo de transition terminée');
             transitionVideo.style.opacity = '0';
