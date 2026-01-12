@@ -30,8 +30,9 @@
             justify-content: center;
             align-items: center;
         }
-        /* Vidéo de transition - EXACTEMENT comme accueil */
-        #transition-video {
+        /* Vidéos de transition */
+        #transition-video-in,
+        #transition-video-out {
             position: fixed;
             top: 0;
             left: 0;
@@ -42,7 +43,8 @@
             opacity: 0;
             pointer-events: none;
         }
-        #transition-video.active {
+        #transition-video-in.active,
+        #transition-video-out.active {
             opacity: 1;
             pointer-events: all;
         }
@@ -54,7 +56,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/nationalgeographic.fr-mondesimmerges/interface/assets/index-C-Tryrru.js"></script>
+  <script type="module" crossorigin src="/nationalgeographic.fr-mondesimmerges/interface/assets/index-B5rbFpPC.js"></script>
   <link rel="modulepreload" crossorigin href="/nationalgeographic.fr-mondesimmerges/interface/assets/three-4x0lhi4J.js">
   <link rel="modulepreload" crossorigin href="/nationalgeographic.fr-mondesimmerges/interface/assets/gsap-xHO-obUW.js">
   <link rel="stylesheet" crossorigin href="/nationalgeographic.fr-mondesimmerges/interface/assets/index-tuxinE7i.css">
@@ -137,8 +139,12 @@
         <div id="loading-screen">
             <!-- Vrai jelly loader ldrs -->
             <l-jelly size="60" speed="0.9" color="#ffcc00"></l-jelly>
-            <!-- Vidéo de transition -->
-            <video id="transition-video" muted playsinline>
+            <!-- Vidéo de transition ENTRÉE -->
+            <video id="transition-video-in" muted playsinline>
+                <source src="/nationalgeographic.fr-mondesimmerges/videos/animation-logo-transition-inverse.webm" type="video/webm">
+            </video>
+            <!-- Vidéo de transition SORTIE -->
+            <video id="transition-video-out" muted playsinline>
                 <source src="/nationalgeographic.fr-mondesimmerges/videos/anim-logo-transition.webm" type="video/webm">
             </video>
         </div>

@@ -1051,16 +1051,16 @@ export class GlobeManager {
     * Joue la vidéo de transition puis redirige vers une page
     */
    playTransitionVideoAndRedirect(hotspotId) {
-       const transitionVideo = document.getElementById('transition-video');
+       const transitionVideo = document.getElementById('transition-video-out');
 
        if (!transitionVideo) {
-           console.warn('⚠️ Vidéo de transition introuvable, redirection directe');
+           console.warn('⚠️ Vidéo de transition de sortie introuvable, redirection directe');
            const redirectUrl = getRedirectUrl(hotspotId);
            window.location.href = redirectUrl;
            return;
        }
 
-       console.log('🎬 Lecture vidéo de transition avant redirection...');
+       console.log('🎬 TRANSITION SORTIE (vidéo normale)');
 
        // Activer la vidéo (la rendre visible)
        transitionVideo.classList.add('active');

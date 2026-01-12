@@ -445,6 +445,27 @@
             pointer-events: all;
         }
 
+        /* Écran de chargement après la vidéo */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 100000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
         .video-overlay {
             position: absolute;
             top: 0;
@@ -1318,6 +1339,11 @@
         Votre navigateur ne supporte pas les vidéos HTML5.
     </video>
 
+    <!-- Écran de chargement après transition -->
+    <div id="loading-overlay" class="loading-overlay">
+        <l-jelly size="60" speed="0.9" color="#ffcc00"></l-jelly>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Variables pour le système de changement de vidéos
@@ -1541,8 +1567,9 @@
             // Gestion du bouton Explorer avec vidéo de transition
             const exploreBtn = document.getElementById('exploreBtn');
             const transitionVideo = document.getElementById('transitionVideo');
-            
-            if (exploreBtn && transitionVideo) {
+            const loadingOverlay = document.getElementById('loading-overlay');
+
+            if (exploreBtn && transitionVideo && loadingOverlay) {
                 exploreBtn.addEventListener('click', function() {
                     console.log('>>> DÉCLENCHEMENT DE LA TRANSITION <<<');
                     
@@ -1591,13 +1618,20 @@
                 
                 // Fonction de redirection
                 function handleRedirection() {
-                    console.log('>>> REDIRECTION VERS L\'INTERFACE <<<');
+                    console.log('>>> TRANSITION VERS LOADING OVERLAY <<<');
 
                     // Masquer la vidéo de transition
                     transitionVideo.classList.remove('active');
 
-                    // Redirection vers la page interface
-                    window.location.href = '/nationalgeographic.fr-mondesimmerges/interface/';
+                    // Afficher l'écran de chargement avec jelly
+                    loadingOverlay.classList.add('active');
+                    console.log('🔄 Loading overlay actif');
+
+                    // Attendre 500ms puis rediriger
+                    setTimeout(() => {
+                        console.log('🚀 REDIRECTION VERS L\'INTERFACE');
+                        window.location.href = '/nationalgeographic.fr-mondesimmerges/interface/';
+                    }, 500);
                 }
             }
             

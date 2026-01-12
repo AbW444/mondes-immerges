@@ -139,17 +139,17 @@ function initCustomCursor() {
 async function playTransitionVideo() {
     return new Promise((resolve) => {
         const jellyLoader = document.querySelector('l-jelly');
-        const transitionVideo = document.getElementById('transition-video');
+        const transitionVideo = document.getElementById('transition-video-in');
         const loadingScreen = document.getElementById('loading-screen');
         const mainContainer = document.getElementById('main-container');
 
         if (!transitionVideo) {
-            console.warn('⚠️ Vidéo de transition introuvable');
+            console.warn('⚠️ Vidéo de transition d\'entrée introuvable');
             resolve();
             return;
         }
 
-        console.log('>>> DÉCLENCHEMENT DE LA TRANSITION <<<');
+        console.log('🎬 TRANSITION ENTRÉE (vidéo inversée)');
 
         // Cacher le jelly loader
         if (jellyLoader) {
