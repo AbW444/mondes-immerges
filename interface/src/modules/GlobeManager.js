@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { gsap } from 'gsap';
 // Import corrigé pour la redirection
 import { getRedirectUrl } from '../data/redirect-config.js';
+import { getTransitionManager } from './TransitionManager.js';
 
 
 export class GlobeManager {
@@ -1052,37 +1053,27 @@ export class GlobeManager {
     }
     
     // Fonction de redirection
+   /**
+    * Redirige vers une page externe avec transition professionnelle OUT
+    * Utilise le TransitionManager pour une expérience fluide sans freeze
+    */
    _redirectToExternalPage(hotspot) {
-       console.log("=== REDIRECTION VERS PAGE EXTERNE ===");
-       
-       // Créer un overlay de transition
-       const transitionOverlay = document.createElement('div');
-       transitionOverlay.style.cssText = `
-           position: fixed;
-           top: 0;
-           left: 0;
-           width: 100%;
-           height: 100%;
-           background-color: rgba(0, 0, 0, 0);
-           z-index: 9999;
-           pointer-events: none;
-       `;
-       
-       document.body.appendChild(transitionOverlay);
-       
-       // Animer l'overlay
-       gsap.to(transitionOverlay, {
-           backgroundColor: 'rgba(0, 0, 0, 1)',
-           duration: 1,
-           ease: "power2.inOut",
-           onComplete: () => {
-               // Utiliser la fonction getRedirectUrl pour obtenir l'URL
-               const redirectUrl = getRedirectUrl(hotspot.id);
-               console.log(`Redirection vers: ${redirectUrl}`);
-               
-               // Effectuer la redirection
-               window.location.href = redirectUrl;
-           }
+       console.log("=== REDIRECTION VERS PAGE EXTERNE (avec transition OUT) ===");
+
+       // Obtenir le gestionnaire de transitions
+       const transitionManager = getTransitionManager();
+
+       // Utiliser la fonction getRedirectUrl pour obtenir l'URL
+       const redirectUrl = getRedirectUrl(hotspot.id);
+       console.log(`Préparation de la redirection vers: ${redirectUrl}`);
+
+       // Lancer la séquence de transition OUT professionnelle
+       // (Vidéo normale → Écran de chargement + jelly → Redirection)
+       transitionManager.transitionOut(() => {
+           console.log(`✅ Transition OUT terminée - Redirection vers: ${redirectUrl}`);
+
+           // Effectuer la redirection
+           window.location.href = redirectUrl;
        });
    }
    

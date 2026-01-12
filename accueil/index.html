@@ -445,6 +445,47 @@
             pointer-events: all;
         }
 
+        /* Écran de chargement avec jelly pour transitions */
+        .accueil-loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #000000;
+            display: flex !important;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10003;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .accueil-loading-screen.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .accueil-loading-screen .loading-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .accueil-loading-screen .loading-text {
+            font-family: 'Geograph', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #ffcc00;
+            font-size: 1rem;
+            font-weight: 500;
+            animation: blink 1.5s infinite;
+            text-align: center;
+        }
+
         .video-overlay {
             position: absolute;
             top: 0;
@@ -1318,6 +1359,9 @@
         Votre navigateur ne supporte pas les vidéos HTML5.
     </video>
 
+    <!-- Gestionnaire de transitions professionnel -->
+    <script src="./js/transition-manager.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Variables pour le système de changement de vidéos
@@ -1589,15 +1633,35 @@
                     }, 15000);
                 });
                 
-                // Fonction de redirection
+                // Fonction de redirection AVEC transition professionnelle
                 function handleRedirection() {
-                    console.log('>>> REDIRECTION VERS L\'INTERFACE <<<');
+                    console.log('>>> UTILISATION DU TRANSITION MANAGER <<<');
 
-                    // Masquer la vidéo de transition
+                    // Masquer la vidéo de transition (elle a déjà joué)
                     transitionVideo.classList.remove('active');
 
-                    // Redirection vers la page interface
-                    window.location.href = '/nationalgeographic.fr-mondesimmerges/interface/';
+                    // IMPORTANT: Afficher l'écran de chargement + jelly APRÈS la vidéo
+                    // pour éviter les freeze d'affichage
+                    if (window.AccueilTransitionManager) {
+                        // Utiliser le gestionnaire pour afficher le jelly puis rediriger
+                        const loadingScreen = document.getElementById('accueil-loading-screen');
+                        if (loadingScreen) {
+                            loadingScreen.classList.add('active');
+                            loadingScreen.style.opacity = '1';
+
+                            // Laisser le jelly visible un instant puis rediriger
+                            setTimeout(() => {
+                                console.log('>>> REDIRECTION VERS L\'INTERFACE <<<');
+                                window.location.href = './interface/';
+                            }, 800);
+                        } else {
+                            // Fallback si l'écran de chargement n'est pas créé
+                            window.location.href = './interface/';
+                        }
+                    } else {
+                        // Fallback si le gestionnaire n'est pas chargé
+                        window.location.href = './interface/';
+                    }
                 }
             }
             

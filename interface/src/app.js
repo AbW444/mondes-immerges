@@ -5,6 +5,7 @@ import { Interaction } from './modules/Interaction.js';
 import { InterfaceUI } from './modules/InterfaceUI.js';
 import { ContentPanel } from './modules/ContentPanel.js';
 import { hotspots, getHotspotById } from './data/hotspots.js';
+import { getTransitionManager } from './modules/TransitionManager.js';
 
 
 /**
@@ -19,13 +20,14 @@ class MondesImmergesApp {
         this.interaction = null;
         this.interfaceUI = null;
         this.contentPanel = null;
-        
+        this.transitionManager = null;
+
         // État de l'application
         this.isInitialized = false;
         this.isExploring = false;
         this.currentHotspot = null;
         this.explorationHistory = [];
-        
+
         // Éléments DOM
         this.welcomeScreen = document.getElementById('welcome-screen');
         this.mainContainer = document.getElementById('main-container');
@@ -37,9 +39,12 @@ class MondesImmergesApp {
      */
     init() {
         console.log('Initialisation de l\'application Mondes Immergés');
-        
+
         if (this.isInitialized) return;
         this.isInitialized = true;
+
+        // Initialiser le gestionnaire de transitions professionnel
+        this.transitionManager = getTransitionManager();
 
         // Initialiser les effets visuels en premier
         this.visualEffects = new VisualEffects({
@@ -383,14 +388,20 @@ class MondesImmergesApp {
         // Afficher des messages système après le chargement
         this.showSystemMessages();
 
-        // Afficher une notification de bienvenue
-        setTimeout(() => {
-            this.visualEffects.showNotification(
-                "Bienvenue dans l'exploration des Mondes Immergés",
-                "info",
-                4000
-            );
-        }, 1000);
+        // Lancer la séquence de transition IN professionnelle
+        // (écran de chargement + vidéo inversée → contenu)
+        this.transitionManager.transitionIn(() => {
+            console.log('✅ Transition IN terminée - Application prête');
+
+            // Afficher une notification de bienvenue après la transition
+            setTimeout(() => {
+                this.visualEffects.showNotification(
+                    "Bienvenue dans l'exploration des Mondes Immergés",
+                    "info",
+                    4000
+                );
+            }, 500);
+        });
     }
     
     /**
