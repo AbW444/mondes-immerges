@@ -8,16 +8,19 @@ import { jelly } from 'ldrs';
  */
 function checkWebGLCompatibility() {
     console.log('🔍 Vérification de la compatibilité WebGL...');
-    
-    // Créer un canvas de test
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    
-    if (!gl) {
-        console.error('❌ WebGL non supporté');
-        showWebGLError();
-        return false;
-    }
+
+    try {
+        // Créer un canvas de test
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl', { failIfMajorPerformanceCaveat: false })
+                 || canvas.getContext('experimental-webgl', { failIfMajorPerformanceCaveat: false })
+                 || canvas.getContext('webgl2', { failIfMajorPerformanceCaveat: false });
+
+        if (!gl) {
+            console.warn('⚠️ WebGL non détecté lors du test préliminaire');
+            // Ne pas bloquer - Three.js pourra peut-être créer son contexte quand même
+            return false;
+        }
     
     console.log('✅ Contexte WebGL créé avec succès');
     
@@ -127,8 +130,14 @@ function checkWebGLCompatibility() {
         console.warn('⚠️  Nombre d\'attributs vertex limité:', maxVertexAttribs);
     }
     
-    console.log('🚀 WebGL compatible - Initialisation 3D possible');
-    return true;
+        console.log('🚀 WebGL compatible - Initialisation 3D possible');
+        return true;
+
+    } catch (error) {
+        console.warn('⚠️ Erreur lors de la vérification WebGL:', error);
+        // Ne pas bloquer - laisser Three.js essayer
+        return false;
+    }
 }
 
 /**
@@ -190,11 +199,11 @@ function showWebGLError() {
  */
 function initialize() {
     console.log('🌊 Application Mondes Immergés en cours de chargement...');
-    
-    // NOUVEAU: Vérifier la compatibilité WebGL avant de continuer
-    if (!checkWebGLCompatibility()) {
-        console.error('❌ Initialisation interrompue - WebGL incompatible');
-        return;
+
+    // Vérifier la compatibilité WebGL (non-bloquant, Three.js gérera les erreurs)
+    const webglSupported = checkWebGLCompatibility();
+    if (!webglSupported) {
+        console.warn('⚠️ WebGL détection échouée, mais on continue (Three.js gérera)');
     }
     
     // Désactiver complètement toutes les interactions de glissement
