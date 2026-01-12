@@ -1,0 +1,168 @@
+// PATCH: Ajouter après la méthode init() ou avant setupLighting()
+
+    /**
+     * Configure les gestionnaires de perte/restauration du contexte WebGL
+     * CRITIQUE pour gérer les erreurs GL_OUT_OF_MEMORY et GL_CONTEXT_LOST
+     */
+    setupWebGLContextHandlers() {
+        if (!this.renderer || !this.renderer.domElement) return;
+
+        const canvas = this.renderer.domElement;
+
+        // Gestionnaire de perte de contexte
+        canvas.addEventListener('webglcontextlost', (event) => {
+            event.preventDefault();
+            console.error('🔴 CONTEXTE WEBGL PERDU - Tentative de récupération...');
+
+            // Arrêter le rendu
+            if (this.animationFrameId) {
+                cancelAnimationFrame(this.animationFrameId);
+                this.animationFrameId = null;
+            }
+
+            // Marquer que le contexte est perdu
+            this.contextLost = true;
+
+            // Afficher un message à l'utilisateur
+            this.showContextLostMessage();
+        }, false);
+
+        // Gestionnaire de restauration de contexte
+        canvas.addEventListener('webglcontextrestored', () => {
+            console.log('✅ CONTEXTE WEBGL RESTAURÉ - Réinitialisation...');
+
+            this.contextLost = false;
+
+            // Masquer le message d'erreur
+            this.hideContextLostMessage();
+
+            // Réinitialiser la scène
+            try {
+                this.reinitializeAfterContextLoss();
+            } catch (error) {
+                console.error('Erreur lors de la réinitialisation:', error);
+                // Recharger la page en dernier recours
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            }
+        }, false);
+
+        console.log('✅ Gestionnaires de contexte WebGL configurés');
+    }
+
+    /**
+     * Affiche un message quand le contexte est perdu
+     */
+    showContextLostMessage() {
+        const existingMsg = document.getElementById('webgl-context-lost-msg');
+        if (existingMsg) return;
+
+        const msg = document.createElement('div');
+        msg.id = 'webgl-context-lost-msg';
+        msg.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            color: #ffcc00;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #ffcc00;
+            z-index: 100000;
+            text-align: center;
+            font-family: 'Geograph', sans-serif;
+            max-width: 500px;
+        `;
+        msg.innerHTML = `
+            <h2 style="margin-bottom: 15px;">⚠️ Contexte WebGL Perdu</h2>
+            <p style="margin-bottom: 15px;">La mémoire GPU est saturée. Tentative de récupération automatique...</p>
+            <p style="font-size: 0.9em; opacity: 0.8;">Si le problème persiste, rechargez la page.</p>
+        `;
+        document.body.appendChild(msg);
+    }
+
+    /**
+     * Masque le message d'erreur
+     */
+    hideContextLostMessage() {
+        const msg = document.getElementById('webgl-context-lost-msg');
+        if (msg) {
+            msg.remove();
+        }
+    }
+
+    /**
+     * Réinitialise la scène après restauration du contexte
+     */
+    reinitializeAfterContextLoss() {
+        console.log('🔄 Réinitialisation de la scène WebGL...');
+
+        // Nettoyer les anciennes ressources
+        if (this.scene) {
+            this.scene.traverse((object) => {
+                if (object.geometry) {
+                    object.geometry.dispose();
+                }
+                if (object.material) {
+                    if (Array.isArray(object.material)) {
+                        object.material.forEach(material => material.dispose());
+                    } else {
+                        object.material.dispose();
+                    }
+                }
+            });
+        }
+
+        // Recréer les textures et matériaux
+        if (this.videoTexture) {
+            this.videoTexture.dispose();
+            this.videoTexture = null;
+        }
+
+        // Redémarrer le rendu
+        this.startRendering();
+
+        console.log('✅ Réinitialisation terminée');
+    }
+
+    /**
+     * Gère les erreurs WebGL non récupérables
+     */
+    handleWebGLError() {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            color: #ffcc00;
+            padding: 40px;
+            border-radius: 12px;
+            border: 2px solid #ffcc00;
+            z-index: 100000;
+            text-align: center;
+            font-family: 'Geograph', sans-serif;
+            max-width: 600px;
+        `;
+        errorDiv.innerHTML = `
+            <div style="font-size: 3em; margin-bottom: 20px;">⚠️</div>
+            <h2 style="margin-bottom: 20px;">Erreur WebGL</h2>
+            <p style="margin-bottom: 20px;">
+                Impossible d'initialiser le rendu 3D.
+                Votre GPU manque peut-être de mémoire.
+            </p>
+            <button onclick="location.reload()" style="
+                background: #ffcc00;
+                color: #000;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: bold;
+            ">Recharger la page</button>
+        `;
+        document.body.appendChild(errorDiv);
+    }

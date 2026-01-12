@@ -81,18 +81,29 @@ export class GlobeManager {
         
         this.updateCameraPosition();
         
-        // Créer le renderer avec vérifications WebGL
+        // Créer le renderer avec vérifications WebGL et optimisations mémoire
         try {
-            this.renderer = new THREE.WebGLRenderer({ 
-                antialias: true, 
+            this.renderer = new THREE.WebGLRenderer({
+                antialias: window.devicePixelRatio <= 1, // Désactiver antialiasing sur écrans HD
                 alpha: true,
-                logarithmicDepthBuffer: true,
-                powerPreference: "high-performance"
+                logarithmicDepthBuffer: false, // Désactivé pour économiser la mémoire
+                powerPreference: "default", // "default" au lieu de "high-performance" pour éviter saturation GPU
+                preserveDrawingBuffer: false, // Économise la mémoire
+                failIfMajorPerformanceCaveat: false // Ne pas échouer si performance limitée
             });
+
             this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limiter pour les performances
-            this.renderer.shadowMap.enabled = true;
-            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Limité à 1.5x pour économiser GPU
+
+            // Désactiver les ombres pour économiser la mémoire GPU
+            this.renderer.shadowMap.enabled = false;
+
+            // Configurer les limites de texture pour éviter OUT_OF_MEMORY
+            const capabilities = this.renderer.capabilities;
+            capabilities.maxTextures = Math.min(capabilities.maxTextures, 8);
+
+            // Ajouter la gestion de perte/restauration du contexte WebGL
+            this.setupWebGLContextHandlers();
             
             // Vérifier les capacités WebGL
             const gl = this.renderer.getContext();
@@ -160,7 +171,134 @@ export class GlobeManager {
         
         this.container.appendChild(errorDiv);
     }
-    
+
+    /**
+     * Configure les gestionnaires de perte/restauration du contexte WebGL
+     * CRITIQUE pour gérer les erreurs GL_OUT_OF_MEMORY et GL_CONTEXT_LOST
+     */
+    setupWebGLContextHandlers() {
+        if (!this.renderer || !this.renderer.domElement) return;
+
+        const canvas = this.renderer.domElement;
+
+        // Gestionnaire de perte de contexte
+        canvas.addEventListener('webglcontextlost', (event) => {
+            event.preventDefault();
+            console.error('🔴 CONTEXTE WEBGL PERDU - Tentative de récupération...');
+
+            // Arrêter le rendu
+            if (this.animationFrameId) {
+                cancelAnimationFrame(this.animationFrameId);
+                this.animationFrameId = null;
+            }
+
+            // Marquer que le contexte est perdu
+            this.contextLost = true;
+
+            // Afficher un message à l'utilisateur
+            this.showContextLostMessage();
+        }, false);
+
+        // Gestionnaire de restauration de contexte
+        canvas.addEventListener('webglcontextrestored', () => {
+            console.log('✅ CONTEXTE WEBGL RESTAURÉ - Réinitialisation...');
+
+            this.contextLost = false;
+
+            // Masquer le message d'erreur
+            this.hideContextLostMessage();
+
+            // Réinitialiser la scène
+            try {
+                this.reinitializeAfterContextLoss();
+            } catch (error) {
+                console.error('Erreur lors de la réinitialisation:', error);
+                // Recharger la page en dernier recours
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            }
+        }, false);
+
+        console.log('✅ Gestionnaires de contexte WebGL configurés');
+    }
+
+    /**
+     * Affiche un message quand le contexte est perdu
+     */
+    showContextLostMessage() {
+        const existingMsg = document.getElementById('webgl-context-lost-msg');
+        if (existingMsg) return;
+
+        const msg = document.createElement('div');
+        msg.id = 'webgl-context-lost-msg';
+        msg.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            color: #ffcc00;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #ffcc00;
+            z-index: 100000;
+            text-align: center;
+            font-family: 'Geograph', sans-serif;
+            max-width: 500px;
+        `;
+        msg.innerHTML = `
+            <h2 style="margin-bottom: 15px;">⚠️ Contexte WebGL Perdu</h2>
+            <p style="margin-bottom: 15px;">La mémoire GPU est saturée. Tentative de récupération automatique...</p>
+            <p style="font-size: 0.9em; opacity: 0.8;">Si le problème persiste, rechargez la page.</p>
+        `;
+        document.body.appendChild(msg);
+    }
+
+    /**
+     * Masque le message d'erreur
+     */
+    hideContextLostMessage() {
+        const msg = document.getElementById('webgl-context-lost-msg');
+        if (msg) {
+            msg.remove();
+        }
+    }
+
+    /**
+     * Réinitialise la scène après restauration du contexte
+     */
+    reinitializeAfterContextLoss() {
+        console.log('🔄 Réinitialisation de la scène WebGL...');
+
+        // Nettoyer les anciennes ressources
+        if (this.scene) {
+            this.scene.traverse((object) => {
+                if (object.geometry) {
+                    object.geometry.dispose();
+                }
+                if (object.material) {
+                    if (Array.isArray(object.material)) {
+                        object.material.forEach(material => material.dispose());
+                    } else {
+                        object.material.dispose();
+                    }
+                }
+            });
+        }
+
+        // Recréer les textures et matériaux
+        if (this.videoTexture) {
+            this.videoTexture.dispose();
+            this.videoTexture = null;
+        }
+
+        // Redémarrer le rendu
+        this.startRendering();
+
+        console.log('✅ Réinitialisation terminée');
+    }
+
     // NOUVELLE MÉTHODE: Gestionnaire des événements clavier
     onKeyDown(event) {
         if (event.key === 'Enter') {
@@ -355,10 +493,23 @@ export class GlobeManager {
         this.scene.add(hemisphereLight);
     }
     
+    /**
+     * Optimise une texture pour économiser la mémoire GPU
+     */
+    optimizeTexture(texture) {
+        texture.generateMipmaps = false;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.anisotropy = 1;
+        return texture;
+    }
+
     createCelestialBodies() {
         const textureLoader = new THREE.TextureLoader();
 
-        const sunTexture = textureLoader.load(`${import.meta.env.BASE_URL}images/sun-texture.jpg`);
+        const sunTexture = textureLoader.load(`${import.meta.env.BASE_URL}images/sun-texture.jpg`, (tex) => {
+            this.optimizeTexture(tex);
+        });
         const sunGeometry = new THREE.SphereGeometry(3, 32, 32);
         const sunMaterial = new THREE.MeshBasicMaterial({
             map: sunTexture,
@@ -369,7 +520,9 @@ export class GlobeManager {
         sun.position.copy(this.celestialParams.sunPosition);
         this.scene.add(sun);
 
-        const moonTexture = textureLoader.load(`${import.meta.env.BASE_URL}images/moon-texture.jpg`);
+        const moonTexture = textureLoader.load(`${import.meta.env.BASE_URL}images/moon-texture.jpg`, (tex) => {
+            this.optimizeTexture(tex);
+        });
         const moonGeometry = new THREE.SphereGeometry(1.5, 32, 32);
         const moonMaterial = new THREE.MeshStandardMaterial({
             map: moonTexture,
@@ -484,10 +637,15 @@ export class GlobeManager {
             }, 1000);
 
             this.videoTexture = new THREE.VideoTexture(video);
+            // Optimisations mémoire GPU pour éviter GL_OUT_OF_MEMORY
             this.videoTexture.minFilter = THREE.LinearFilter;
             this.videoTexture.magFilter = THREE.LinearFilter;
             this.videoTexture.format = THREE.RGBAFormat;
             this.videoTexture.colorSpace = THREE.SRGBColorSpace;
+            this.videoTexture.generateMipmaps = false; // Désactiver mipmaps pour économiser ~33% mémoire
+            this.videoTexture.anisotropy = 1; // Limiter anisotropie (au lieu de max)
+
+            console.log('✅ Texture vidéo optimisée pour mémoire GPU limitée');
 
             const depthGeometry = new THREE.SphereGeometry(1.99, 64, 64);
             const depthMaterial = new THREE.MeshBasicMaterial({
@@ -626,13 +784,26 @@ export class GlobeManager {
                         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
                         this.renderer.toneMappingExposure = 0.3;
 
-                        const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
+                        // OPTIMISATION MÉMOIRE: Limiter la taille du cube render target
+                        // Réduire de la taille originale à max 1024 pour éviter GL_OUT_OF_MEMORY
+                        const maxSkyboxSize = 1024;
+                        const skyboxSize = Math.min(texture.image.height, maxSkyboxSize);
+
+                        // Optimiser la texture source
+                        texture.generateMipmaps = false;
+                        texture.minFilter = THREE.LinearFilter;
+                        texture.magFilter = THREE.LinearFilter;
+
+                        const rt = new THREE.WebGLCubeRenderTarget(skyboxSize);
                         rt.fromEquirectangularTexture(this.renderer, texture);
                         this.scene.background = rt.texture;
 
+                        // Libérer la texture source après conversion
+                        texture.dispose();
+
                         this.scene.fog = new THREE.FogExp2(0x000011, 0.00008);
 
-                        console.log('✅ Skybox chargée');
+                        console.log(`✅ Skybox chargée (optimisée à ${skyboxSize}px)`);
                         resolved = true;
                         clearTimeout(timeout);
                         resolve();
@@ -1193,9 +1364,12 @@ export class GlobeManager {
    
    handleVideoError() {
        console.log("Tentative de résolution de l'erreur vidéo...");
-       
+
        const textureLoader = new THREE.TextureLoader();
        textureLoader.load(`${import.meta.env.BASE_URL}images/video-placeholder.jpg`, (texture) => {
+           // Optimiser la texture de secours
+           this.optimizeTexture(texture);
+
            if (this.globe && this.globe.material) {
                console.log("Application de la texture de secours");
                
