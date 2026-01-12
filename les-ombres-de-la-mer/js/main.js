@@ -72,26 +72,55 @@ document.addEventListener("DOMContentLoaded", function() {
     // LANCER LA VIDÉO IMMÉDIATEMENT
     startGlobeVideoImmediately();
     
-    // MASQUER LE LOADER APRÈS 2 SECONDES ET RÉVÉLER LE SITE
+    // MASQUER LE LOADER ET JOUER LA VIDÉO DE TRANSITION INVERSÉE
     setTimeout(() => {
-        console.log('=== MASQUAGE DU LOADER ET RÉVÉLATION DU SITE ===');
-        
-        // Transition fluide du loader
+        console.log('=== TRANSITION ENTRÉE: JELLY → VIDÉO INVERSÉE ===');
+
+        // Masquer le jelly loader
         customLoader.style.opacity = '0';
-        
+
         setTimeout(() => {
             customLoader.remove();
-            document.body.classList.remove('loading');
-            
-            // Initialiser le curseur personnalisé UNIQUEMENT sur desktop avec souris
-            if (isDesktop && !isTouchDevice) {
-                initCustomCursor();
-                console.log('Curseur personnalisé initialisé pour desktop');
+
+            // Jouer la vidéo de transition inversée
+            const transitionVideoEntry = document.getElementById('transition-video-entry');
+            if (transitionVideoEntry) {
+                transitionVideoEntry.style.opacity = '1';
+                transitionVideoEntry.currentTime = 0;
+                transitionVideoEntry.play().then(() => {
+                    console.log('✅ Vidéo inversée en cours');
+
+                    transitionVideoEntry.addEventListener('ended', () => {
+                        console.log('✅ Vidéo inversée terminée - Révélation site');
+                        transitionVideoEntry.style.opacity = '0';
+                        document.body.classList.remove('loading');
+
+                        // Initialiser le curseur personnalisé UNIQUEMENT sur desktop avec souris
+                        if (isDesktop && !isTouchDevice) {
+                            initCustomCursor();
+                            console.log('Curseur personnalisé initialisé pour desktop');
+                        }
+
+                        console.log('Site révélé, vidéo active');
+                    }, { once: true });
+                }).catch(e => {
+                    console.error('Erreur vidéo entrée:', e);
+                    transitionVideoEntry.style.opacity = '0';
+                    document.body.classList.remove('loading');
+                });
+
+                // Timeout de sécurité
+                setTimeout(() => {
+                    if (transitionVideoEntry.style.opacity !== '0') {
+                        transitionVideoEntry.style.opacity = '0';
+                        document.body.classList.remove('loading');
+                    }
+                }, 5000);
+            } else {
+                document.body.classList.remove('loading');
             }
-            
-            console.log('Site révélé, vidéo active');
         }, 800);
-        
+
     }, 2000);
     
     // Masquer l'ancien loader s'il existe
@@ -905,16 +934,40 @@ function initReturnExploration() {
         }
     });
     
-    // Gestion du clic - REDIRECTION VERS LOCALHOST
+    // Gestion du clic - VIDÉO TRANSITION PUIS REDIRECTION
     returnBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('>>> CLIC SUR BOUTON RETOUR EXPLORATION - REDIRECTION IMMÉDIATE <<<');
-        
+        console.log('>>> CLIC SUR BOUTON RETOUR - TRANSITION SORTIE: VIDÉO NORMALE ===');
+
         // Animation de clic
         returnBtn.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            window.location.href = '/nationalgeographic.fr-mondesimmerges/interface/';
-        }, 150);
+
+        // Jouer la vidéo de transition sortie
+        const transitionVideoExit = document.getElementById('transition-video-exit');
+        if (transitionVideoExit) {
+            transitionVideoExit.style.opacity = '1';
+            transitionVideoExit.currentTime = 0;
+            transitionVideoExit.play().then(() => {
+                console.log('✅ Vidéo sortie en cours');
+
+                transitionVideoExit.addEventListener('ended', () => {
+                    console.log('✅ Vidéo sortie terminée - Redirection');
+                    window.location.href = '/nationalgeographic.fr-mondesimmerges/interface/';
+                }, { once: true });
+            }).catch(e => {
+                console.error('Erreur vidéo sortie:', e);
+                window.location.href = '/nationalgeographic.fr-mondesimmerges/interface/';
+            });
+
+            // Timeout de sécurité
+            setTimeout(() => {
+                window.location.href = '/nationalgeographic.fr-mondesimmerges/interface/';
+            }, 5000);
+        } else {
+            setTimeout(() => {
+                window.location.href = '/nationalgeographic.fr-mondesimmerges/interface/';
+            }, 150);
+        }
     });
     
     console.log('=== FIN INITIALISATION BOUTON ===');
