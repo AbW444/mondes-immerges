@@ -10,10 +10,8 @@ export default defineConfig({
   // Répertoire racine du projet
   root: './',
 
-  // IMPORTANT: Pour GitHub Pages - Remplacer par le nom exact de votre repo
-  base: process.env.NODE_ENV === 'production'
-    ? '/nationalgeographic.fr-mondesimmerges/interface/'
-    : '/',
+  // IMPORTANT: Base path - utiliser './' pour compatibilité maximale
+  base: './',
   
   // Configuration du serveur de développement
   server: {
