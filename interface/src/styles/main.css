@@ -686,7 +686,7 @@ body.info-visible .hotspot-connector {
   letter-spacing: 2px;
   font-weight: normal;
   text-align: center;
-  text-shadow: 0 0 8px rgba(255, 204, 0, 0.5);
+  text-shadow: none;
 }
 
 .overlay-content p {
@@ -703,7 +703,7 @@ body.info-visible .hotspot-connector {
 }
 
 .overlay-content p strong {
-  color: #ffcc00;
+  color: #d9a800;
   font-weight: 500;
 }
 
@@ -718,7 +718,7 @@ body.info-visible .hotspot-connector {
   border: 2px solid rgba(255, 204, 0, 0.4);
 
   /* Glassmorphisme comme les autres boutons */
-  background: rgba(0, 10, 20, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 
