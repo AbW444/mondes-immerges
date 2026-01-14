@@ -838,6 +838,7 @@ export class GlobeManager {
 
         // Créer le connector line en SVG pour de meilleures performances
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.classList.add('hotspot-connector');
         svg.style.cssText = `
             position: fixed;
             top: 0;
@@ -845,7 +846,7 @@ export class GlobeManager {
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 999;
+            z-index: 50;
             opacity: 0;
         `;
 
