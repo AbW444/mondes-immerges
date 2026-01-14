@@ -325,10 +325,15 @@ class MondesImmergesApp {
                     coordLngElement.textContent = Math.abs(lng).toFixed(4) + (lng >= 0 ? '' : '-');
                 }
                 
-                // Calculer l'altitude (distance au centre)
-                const altitude = cameraPosition.length();
+                // Calculer l'altitude réaliste (distance au centre - rayon Terre)
+                // Rayon du globe = 2 unités, 1 unité ≈ 100 km
+                const GLOBE_RADIUS = 2;  // Rayon du globe en unités Three.js
+                const KM_PER_UNIT = 100; // Conversion: 1 unité = 100 km
+                const distanceFromCenter = cameraPosition.length();
+                const altitude = (distanceFromCenter - GLOBE_RADIUS) * KM_PER_UNIT;
                 if (altitudeElement) {
-                    altitudeElement.textContent = altitude.toFixed(3);
+                    // Afficher en format xxx.xx KM
+                    altitudeElement.textContent = altitude.toFixed(2);
                 }
                 
                 // Mettre à jour le niveau de zoom

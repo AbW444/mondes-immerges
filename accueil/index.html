@@ -1627,11 +1627,11 @@
                     loadingOverlay.classList.add('active');
                     console.log('🔄 Loading overlay actif (par-dessus vidéo)');
 
-                    // Redirection immédiate (l'écran noir est déjà présent)
+                    // Redirection avec délai pour garantir l'écran noir
                     setTimeout(() => {
                         console.log('🚀 REDIRECTION VERS L\'INTERFACE');
                         window.location.href = '/nationalgeographic.fr-mondesimmerges/interface/';
-                    }, 300);
+                    }, 800);
                 }
             }
             

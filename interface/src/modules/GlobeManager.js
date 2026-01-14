@@ -37,7 +37,7 @@ export class GlobeManager {
             ellipseMajorAxis: 9.5,  // Réduit de 12 à 9.5 pour zoom de base plus proche
             ellipseMinorAxis: 6.5,  // Réduit de 8 à 6.5 pour zoom de base plus proche
             inclination: Math.PI / 6,
-            orbitAngle: 0,
+            orbitAngle: Math.random() * Math.PI * 2,  // Position aléatoire sur l'orbite au chargement
             zoomLevel: 1,
             maxZoomLevel: 2.0,      // Permet de dézoomer largement
             minZoomLevel: 0.8,      // Limite le zoom à x0.8 (pas plus proche)
