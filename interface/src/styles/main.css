@@ -662,8 +662,8 @@ body.info-visible .hotspot-connector {
 }
 
 .overlay-content {
-  /* Même fond que les boutons de l'interface */
-  background: rgba(0, 10, 20, 0.6);
+  /* Fond noir pur transparent sans teinte bleue */
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 
