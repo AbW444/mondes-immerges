@@ -138,13 +138,13 @@ export class GlobeManager {
             left: 50%;
             transform: translate(-50%, -50%);
             background-color: rgba(0, 0, 0, 0.9);
-            color: #ffcc00;
+            color: #ffdd00;
             padding: 30px;
             border-radius: 10px;
             text-align: center;
             font-family: 'Roboto Mono', monospace;
             z-index: 10000;
-            border: 2px solid #ffcc00;
+            border: 2px solid #ffdd00;
             max-width: 500px;
         `;
         
@@ -152,7 +152,7 @@ export class GlobeManager {
             <h2>Erreur d'initialisation 3D</h2>
             <p>Impossible d'initialiser le rendu WebGL.</p>
             <p>Veuillez vérifier que votre navigateur supporte WebGL.</p>
-            <button onclick="location.reload()" style="background: #ffcc00; color: #000; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-family: inherit; margin-top: 10px;">
+            <button onclick="location.reload()" style="background: #ffdd00; color: #000; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-family: inherit; margin-top: 10px;">
                 Réessayer
             </button>
         `;
@@ -295,14 +295,14 @@ export class GlobeManager {
             left: 50%;
             transform: translate(-50%, -50%);
             background-color: rgba(0, 10, 30, 0.9);
-            color: #ffcc00;
+            color: #ffdd00;
             padding: 15px 25px;
             border-radius: 8px;
             font-family: 'Roboto Mono', monospace;
             font-size: 16px;
             font-weight: bold;
             text-align: center;
-            border: 2px solid #ffcc00;
+            border: 2px solid #ffdd00;
             box-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
             z-index: 100;
             pointer-events: none;
@@ -774,14 +774,15 @@ export class GlobeManager {
 
             console.log(`Hotspot ${title}: GPS(${position.lat}, ${position.lng}) -> 3D(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
 
-            // Hotspot sphérique avec jaune pur
+            // Hotspot sphérique avec jaune vif DA
             const markerGeometry = new THREE.SphereGeometry(0.05, 16, 16);
             const markerMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffcc00, // Jaune pur de la DA
+                color: 0xffdd00, // Jaune vif de la DA (plus lumineux)
                 transparent: true,
                 opacity: 0, // Commence invisible, apparaîtra avec les autres UI
                 depthTest: true,
-                depthWrite: true // Activer pour éviter de voir à travers le globe
+                depthWrite: true, // Activer pour éviter de voir à travers le globe
+                toneMapped: false // Désactive le tone mapping pour conserver la couleur pure
             });
 
             const marker = new THREE.Mesh(markerGeometry, markerMaterial);
@@ -791,12 +792,13 @@ export class GlobeManager {
             // Ajouter le halo
             const haloGeometry = new THREE.SphereGeometry(0.08, 16, 16);
             const haloMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffcc00, // Jaune pur de la DA
+                color: 0xffdd00, // Jaune vif de la DA (plus lumineux)
                 transparent: true,
                 opacity: 0, // Commence invisible
                 side: THREE.BackSide,
                 depthTest: true,
-                depthWrite: false
+                depthWrite: false,
+                toneMapped: false // Désactive le tone mapping pour conserver la couleur pure
             });
 
             const halo = new THREE.Mesh(haloGeometry, haloMaterial);
@@ -819,8 +821,8 @@ export class GlobeManager {
         labelDiv.textContent = text;
         labelDiv.style.cssText = `
             position: fixed;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: #ffcc00;
+            background-color: rgba(0, 0, 0, 0.85);
+            color: #ffdd00;
             padding: 6px 12px;
             border-radius: 4px;
             font-family: 'Roboto Mono', monospace;
@@ -866,7 +868,7 @@ export class GlobeManager {
 
         const onMouseLeave = () => {
             labelDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-            labelDiv.style.color = '#ffcc00';
+            labelDiv.style.color = '#ffdd00';
             labelDiv.style.transform = 'scale(1)';
         };
 
