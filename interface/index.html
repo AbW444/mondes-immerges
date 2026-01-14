@@ -78,14 +78,22 @@
             color: #000000 !important;
         }
 
-        /* Supprimer effets hover des flèches de direction */
-        #navigation-controls button:hover {
-            background: rgba(0, 10, 20, 0.6) !important;
-            border-color: rgba(255, 204, 0, 0.4) !important;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-            transform: none !important;
+        /* Bloquer touches clavier flèches pour éviter bugs navigation */
+        body {
+            overflow: hidden;
         }
     </style>
+    <script>
+        // Bloquer touches flèches clavier sur interface
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('keydown', function(e) {
+                // Bloquer flèches: ArrowUp, ArrowDown, ArrowLeft, ArrowRight
+                if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
     <!-- Charger ldrs pour le vrai jelly loader -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

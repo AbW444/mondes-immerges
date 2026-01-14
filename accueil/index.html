@@ -1620,18 +1620,20 @@
                 function handleRedirection() {
                     console.log('>>> TRANSITION VERS LOADING OVERLAY <<<');
 
-                    // NE PAS masquer la vidéo - elle reste affichée sur sa dernière frame noire
-                    // Cela empêche le contenu de la page d'accueil de réapparaître
+                    // IMPORTANT: Garder la vidéo visible sur sa dernière frame noire
+                    // Ne pas enlever la classe 'active' de la vidéo
+                    transitionVideo.style.pointerEvents = 'none';
 
                     // Afficher l'écran de chargement avec jelly PAR-DESSUS la vidéo
                     loadingOverlay.classList.add('active');
-                    console.log('🔄 Loading overlay actif (par-dessus vidéo)');
+                    loadingOverlay.style.background = '#000'; // Fond noir pur
+                    console.log('🔄 Loading overlay actif avec fond noir');
 
-                    // Redirection avec délai pour garantir l'écran noir
+                    // Redirection immédiate - l'écran noir est garanti
                     setTimeout(() => {
                         console.log('🚀 REDIRECTION VERS L\'INTERFACE');
                         window.location.href = '/nationalgeographic.fr-mondesimmerges/interface/';
-                    }, 800);
+                    }, 300);
                 }
             }
             
