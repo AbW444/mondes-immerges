@@ -1229,7 +1229,7 @@ body.loading .globe-video {
     z-index: 50;
     transform: translateY(-50%) scale(0.8);
     transition: all 0.3s ease;
-    opacity: 0;
+    opacity: 0.6;
     touch-action: manipulation;
     min-width: var(--touch-target);
     min-height: var(--touch-target);
