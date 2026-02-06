@@ -438,11 +438,22 @@
             opacity: 0;
             pointer-events: none;
             transition: none;
+            background: #000; /* Fond noir pour cacher le contenu */
         }
 
         .transition-video.active {
             opacity: 1;
             pointer-events: all;
+        }
+
+        /* Masquer tout le contenu pendant la transition */
+        body.transition-active .immerse-section,
+        body.transition-active header,
+        body.transition-active .top-nav,
+        body.transition-active .side-nav,
+        body.transition-active .video-indicator {
+            visibility: hidden !important;
+            opacity: 0 !important;
         }
 
         /* Écran de chargement après la vidéo */
@@ -1575,7 +1586,8 @@
                 exploreBtn.addEventListener('click', function() {
                     console.log('>>> DÉCLENCHEMENT DE LA TRANSITION <<<');
 
-                    // Activer la vidéo de transition
+                    // Masquer le contenu et activer la vidéo de transition
+                    document.body.classList.add('transition-active');
                     transitionVideo.classList.add('active');
                     transitionVideo.currentTime = 0;
                     blackScreenShown = false;
