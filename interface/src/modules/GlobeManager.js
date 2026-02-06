@@ -1015,6 +1015,25 @@ export class GlobeManager {
             }
         });
 
+        // Créer un overlay noir pour la transition
+        let fadeOverlay = document.getElementById('fade-overlay');
+        if (!fadeOverlay) {
+            fadeOverlay = document.createElement('div');
+            fadeOverlay.id = 'fade-overlay';
+            fadeOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: #000;
+                opacity: 0;
+                z-index: 98000;
+                pointer-events: none;
+            `;
+            document.body.appendChild(fadeOverlay);
+        }
+
         // Étape 2 : Descente fluide vers le hotspot avec zoom
         timeline.to(this.camera.position, {
             x: finalPosition.x,
@@ -1030,6 +1049,13 @@ export class GlobeManager {
                 this._redirectToExternalPage(hotspot);
             }
         }, "-=0.3"); // Overlap pour fluidité
+
+        // Ajouter le fondu au noir progressif vers la fin de l'animation
+        timeline.to(fadeOverlay, {
+            opacity: 1,
+            duration: 0.8,
+            ease: "power2.in"
+        }, "-=0.8"); // Commence 0.8s avant la fin de l'animation
 
         // Zoom progressif pendant la descente (réduit pour moins de rapprochement)
         timeline.to(this.camera, {

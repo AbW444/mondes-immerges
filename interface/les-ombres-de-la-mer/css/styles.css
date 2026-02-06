@@ -1083,7 +1083,8 @@ body.loading .globe-video {
     margin: 0 auto;
     height: 90vh;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    padding: 0 120px; /* Espace pour les flèches */
 }
 
 .gallery-title {
@@ -1101,6 +1102,7 @@ body.loading .globe-video {
     height: 100%;
     position: relative;
     margin-top: 100px;
+    overflow: hidden; /* Conteneur des images avec overflow */
 }
 
 .gallery-track {
@@ -1206,11 +1208,11 @@ body.loading .globe-video {
 }
 
 .gallery-prev {
-    left: 0px;
+    left: -100px;
 }
 
 .gallery-next {
-    right: 0px;
+    right: -100px;
 }
 
 /* Mode plein écran pour les images */
