@@ -628,7 +628,7 @@ function initGallery() {
             
             // Redirection après courte animation
             setTimeout(() => {
-                window.location.href = 'https://abw444.github.io/Page-collection-LesOmbresDeLaMer/';
+                window.location.href = '../les-ombres-de-la-mer/';
             }, 300);
             return; // Sortir de la fonction
         }

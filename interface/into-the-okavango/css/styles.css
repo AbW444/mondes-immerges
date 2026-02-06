@@ -1310,6 +1310,13 @@ body.loading .globe-video {
     z-index: 50;
 }
 
+/* Masquer les dots de galerie sur desktop */
+@media (min-width: 768px) {
+    .gallery-dots {
+        display: none;
+    }
+}
+
 .gallery-dot {
     width: 12px;
     height: 12px;
@@ -2215,10 +2222,9 @@ body.loading .cursor-follower {
     border-radius: 10px;
 }
 
-/* Focus pour navigation clavier */
+/* Focus pour navigation clavier - DÉSACTIVÉ */
 button:focus, a:focus, [tabindex]:focus {
-    outline: 2px solid var(--primary-color-bright);
-    outline-offset: 2px;
+    outline: none;
 }
 
 .gallery-arrow:focus,
