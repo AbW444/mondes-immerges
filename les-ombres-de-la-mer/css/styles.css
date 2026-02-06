@@ -1206,11 +1206,11 @@ body.loading .globe-video {
 }
 
 .gallery-prev {
-    left: -60px;
+    left: 20px;
 }
 
 .gallery-next {
-    right: -60px;
+    right: 20px;
 }
 
 /* Mode plein écran pour les images */
