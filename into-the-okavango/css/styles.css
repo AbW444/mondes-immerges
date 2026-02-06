@@ -1258,11 +1258,11 @@ body.loading .globe-video {
 }
 
 .gallery-prev {
-    left: 5px;
+    left: 0px;
 }
 
 .gallery-next {
-    right: 5px;
+    right: 0px;
 }
 
 /* Mode plein écran */
