@@ -1761,16 +1761,11 @@ window.addEventListener('orientationchange', function() {
     }, 100);
 });
 
-// Affichage du loader lors du chargement des pages
+// Loader désactivé - pas de calque noir au chargement
 window.addEventListener('load', function() {
     const loader = document.querySelector('.loader');
-    if (loader && !loader.classList.contains('hidden')) {
-        showGlobalLoader();
-        
-        setTimeout(() => {
-            loader.classList.add('hidden');
-            hideGlobalLoader();
-        }, 800);
+    if (loader) {
+        loader.style.display = 'none';
     }
 });
 

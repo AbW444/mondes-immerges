@@ -1584,15 +1584,16 @@
                     transitionVideo.addEventListener('timeupdate', function checkEndApproaching() {
                         const timeLeft = transitionVideo.duration - transitionVideo.currentTime;
 
-                        // Quand il reste 0.1 seconde ou moins, afficher l'écran noir
-                        if (timeLeft <= 0.1 && !blackScreenShown) {
+                        // Quand il reste 0.3 seconde ou moins, afficher l'écran noir
+                        if (timeLeft <= 0.3 && !blackScreenShown) {
                             blackScreenShown = true;
                             console.log('>>> FIN DE VIDÉO APPROCHE - ÉCRAN NOIR IMMÉDIAT <<<');
 
-                            // Afficher l'écran noir IMMÉDIATEMENT
+                            // Afficher l'écran noir IMMÉDIATEMENT au-dessus de tout
                             loadingOverlay.style.display = 'flex';
                             loadingOverlay.style.opacity = '1';
                             loadingOverlay.style.background = '#000';
+                            loadingOverlay.style.zIndex = '999999';
                             loadingOverlay.classList.add('active');
 
                             transitionVideo.removeEventListener('timeupdate', checkEndApproaching);
