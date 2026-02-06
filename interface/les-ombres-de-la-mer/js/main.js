@@ -959,261 +959,47 @@ function initGlobalLoader() {
     });
 }
 
-// Initialisation de la galerie avec support tactile
+// Initialisation de la galerie - Version simplifiée
 function initGallery() {
-    console.log('=== INITIALISATION GALERIE TACTILE ===');
-    
+    console.log('=== INITIALISATION GALERIE ===');
+
     loadGalleryImages();
-    
-    const galleryTrack = document.querySelector('.gallery-track');
-    const dots = document.querySelectorAll('.gallery-dot');
-    const prevBtn = document.querySelector('.gallery-prev');
-    const nextBtn = document.querySelector('.gallery-next');
-    let isFullscreenMode = false;
-    let autoplayInterval;
-    
-    if (!galleryTrack) {
-        console.error('Galerie non trouvée');
-        return;
+
+    const slider = document.querySelector(".gallery-slider");
+    if (!slider) return;
+
+    const slides = Array.from(slider.querySelectorAll(".gallery-slide"));
+    const dots = Array.from(slider.querySelectorAll(".gallery-dot"));
+    const prevBtn = slider.querySelector(".gallery-prev");
+    const nextBtn = slider.querySelector(".gallery-next");
+
+    if (!slides.length || !prevBtn || !nextBtn) return;
+
+    let index = Math.max(0, slides.findIndex(s => s.classList.contains("active")));
+    if (index === -1) index = 0;
+
+    function render() {
+        slides.forEach((s, i) => s.classList.toggle("active", i === index));
+        dots.forEach((d, i) => d.classList.toggle("active", i === index));
     }
-    
-    // Créer l'élément pour le mode plein écran
-    let fullscreenMode = document.querySelector('.fullscreen-mode');
-    if (!fullscreenMode) {
-        fullscreenMode = document.createElement('div');
-        fullscreenMode.className = 'fullscreen-mode';
-        fullscreenMode.innerHTML = `
-            <img src="" alt="Image en plein écran" class="fullscreen-image">
-        `;
-        document.body.appendChild(fullscreenMode);
+
+    function goTo(i) {
+        index = (i + slides.length) % slides.length; // wrap
+        render();
     }
-    
-    const fsImage = fullscreenMode.querySelector('.fullscreen-image');
-    
-    // Fonction pour afficher une slide spécifique
-    function showSlide(index) {
-        const slides = document.querySelectorAll('.gallery-slide');
-        if (!slides.length) return;
-        
-        if (index >= slides.length) index = 0;
-        if (index < 0) index = slides.length - 1;
-        
-        slides.forEach(slide => {
-            slide.classList.remove('active');
-            slide.classList.remove('transitioning');
+
+    prevBtn.addEventListener("click", () => goTo(index - 1));
+    nextBtn.addEventListener("click", () => goTo(index + 1));
+
+    // Optionnel: clic sur les dots
+    dots.forEach(dot => {
+        dot.addEventListener("click", () => {
+            const i = Number(dot.dataset.index);
+            if (!Number.isNaN(i)) goTo(i);
         });
-        
-        slides[index].classList.add('active');
-        slides[index].classList.add('transitioning');
-        
-        const updatedDots = document.querySelectorAll('.gallery-dot');
-        updatedDots.forEach(dot => dot.classList.remove('active'));
-        if (updatedDots[index]) {
-            updatedDots[index].classList.add('active');
-        }
-        
-        currentGalleryIndex = index;
-        console.log('Slide active:', index);
-    }
-    
-    // Navigation par boutons
-    if (prevBtn) {
-        prevBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            showSlide(currentGalleryIndex - 1);
-        });
-    }
-    
-    if (nextBtn) {
-        nextBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            showSlide(currentGalleryIndex + 1);
-        });
-    }
-    
-    // Navigation par dots
-    function initDots() {
-        const dots = document.querySelectorAll('.gallery-dot');
-        dots.forEach((dot, index) => {
-            dot.addEventListener('click', (e) => {
-                e.preventDefault();
-                showSlide(index);
-            });
-        });
-    }
-    
-    // Support tactile pour le swipe
-    if ('ontouchstart' in window) {
-        galleryTrack.addEventListener('touchstart', handleTouchStart, { passive: true });
-        galleryTrack.addEventListener('touchmove', handleTouchMove, { passive: true });
-        galleryTrack.addEventListener('touchend', handleTouchEnd, { passive: true });
-    }
-    
-    function handleTouchStart(e) {
-        touchStartX = e.touches[0].clientX;
-    }
-    
-    function handleTouchMove(e) {
-        if (!touchStartX) return;
-        touchEndX = e.touches[0].clientX;
-    }
-    
-    function handleTouchEnd(e) {
-        if (!touchStartX || !touchEndX) return;
-        
-        const difference = touchStartX - touchEndX;
-        const threshold = 50; // Seuil minimum pour déclencher le swipe
-        
-        if (Math.abs(difference) > threshold) {
-            if (difference > 0) {
-                // Swipe vers la gauche - image suivante
-                showSlide(currentGalleryIndex + 1);
-            } else {
-                // Swipe vers la droite - image précédente
-                showSlide(currentGalleryIndex - 1);
-            }
-        }
-        
-        touchStartX = 0;
-        touchEndX = 0;
-    }
-    
-    // Mode plein écran
-    function activateFullscreenMode(imgSrc) {
-        showGlobalLoader();
-        
-        fsImage.src = imgSrc;
-        fsImage.onload = function() {
-            hideGlobalLoader();
-            fullscreenMode.classList.add('active');
-            isFullscreenMode = true;
-            stopAutoplay();
-            document.body.style.overflow = 'hidden';
-        };
-    }
-    
-    function deactivateFullscreenMode() {
-        fullscreenMode.classList.remove('active');
-        isFullscreenMode = false;
-        startAutoplay();
-        document.body.style.overflow = '';
-    }
-    
-    // Fermer le mode plein écran par clic sur le fond
-    fullscreenMode.addEventListener('click', function(e) {
-        if (e.target === fullscreenMode) {
-            deactivateFullscreenMode();
-        }
     });
-    
-    // Navigation en mode plein écran
-    if ('ontouchstart' in window) {
-        fsImage.addEventListener('touchstart', handleTouchStart, { passive: true });
-        fsImage.addEventListener('touchmove', handleTouchMove, { passive: true });
-        fsImage.addEventListener('touchend', function(e) {
-            handleTouchEnd(e);
-            // Mettre à jour l'image en plein écran
-            const currentSlide = document.querySelector('.gallery-slide.active');
-            const currentImg = currentSlide.querySelector('.gallery-image');
-            if (currentImg) {
-                showGlobalLoader();
-                fsImage.src = currentImg.src;
-                fsImage.onload = function() {
-                    hideGlobalLoader();
-                };
-            }
-        }, { passive: true });
-    } else {
-        // Navigation par clic sur desktop
-        fsImage.addEventListener('click', function(e) {
-            e.stopPropagation();
-            showSlide(currentGalleryIndex + 1);
-            
-            showGlobalLoader();
-            const currentSlide = document.querySelector('.gallery-slide.active');
-            const currentImg = currentSlide.querySelector('.gallery-image');
-            fsImage.src = currentImg.src;
-            fsImage.onload = function() {
-                hideGlobalLoader();
-            };
-        });
-    }
-    
-    // Ajouter des écouteurs pour les clics sur les images
-    function initImageClicks() {
-        const imageContainers = document.querySelectorAll('.gallery-image-container');
-        imageContainers.forEach(container => {
-            container.addEventListener('click', function(e) {
-                e.preventDefault();
-                const img = this.querySelector('.gallery-image');
-                if (img) {
-                    activateFullscreenMode(img.src);
-                }
-            });
-        });
-    }
-    
-    // Défilement automatique (seulement sur desktop)
-    function startAutoplay() {
-        if (window.innerWidth >= 1025 && !('ontouchstart' in window)) {
-            autoplayInterval = setInterval(() => {
-                if (!isFullscreenMode) {
-                    const gallerySection = document.querySelector('#gallery');
-                    const rect = gallerySection.getBoundingClientRect();
-                    
-                    if (rect.top <= 0 && rect.bottom >= window.innerHeight / 2) {
-                        showSlide(currentGalleryIndex + 1);
-                    }
-                }
-            }, 8000);
-        }
-    }
-    
-    function stopAutoplay() {
-        clearInterval(autoplayInterval);
-    }
-    
-    // Gestion des touches clavier
-    document.addEventListener('keydown', e => {
-        if (isFullscreenMode) {
-            if (e.key === 'Escape') {
-                deactivateFullscreenMode();
-            } else if (e.key === 'ArrowLeft') {
-                showSlide(currentGalleryIndex - 1);
-                const currentSlide = document.querySelector('.gallery-slide.active');
-                const currentImg = currentSlide.querySelector('.gallery-image');
-                if (currentImg) {
-                    showGlobalLoader();
-                    fsImage.src = currentImg.src;
-                    fsImage.onload = () => hideGlobalLoader();
-                }
-            } else if (e.key === 'ArrowRight') {
-                showSlide(currentGalleryIndex + 1);
-                const currentSlide = document.querySelector('.gallery-slide.active');
-                const currentImg = currentSlide.querySelector('.gallery-image');
-                if (currentImg) {
-                    showGlobalLoader();
-                    fsImage.src = currentImg.src;
-                    fsImage.onload = () => hideGlobalLoader();
-                }
-            }
-        } else {
-            const gallerySection = document.querySelector('#gallery');
-            const rect = gallerySection.getBoundingClientRect();
-            
-            if (rect.top <= 0 && rect.bottom >= window.innerHeight / 2) {
-                if (e.key === 'ArrowLeft') {
-                    showSlide(currentGalleryIndex - 1);
-                } else if (e.key === 'ArrowRight') {
-                    showSlide(currentGalleryIndex + 1);
-                }
-            }
-        }
-    });
-    
-    setTimeout(initImageClicks, 1000);
-    setTimeout(initDots, 500);
-    startAutoplay();
+
+    render();
 }
 
 // Chargement dynamique des images de la galerie

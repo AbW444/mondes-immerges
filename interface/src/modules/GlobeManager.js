@@ -975,9 +975,9 @@ export class GlobeManager {
         const hotspotY = radius * Math.sin(lat);
         const hotspotZ = radius * Math.cos(lat) * Math.sin(lon);
         const hotspotPos = new THREE.Vector3(hotspotX, hotspotY, hotspotZ);
-        
-        // Créer l'effet de scan
-        this.createScanEffect(hotspot.position);
+
+        // Effet de scan désactivé
+        // this.createScanEffect(hotspot.position);
 
         // Arrêter l'orbite
         this.orbitParams.isOrbiting = false;
