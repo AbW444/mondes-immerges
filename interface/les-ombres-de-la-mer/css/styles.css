@@ -1179,7 +1179,7 @@ body.loading .globe-video {
     z-index: 50;
     transform: translateY(-50%) scale(0.8);
     transition: all 0.3s ease;
-    opacity: 0.6;
+    opacity: 0;
     touch-action: manipulation;
     min-width: var(--touch-target);
     min-height: var(--touch-target);
@@ -1208,11 +1208,11 @@ body.loading .globe-video {
 }
 
 .gallery-prev {
-    left: 10px; /* Déplacé à l'intérieur pour être visible */
+    left: 10px;
 }
 
 .gallery-next {
-    right: 10px; /* Déplacé à l'intérieur pour être visible */
+    right: 10px;
 }
 
 /* Mode plein écran pour les images */
@@ -2218,9 +2218,10 @@ body.loading .cursor-follower {
     border-radius: 10px;
 }
 
-/* Focus visible pour navigation clavier - DÉSACTIVÉ */
+/* Focus pour navigation clavier */
 button:focus, a:focus, [tabindex]:focus {
-    outline: none;
+    outline: 2px solid var(--primary-color-bright);
+    outline-offset: 2px;
 }
 
 /* Suppression spécifique du focus pour les flèches de galerie */

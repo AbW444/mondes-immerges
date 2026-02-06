@@ -402,47 +402,113 @@ function initGlobalLoader() {
 }
 
 // Initialisation de la galerie Okavango avec support tactile
-// Initialisation de la galerie - Version simplifiée
+// Initialisation de la galerie - Version complète avec support tactile
 function initGallery() {
-    console.log('=== INITIALISATION GALERIE OKAVANGO ===');
+    console.log('=== INITIALISATION GALERIE TACTILE ===');
 
     loadGalleryImages();
 
-    const slider = document.querySelector(".gallery-slider");
-    if (!slider) return;
+    const galleryTrack = document.querySelector('.gallery-track');
+    const dots = document.querySelectorAll('.gallery-dot');
+    const prevBtn = document.querySelector('.gallery-prev');
+    const nextBtn = document.querySelector('.gallery-next');
+    let isFullscreenMode = false;
+    let autoplayInterval;
 
-    const slides = Array.from(slider.querySelectorAll(".gallery-slide"));
-    const dots = Array.from(slider.querySelectorAll(".gallery-dot"));
-    const prevBtn = slider.querySelector(".gallery-prev");
-    const nextBtn = slider.querySelector(".gallery-next");
-
-    if (!slides.length || !prevBtn || !nextBtn) return;
-
-    let index = Math.max(0, slides.findIndex(s => s.classList.contains("active")));
-    if (index === -1) index = 0;
-
-    function render() {
-        slides.forEach((s, i) => s.classList.toggle("active", i === index));
-        dots.forEach((d, i) => d.classList.toggle("active", i === index));
+    if (!galleryTrack) {
+        console.error('Galerie non trouvée');
+        return;
     }
 
-    function goTo(i) {
-        index = (i + slides.length) % slides.length; // wrap
-        render();
+    // Créer l'élément pour le mode plein écran
+    let fullscreenMode = document.querySelector('.fullscreen-mode');
+    if (!fullscreenMode) {
+        fullscreenMode = document.createElement('div');
+        fullscreenMode.className = 'fullscreen-mode';
+        fullscreenMode.innerHTML = `
+            <img src="" alt="Image en plein écran" class="fullscreen-image">
+        `;
+        document.body.appendChild(fullscreenMode);
     }
 
-    prevBtn.addEventListener("click", () => goTo(index - 1));
-    nextBtn.addEventListener("click", () => goTo(index + 1));
+    const fsImage = fullscreenMode.querySelector('.fullscreen-image');
 
-    // Optionnel: clic sur les dots
-    dots.forEach(dot => {
-        dot.addEventListener("click", () => {
-            const i = Number(dot.dataset.index);
-            if (!Number.isNaN(i)) goTo(i);
+    // Fonction pour afficher une slide spécifique
+    function showSlide(index) {
+        const slides = document.querySelectorAll('.gallery-slide');
+        if (!slides.length) return;
+
+        if (index >= slides.length) index = 0;
+        if (index < 0) index = slides.length - 1;
+
+        slides.forEach(slide => {
+            slide.classList.remove('active');
+            slide.classList.remove('transitioning');
         });
-    });
 
-    render();
+        slides[index].classList.add('active');
+        slides[index].classList.add('transitioning');
+
+        const updatedDots = document.querySelectorAll('.gallery-dot');
+        updatedDots.forEach(dot => dot.classList.remove('active'));
+        if (updatedDots[index]) {
+            updatedDots[index].classList.add('active');
+        }
+
+        currentGalleryIndex = index;
+        console.log('Slide active:', index);
+    }
+
+    // Navigation par boutons
+    if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSlide(currentGalleryIndex - 1);
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSlide(currentGalleryIndex + 1);
+        });
+    }
+
+    // Support tactile pour le swipe
+    if ('ontouchstart' in window) {
+        galleryTrack.addEventListener('touchstart', handleTouchStart, { passive: true });
+        galleryTrack.addEventListener('touchmove', handleTouchMove, { passive: true });
+        galleryTrack.addEventListener('touchend', handleTouchEnd, { passive: true });
+    }
+
+    function handleTouchStart(e) {
+        touchStartX = e.touches[0].clientX;
+    }
+
+    function handleTouchMove(e) {
+        if (!touchStartX) return;
+        touchEndX = e.touches[0].clientX;
+    }
+
+    function handleTouchEnd(e) {
+        if (!touchStartX || !touchEndX) return;
+
+        const difference = touchStartX - touchEndX;
+        const threshold = 50; // Seuil minimum pour déclencher le swipe
+
+        if (Math.abs(difference) > threshold) {
+            if (difference > 0) {
+                // Swipe vers la gauche - image suivante
+                showSlide(currentGalleryIndex + 1);
+            } else {
+                // Swipe vers la droite - image précédente
+                showSlide(currentGalleryIndex - 1);
+            }
+        }
+
+        touchStartX = 0;
+        touchEndX = 0;
+    }
 }
 
 // Chargement dynamique des images de la galerie Okavango
