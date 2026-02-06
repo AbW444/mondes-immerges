@@ -12,7 +12,7 @@ export default defineConfig({
 
   // IMPORTANT: Pour GitHub Pages - Remplacer par le nom exact de votre repo
   base: process.env.NODE_ENV === 'production'
-    ? '/nationalgeographic.fr-mondesimmerges/interface/'
+    ? '/mondes-immerges/'
     : '/',
   
   // Configuration du serveur de développement

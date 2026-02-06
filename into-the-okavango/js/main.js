@@ -357,7 +357,7 @@ function initReturnExploration() {
 
         // Redirection après courte animation
         setTimeout(() => {
-            window.location.href = '/nationalgeographic.fr-mondesimmerges/interface/';
+            window.location.href = '/mondes-immerges/interface/';
         }, 150);
     });
     

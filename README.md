@@ -5,7 +5,7 @@ Projet consolidé regroupant toutes les pages du site National Geographic Mondes
 ## Structure du projet
 
 ```
-nationalgeographic.fr-mondesimmerges/
+mondes-immerges/
 ├── accueil/                    # Page d'accueil principale
 ├── interface/                  # Globe interactif (interface principale)
 ├── les-ombres-de-la-mer/      # Collection : Les Ombres De La Mer
