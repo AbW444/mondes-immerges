@@ -1208,11 +1208,11 @@ body.loading .globe-video {
 }
 
 .gallery-prev {
-    left: 10px;
+    left: -70px; /* Éloignée de l'image pour ne pas se superposer */
 }
 
 .gallery-next {
-    right: 10px;
+    right: -70px; /* Éloignée de l'image pour ne pas se superposer */
 }
 
 /* Mode plein écran pour les images */
