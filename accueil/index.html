@@ -1638,6 +1638,32 @@
 
             console.log('Page Mondes Immergés initialisée avec succès');
         });
+
+        // Reset transition video when page is restored from cache (back button)
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || (performance.navigation && performance.navigation.type === 2)) {
+                console.log('Page restaurée depuis le cache - Reset de la vidéo de transition');
+                const transitionVideo = document.getElementById('transitionVideo');
+                const loadingOverlay = document.getElementById('loadingOverlay');
+
+                if (transitionVideo) {
+                    transitionVideo.classList.remove('active');
+                    transitionVideo.classList.remove('freeze-last-frame');
+                    transitionVideo.pause();
+                    transitionVideo.currentTime = 0;
+                }
+
+                if (loadingOverlay) {
+                    loadingOverlay.classList.remove('active');
+                    loadingOverlay.style.display = 'none';
+                    loadingOverlay.style.opacity = '0';
+                }
+
+                // Reset redirected state
+                document.body.classList.remove('redirected');
+                document.body.classList.remove('transition-active');
+            }
+        });
     </script>
 </body>
 </html>
