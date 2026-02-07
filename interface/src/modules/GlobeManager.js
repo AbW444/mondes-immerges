@@ -21,11 +21,6 @@ export class GlobeManager {
         this.clock = new THREE.Clock();
         this.labelsVisible = false; // Flag pour contrôler l'apparition des labels
 
-        // NOUVEAU: Variables pour la gestion des vidéos
-        this.currentVideoPath = `${import.meta.env.BASE_URL}videos/globe-video.webm`;
-        this.alternateVideoPath = `${import.meta.env.BASE_URL}videos/globe-video-aberration.webm`;
-        this.isAlternateVideo = false;
-        
         // Paramètres pour l'orbite ellipsoïdale - ZOOM AUGMENTÉ
         this.orbitParams = {
             isOrbiting: true,
@@ -134,9 +129,6 @@ export class GlobeManager {
         // Ajouter les écouteurs d'événements
         window.addEventListener('resize', this.onWindowResize.bind(this));
         this.container.addEventListener('click', this.onMouseClick.bind(this));
-        
-        // NOUVEAU: Ajouter l'écouteur pour la touche Entrée
-        document.addEventListener('keydown', this.onKeyDown.bind(this));
     }
     
     // Méthode pour gérer les erreurs WebGL
@@ -169,183 +161,7 @@ export class GlobeManager {
         
         this.container.appendChild(errorDiv);
     }
-    
-    // NOUVELLE MÉTHODE: Gestionnaire des événements clavier
-    onKeyDown(event) {
-        if (event.key === 'Enter') {
-            this.switchVideoTexture();
-        }
-    }
-    
-    // NOUVELLE MÉTHODE: Changer la texture vidéo du globe
-    switchVideoTexture() {
-        if (!this.videoElement || !this.videoTexture) {
-            console.warn('Vidéo ou texture non initialisée');
-            return;
-        }
-        
-        console.log('=== CHANGEMENT DE TEXTURE VIDÉO ===');
-        
-        // Basculer vers l'autre vidéo
-        this.isAlternateVideo = !this.isAlternateVideo;
-        const newVideoPath = this.isAlternateVideo ? this.alternateVideoPath : this.currentVideoPath;
-        
-        console.log(`Passage à: ${newVideoPath}`);
-        
-        // Créer un nouvel élément vidéo pour éviter les conflits
-        const newVideo = document.createElement('video');
-        newVideo.src = newVideoPath;
-        newVideo.loop = true;
-        newVideo.muted = true;
-        newVideo.autoplay = true;
-        newVideo.playsInline = true;
-        newVideo.crossOrigin = 'anonymous';
-        
-        // Gérer le chargement de la nouvelle vidéo
-        newVideo.addEventListener('canplaythrough', () => {
-            console.log('Nouvelle vidéo prête');
-            
-            // Arrêter l'ancienne vidéo
-            this.videoElement.pause();
-            
-            // Créer une nouvelle texture avec la nouvelle vidéo
-            const newTexture = new THREE.VideoTexture(newVideo);
-            newTexture.minFilter = THREE.LinearFilter;
-            newTexture.magFilter = THREE.LinearFilter;
-            newTexture.format = THREE.RGBAFormat;
-            newTexture.colorSpace = THREE.SRGBColorSpace;
-            
-            // Remplacer la texture du matériau du globe
-            if (this.globe && this.globe.material) {
-                // Disposer de l'ancienne texture pour libérer la mémoire
-                if (this.videoTexture) {
-                    this.videoTexture.dispose();
-                }
-                
-                // Appliquer la nouvelle texture
-                this.globe.material.map = newTexture;
-                this.globe.material.needsUpdate = true;
-                
-                // Mettre à jour les références
-                this.videoElement = newVideo;
-                this.videoTexture = newTexture;
-                
-                console.log('Texture du globe mise à jour avec succès');
-                
-                // Effet visuel pour indiquer le changement
-                this.createVideoSwitchEffect();
-            }
-        });
-        
-        newVideo.addEventListener('error', (e) => {
-            console.error('Erreur lors du chargement de la nouvelle vidéo:', e);
-            console.log('Tentative de retour à la vidéo précédente...');
-            // Revenir à l'état précédent en cas d'erreur
-            this.isAlternateVideo = !this.isAlternateVideo;
-        });
-        
-        // Commencer le chargement
-        newVideo.load();
-        
-        // Démarrer la lecture une fois chargée
-        newVideo.play().catch(e => {
-            console.error('Erreur lors de la lecture de la nouvelle vidéo:', e);
-        });
-    }
-    
-    // NOUVELLE MÉTHODE: Effet visuel lors du changement de vidéo
-    createVideoSwitchEffect() {
-        // Créer un effet de flash subtil pour indiquer le changement
-        const flashOverlay = document.createElement('div');
-        flashOverlay.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 204, 0, 0.3);
-            pointer-events: none;
-            z-index: 50;
-            opacity: 0;
-        `;
-        
-        this.container.appendChild(flashOverlay);
-        
-        // Animation du flash
-        gsap.timeline()
-            .to(flashOverlay, {
-                opacity: 1,
-                duration: 0.1,
-                ease: "power2.out"
-            })
-            .to(flashOverlay, {
-                opacity: 0,
-                duration: 0.3,
-                ease: "power2.out",
-                onComplete: () => {
-                    flashOverlay.remove();
-                }
-            });
-        
-        // Créer une notification pour informer du changement
-        this.showVideoSwitchNotification();
-    }
-    
-    // NOUVELLE MÉTHODE: Notification du changement de vidéo
-    showVideoSwitchNotification() {
-        // Créer une notification temporaire
-        const notification = document.createElement('div');
-        notification.textContent = this.isAlternateVideo ? 
-            'Mode Aberration Activé' : 
-            'Mode Normal Activé';
-        
-        notification.style.cssText = `
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 10, 30, 0.9);
-            color: #ffdd00;
-            padding: 15px 25px;
-            border-radius: 8px;
-            font-family: 'Roboto Mono', monospace;
-            font-size: 16px;
-            font-weight: bold;
-            text-align: center;
-            border: 2px solid #ffdd00;
-            box-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
-            z-index: 100;
-            pointer-events: none;
-            opacity: 0;
-            letter-spacing: 1px;
-        `;
-        
-        this.container.appendChild(notification);
-        
-        // Animation de la notification
-        gsap.timeline()
-            .to(notification, {
-                opacity: 1,
-                scale: 1.1,
-                duration: 0.3,
-                ease: "back.out(1.7)"
-            })
-            .to(notification, {
-                scale: 1,
-                duration: 0.2
-            })
-            .to(notification, {
-                opacity: 0,
-                scale: 0.9,
-                duration: 0.5,
-                delay: 1.5,
-                ease: "power2.in",
-                onComplete: () => {
-                    notification.remove();
-                }
-            });
-    }
-    
+
     setupLighting() {
         const ambientLight = new THREE.AmbientLight(0x404050, 0.5);
         this.scene.add(ambientLight);

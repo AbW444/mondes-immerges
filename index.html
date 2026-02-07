@@ -384,33 +384,6 @@
             z-index: 1;
         }
 
-        /* Style pour les indicateurs de vidéo */
-        .video-indicator {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            color: var(--primary-color-bright);
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-family: 'Geograph', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 1000;
-            border: 1px solid var(--primary-color);
-            backdrop-filter: blur(10px);
-            opacity: 0;
-            transform: translateY(-20px);
-            transition: all 0.3s ease;
-        }
-
-        .video-indicator.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-
-
         .logo-video {
             position: absolute;
             top: 50%;
@@ -957,17 +930,9 @@
             .side-nav li {
                 margin: var(--spacing-sm) 0;
             }
-            
+
             .nav-link {
                 font-size: 11px;
-            }
-
-            .video-indicator {
-                top: 15px;
-                right: 15px;
-                padding: 8px 16px;
-                font-size: 13px;
-                border-radius: 15px;
             }
         }
 
@@ -1081,16 +1046,6 @@
                 display: none;
             }
 
-            .video-indicator {
-                top: 10px;
-                right: 10px;
-                left: 10px;
-                padding: 6px 12px;
-                font-size: 12px;
-                border-radius: 12px;
-                text-align: center;
-            }
-
             @keyframes expandSeparator {
                 0% {
                     width: 0;
@@ -1156,12 +1111,6 @@
                 font-size: 16px;
                 letter-spacing: 0.5px;
                 margin-top: 15px;
-            }
-
-            .video-indicator {
-                padding: 5px 10px;
-                font-size: 11px;
-                border-radius: 10px;
             }
         }
 
@@ -1234,13 +1183,6 @@
     <!-- Curseur personnalisé -->
     <div class="cursor"></div>
     <div class="cursor-follower"></div>
-
-    <!-- Indicateur de vidéo actuelle -->
-    <div class="video-indicator" id="videoIndicator">
-        Vidéo d'arrière-plan 1/4
-    </div>
-
-
 
     <!-- Top Navigation -->
     <div class="top-nav">
@@ -1320,76 +1262,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Variables pour le système de changement de vidéos
-            const backgroundVideo = document.getElementById('backgroundVideo');
-            const videoIndicator = document.getElementById('videoIndicator');
-            
-            // Liste des vidéos d'arrière-plan
-            const videoSources = [
-                './videos/video-arriereplan.webm',
-                './videos/map-video-poisson.webm',
-                './videos/img-satellite.webm',
-                './videos/satellite-video-chroma.webm'
-            ];
-            
-            // Noms des vidéos pour l'indicateur
-            const videoNames = [
-                'Vidéo d\'arrière-plan',
-                'Vidéo d\'arrière-plan',
-                'Vidéo d\'arrière-plan',
-                'Vidéo d\'arrière-plan'
-            ];
-            
-            let currentVideoIndex = 0;
-            
-            // Fonction pour changer la vidéo
-            function changeBackgroundVideo() {
-                // Passer à la vidéo suivante
-                currentVideoIndex = (currentVideoIndex + 1) % videoSources.length;
-                
-                // Mettre à jour la source de la vidéo
-                const newSource = videoSources[currentVideoIndex];
-                backgroundVideo.src = newSource;
-                
-                // Recharger et relancer la vidéo
-                backgroundVideo.load();
-                backgroundVideo.play().catch(function(e) {
-                    console.log('Erreur lors de la lecture de la nouvelle vidéo:', e);
-                });
-                
-                // Mettre à jour l'indicateur
-                updateVideoIndicator();
-                
-                console.log(`Vidéo changée vers: ${newSource} (${currentVideoIndex + 1}/${videoSources.length})`);
-            }
-            
-            // Fonction pour mettre à jour l'indicateur
-            function updateVideoIndicator() {
-                videoIndicator.textContent = `${videoNames[currentVideoIndex]} (${currentVideoIndex + 1}/${videoSources.length})`;
-                
-                // Animation de l'indicateur
-                videoIndicator.classList.remove('show');
-                setTimeout(() => {
-                    videoIndicator.classList.add('show');
-                }, 100);
-                
-                // Masquer l'indicateur après 3 secondes
-                setTimeout(() => {
-                    videoIndicator.classList.remove('show');
-                }, 3000);
-            }
-            
-            // Afficher l'indicateur initial seulement lors des changements
-            // (supprimé l'affichage automatique au chargement)
-            
-            // Écouter la touche Entrée
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.keyCode === 13) {
-                    e.preventDefault();
-                    changeBackgroundVideo();
-                }
-            });
-            
             // Initialisation du curseur personnalisé (désactivé sur mobile)
             if (window.innerWidth > 768) {
                 const cursor = document.querySelector('.cursor');
@@ -1617,9 +1489,8 @@
                     }
                 });
             });
-            
+
             console.log('Page Mondes Immergés initialisée avec succès');
-            console.log('Appuyez sur Entrée pour changer la vidéo d\'arrière-plan');
         });
     </script>
 </body>
