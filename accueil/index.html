@@ -423,6 +423,11 @@
             pointer-events: all;
         }
 
+        /* Empêcher la vidéo de disparaître - bloquée sur dernière frame */
+        .transition-video.freeze-last-frame {
+            opacity: 1 !important;
+        }
+
         /* Masquer tout le contenu pendant la transition */
         body.transition-active .immerse-section,
         body.transition-active header,
@@ -1579,35 +1584,39 @@
 
                         // Écouter la fin de la vidéo pour la redirection
                         transitionVideo.addEventListener('ended', function() {
-                            console.log('Vidéo terminée - Redirection IMMÉDIATE...');
-                            handleRedirection();
+                            if (document.body.classList.contains('redirected')) return;
+
+                            console.log('Vidéo terminée - Blocage sur dernière frame');
+                            document.body.classList.add('redirected');
+
+                            // Bloquer la vidéo sur la dernière frame
+                            transitionVideo.classList.add('freeze-last-frame');
+
+                            // Redirection IMMÉDIATE sans masquer la vidéo
+                            console.log('🚀 REDIRECTION IMMÉDIATE VERS L\'INTERFACE');
+                            window.location.href = '/mondes-immerges/interface/';
                         }, { once: true });
 
                     }).catch(e => {
                         console.log('Erreur lors du lancement de la vidéo:', e);
                         // En cas d'erreur, redirection immédiate
-                        handleRedirection();
+                        if (!document.body.classList.contains('redirected')) {
+                            document.body.classList.add('redirected');
+                            transitionVideo.classList.add('freeze-last-frame');
+                            window.location.href = '/mondes-immerges/interface/';
+                        }
                     });
 
                     // Fallback : 15 secondes maximum
                     setTimeout(() => {
-                        if (transitionVideo.classList.contains('active') && !document.body.classList.contains('redirected')) {
+                        if (!document.body.classList.contains('redirected')) {
                             console.log('Timeout - Redirection forcée');
-                            handleRedirection();
+                            document.body.classList.add('redirected');
+                            transitionVideo.classList.add('freeze-last-frame');
+                            window.location.href = '/mondes-immerges/interface/';
                         }
                     }, 15000);
                 });
-
-                // Fonction de redirection
-                function handleRedirection() {
-                    if (document.body.classList.contains('redirected')) return;
-
-                    console.log('🚀 REDIRECTION VERS L\'INTERFACE');
-                    document.body.classList.add('redirected');
-
-                    // Redirection IMMÉDIATE
-                    window.location.href = '/mondes-immerges/interface/';
-                }
             }
             
             // Smooth scroll pour les liens de navigation

@@ -411,11 +411,17 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
+            background: #000; /* Fond noir pour éviter tout flash */
         }
 
         .transition-video.active {
             opacity: 1;
             pointer-events: all;
+        }
+
+        /* Empêcher la vidéo de disparaître - bloquée sur dernière frame */
+        .transition-video.freeze-last-frame {
+            opacity: 1 !important;
         }
 
         .video-overlay {
@@ -1421,56 +1427,53 @@
                     // Activer la vidéo de transition
                     transitionVideo.classList.add('active');
                     transitionVideo.currentTime = 0;
-                    
+
                     // Lancer la vidéo
                     transitionVideo.play().then(() => {
                         console.log('Vidéo de transition lancée');
-                        
+
                         // Écouter la fin de la vidéo pour la redirection EXACTE
                         transitionVideo.addEventListener('ended', function() {
-                            console.log('Vidéo de transition terminée - Redirection IMMÉDIATE...');
-                            handleRedirection();
+                            console.log('Vidéo de transition terminée - Blocage sur dernière frame');
+
+                            // Bloquer la vidéo sur la dernière frame
+                            transitionVideo.classList.add('freeze-last-frame');
+
+                            // Redirection IMMÉDIATE sans masquer la vidéo
+                            console.log('>>> REDIRECTION IMMÉDIATE VERS L\'INTERFACE <<<');
+                            window.location.href = '/mondes-immerges/interface/';
                         }, { once: true });
-                        
+
                     }).catch(e => {
                         console.log('Erreur lors du lancement de la vidéo:', e);
                         // En cas d'erreur, redirection immédiate
-                        handleRedirection();
+                        window.location.href = '/mondes-immerges/interface/';
                     });
                     
                     // Sécurité : vérifier la durée de la vidéo et forcer la redirection si nécessaire
                     transitionVideo.addEventListener('loadedmetadata', function() {
                         const videoDuration = transitionVideo.duration;
                         console.log('Durée de la vidéo de transition:', videoDuration + 's');
-                        
-                        // Timeout basé sur la durée réelle de la vidéo + 1 seconde de sécurité
+
+                        // Timeout basé sur la durée réelle de la vidéo + 0.5 seconde de sécurité
                         setTimeout(() => {
-                            if (transitionVideo.classList.contains('active')) {
+                            if (transitionVideo.classList.contains('active') && !transitionVideo.classList.contains('freeze-last-frame')) {
                                 console.log('Timeout sécurité - Forcer la redirection');
-                                handleRedirection();
+                                transitionVideo.classList.add('freeze-last-frame');
+                                window.location.href = '/mondes-immerges/interface/';
                             }
-                        }, (videoDuration + 1) * 1000);
+                        }, (videoDuration + 0.5) * 1000);
                     }, { once: true });
-                    
+
                     // Fallback ultime : 15 secondes maximum
                     setTimeout(() => {
-                        if (transitionVideo.classList.contains('active')) {
+                        if (!transitionVideo.classList.contains('freeze-last-frame')) {
                             console.log('Timeout ultime - Redirection forcée');
-                            handleRedirection();
+                            transitionVideo.classList.add('freeze-last-frame');
+                            window.location.href = '/mondes-immerges/interface/';
                         }
                     }, 15000);
                 });
-                
-                // Fonction de redirection
-                function handleRedirection() {
-                    console.log('>>> REDIRECTION VERS L\'INTERFACE <<<');
-
-                    // Masquer la vidéo de transition
-                    transitionVideo.classList.remove('active');
-
-                    // Redirection vers la page interface
-                    window.location.href = '/mondes-immerges/interface/';
-                }
             }
             
             // Smooth scroll pour les liens de navigation
