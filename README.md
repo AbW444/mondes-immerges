@@ -5,12 +5,19 @@ Projet consolidé regroupant toutes les pages du site National Geographic Mondes
 ## Structure du projet
 
 ```
-nationalgeographic.fr-mondesimmerges/
-├── accueil/                    # Page d'accueil principale
-├── interface/                  # Globe interactif (interface principale)
-├── les-ombres-de-la-mer/      # Collection : Les Ombres De La Mer
-└── into-the-okavango/         # Collection : Into The Okavango
+mondes-immerges/
+├── accueil/                           # Page d'accueil principale
+└── interface/                         # Globe interactif (interface principale)
+    ├── les-ombres-de-la-mer/          # Collection : Les Ombres De La Mer
+    └── into-the-okavango/             # Collection : Into The Okavango
 ```
+
+## URLs du site
+
+- **Accueil principal** : https://abw444.github.io/mondes-immerges/
+- **Globe interactif** : https://abw444.github.io/mondes-immerges/interface/
+- **Les Ombres de la Mer** : https://abw444.github.io/mondes-immerges/interface/les-ombres-de-la-mer/
+- **Into The Okavango** : https://abw444.github.io/mondes-immerges/interface/into-the-okavango/
 
 ## Pages
 
@@ -44,5 +51,5 @@ npm run dev
 Ce projet consolide les anciens dépôts suivants :
 - `-nationalgeographic.fr-mondesimmerges-accueil` → `accueil/`
 - `interface_globe` → `interface/`
-- `Page-collection-LesOmbresDeLaMer` → `les-ombres-de-la-mer/`
-- `Page-collection-IntoTheOkavango` → `into-the-okavango/`
+- `Page-collection-LesOmbresDeLaMer` → `interface/les-ombres-de-la-mer/`
+- `Page-collection-IntoTheOkavango` → `interface/into-the-okavango/`

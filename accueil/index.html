@@ -78,7 +78,7 @@
         
         body {
             font-family: 'Geograph', 'Inter', sans-serif;
-            background-color: var(--dark-color);
+            background-color: #000;
             color: var(--text-color);
             overflow-x: hidden;
             position: relative;
@@ -437,12 +437,44 @@
             z-index: 99999;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s ease;
+            transition: none;
+            background: #000; /* Fond noir pour cacher le contenu */
         }
 
         .transition-video.active {
             opacity: 1;
             pointer-events: all;
+        }
+
+        /* Masquer tout le contenu pendant la transition */
+        body.transition-active .immerse-section,
+        body.transition-active header,
+        body.transition-active .top-nav,
+        body.transition-active .side-nav,
+        body.transition-active .video-indicator {
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+
+        /* Écran de chargement après la vidéo */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 100000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: none;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+            opacity: 1;
         }
 
         .video-overlay {
@@ -505,8 +537,8 @@
             top: calc(100% + 32px);
             left: 0;
             font-family: 'Geograph', sans-serif;
-            font-size: clamp(1rem, 1.8vw, 1.4rem);
-            font-weight: 300;
+            font-size: clamp(2rem, 3vw, 2.8rem);
+            font-weight: 500;
             color: var(--text-color);
             opacity: 0;
             transform: translateY(30px);
@@ -521,14 +553,14 @@
         .explore-globe-btn {
             display: block;
             margin: 0 auto;
-            padding: 18px 32px;
+            padding: 22px 42px;
             background: rgba(0, 0, 0, 0.9);
             backdrop-filter: blur(25px);
             border: 2px solid var(--primary-color);
             border-radius: 50px;
             color: var(--text-color);
             font-weight: 700;
-            font-size: 16px;
+            font-size: 20px;
             transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
             z-index: 50;
             text-transform: uppercase;
@@ -755,17 +787,17 @@
                 top: auto;
                 left: auto;
                 text-align: center;
-                font-size: clamp(0.8rem, 3vw, 1.1rem);
+                font-size: clamp(1.3rem, 3.8vw, 1.7rem);
                 max-width: 90%;
                 margin: 0 auto 40px auto; /* Plus d'espace avant le bouton */
                 line-height: 1.4;
             }
-            
+
             .explore-globe-btn {
                 position: relative;
                 margin: 80px auto 60px; /* Bouton encore plus bas */
-                padding: 14px 28px;
-                font-size: 14px;
+                padding: 18px 36px;
+                font-size: 18px;
                 letter-spacing: 1px;
             }
         }
@@ -822,14 +854,14 @@
             }
             
             .immerse-subtitle {
-                font-size: clamp(0.7rem, 3.5vw, 1rem);
+                font-size: clamp(1.1rem, 4.3vw, 1.5rem);
                 margin: 0 auto 35px auto;
                 max-width: 95%;
             }
-            
+
             .explore-globe-btn {
-                padding: 12px 24px;
-                font-size: 13px;
+                padding: 16px 30px;
+                font-size: 16px;
                 margin: 70px auto 50px; /* Bouton plus bas */
             }
         }
@@ -885,13 +917,13 @@
             }
             
             .immerse-subtitle {
-                font-size: clamp(0.6rem, 4vw, 0.9rem);
+                font-size: clamp(0.8rem, 4.5vw, 1.1rem);
                 margin: 0 auto 30px auto;
             }
-            
+
             .explore-globe-btn {
-                padding: 10px 20px;
-                font-size: 12px;
+                padding: 14px 26px;
+                font-size: 15px;
                 margin: 60px auto 40px; /* Bouton plus bas */
             }
         }
@@ -940,13 +972,13 @@
             }
             
             .immerse-subtitle {
-                font-size: clamp(0.9rem, 1.6vw, 1.2rem);
+                font-size: clamp(1.4rem, 2.3vw, 1.8rem);
                 max-width: 500px;
             }
-            
+
             .explore-globe-btn {
-                padding: 16px 28px;
-                font-size: 15px;
+                padding: 20px 36px;
+                font-size: 18px;
                 letter-spacing: 1.5px;
             }
 
@@ -1065,14 +1097,14 @@
                 top: 32px;
                 left: auto;
                 text-align: center;
-                font-size: clamp(0.8rem, 3.5vw, 1.1rem);
+                font-size: clamp(1rem, 4vw, 1.3rem);
                 max-width: 90%;
                 margin: 0 auto;
             }
-            
+
             .explore-globe-btn {
-                padding: 14px 24px;
-                font-size: 14px;
+                padding: 18px 32px;
+                font-size: 17px;
                 letter-spacing: 1px;
                 margin-top: 20px;
             }
@@ -1147,13 +1179,13 @@
             }
             
             .immerse-subtitle {
-                font-size: clamp(0.7rem, 4vw, 1rem);
+                font-size: clamp(0.9rem, 4.5vw, 1.2rem);
                 max-width: 95%;
             }
-            
+
             .explore-globe-btn {
-                padding: 12px 20px;
-                font-size: 13px;
+                padding: 16px 28px;
+                font-size: 16px;
                 letter-spacing: 0.5px;
                 margin-top: 15px;
             }
@@ -1178,17 +1210,17 @@
             }
             
             .immerse-subtitle {
-                font-size: clamp(0.7rem, 2.5vw, 1rem);
+                font-size: clamp(0.9rem, 3vw, 1.2rem);
                 top: 20px;
             }
-            
+
             .title-separator {
                 top: 12px;
             }
-            
+
             .explore-globe-btn {
-                padding: 10px 18px;
-                font-size: 12px;
+                padding: 14px 26px;
+                font-size: 15px;
                 margin-top: 10px;
             }
         }
@@ -1224,8 +1256,8 @@
             }
             
             .explore-globe-btn {
-                padding: 20px 36px;
-                font-size: 17px;
+                padding: 24px 44px;
+                font-size: 21px;
             }
         }
     </style>
@@ -1287,13 +1319,13 @@
     <section id="immerse" class="immerse-section">
         <div class="immerse-background">
             <!-- Vidéo de fond en boucle -->
-            <video class="bg-video" autoplay muted loop playsinline id="backgroundVideo">
+            <video class="bg-video" autoplay muted loop playsinline preload="metadata" id="backgroundVideo">
                 <source src="./videos/video-arriereplan.webm" type="video/webm">
                 Votre navigateur ne supporte pas les vidéos HTML5.
             </video>
-            
+
             <!-- Vidéo du logo -->
-            <video class="logo-video" autoplay muted playsinline id="logoVideo">
+            <video class="logo-video" autoplay muted playsinline preload="auto" id="logoVideo">
                 <source src="./videos/anim-logo.webm" type="video/webm">
                 Votre navigateur ne supporte pas les vidéos HTML5.
             </video>
@@ -1317,6 +1349,11 @@
         <source src="./videos/anim-logo-transition.webm" type="video/webm">
         Votre navigateur ne supporte pas les vidéos HTML5.
     </video>
+
+    <!-- Écran de chargement après transition -->
+    <div id="loading-overlay" class="loading-overlay">
+        <l-jelly size="60" speed="0.9" color="#ffcc00"></l-jelly>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -1346,20 +1383,25 @@
             function changeBackgroundVideo() {
                 // Passer à la vidéo suivante
                 currentVideoIndex = (currentVideoIndex + 1) % videoSources.length;
-                
+
                 // Mettre à jour la source de la vidéo
                 const newSource = videoSources[currentVideoIndex];
                 backgroundVideo.src = newSource;
-                
-                // Recharger et relancer la vidéo
-                backgroundVideo.load();
-                backgroundVideo.play().catch(function(e) {
-                    console.log('Erreur lors de la lecture de la nouvelle vidéo:', e);
-                });
-                
-                // Mettre à jour l'indicateur
+
+                // Mettre à jour l'indicateur avec état de chargement
                 updateVideoIndicator();
-                
+
+                // Recharger et relancer la vidéo avec meilleure gestion du buffering
+                backgroundVideo.load();
+
+                // Attendre que suffisamment de données soient chargées avant de jouer
+                backgroundVideo.addEventListener('canplay', function onCanPlay() {
+                    backgroundVideo.play().catch(function(e) {
+                        console.log('Erreur lors de la lecture de la nouvelle vidéo:', e);
+                    });
+                    backgroundVideo.removeEventListener('canplay', onCanPlay);
+                }, { once: true });
+
                 console.log(`Vidéo changée vers: ${newSource} (${currentVideoIndex + 1}/${videoSources.length})`);
             }
             
@@ -1487,15 +1529,25 @@
             // Gestion des vidéos de fond
             const bgVideo = document.querySelector('.bg-video');
             const logoVideo = document.getElementById('logoVideo');
-            
+
             if (bgVideo) {
                 bgVideo.addEventListener('loadeddata', function() {
                     bgVideo.play().catch(function(e) {
                         console.log('Autoplay prevented for background video:', e);
                     });
                 });
-                
+
+                // Gestion du buffering pour les vidéos de 20MB
+                bgVideo.addEventListener('waiting', function() {
+                    console.log('Vidéo en cours de buffering...');
+                });
+
+                bgVideo.addEventListener('playing', function() {
+                    console.log('Vidéo en lecture');
+                });
+
                 bgVideo.addEventListener('error', function() {
+                    console.log('Erreur de chargement vidéo, tentative de rechargement...');
                     setTimeout(function() {
                         bgVideo.load();
                     }, 1000);
@@ -1541,63 +1593,74 @@
             // Gestion du bouton Explorer avec vidéo de transition
             const exploreBtn = document.getElementById('exploreBtn');
             const transitionVideo = document.getElementById('transitionVideo');
-            
-            if (exploreBtn && transitionVideo) {
+            const loadingOverlay = document.getElementById('loading-overlay');
+
+            if (exploreBtn && transitionVideo && loadingOverlay) {
+                let blackScreenShown = false;
+
                 exploreBtn.addEventListener('click', function() {
                     console.log('>>> DÉCLENCHEMENT DE LA TRANSITION <<<');
-                    
-                    // Activer la vidéo de transition
+
+                    // Masquer le contenu et activer la vidéo de transition
+                    document.body.classList.add('transition-active');
                     transitionVideo.classList.add('active');
                     transitionVideo.currentTime = 0;
-                    
+                    blackScreenShown = false;
+
+                    // Écouter la progression de la vidéo pour afficher l'écran noir AVANT la fin
+                    transitionVideo.addEventListener('timeupdate', function checkEndApproaching() {
+                        const timeLeft = transitionVideo.duration - transitionVideo.currentTime;
+
+                        // Quand il reste 0.3 seconde ou moins, afficher l'écran noir
+                        if (timeLeft <= 0.3 && !blackScreenShown) {
+                            blackScreenShown = true;
+                            console.log('>>> FIN DE VIDÉO APPROCHE - ÉCRAN NOIR IMMÉDIAT <<<');
+
+                            // Afficher l'écran noir IMMÉDIATEMENT au-dessus de tout
+                            loadingOverlay.style.display = 'flex';
+                            loadingOverlay.style.opacity = '1';
+                            loadingOverlay.style.background = '#000';
+                            loadingOverlay.style.zIndex = '999999';
+                            loadingOverlay.classList.add('active');
+
+                            transitionVideo.removeEventListener('timeupdate', checkEndApproaching);
+                        }
+                    });
+
                     // Lancer la vidéo
                     transitionVideo.play().then(() => {
                         console.log('Vidéo de transition lancée');
-                        
-                        // Écouter la fin de la vidéo pour la redirection EXACTE
+
+                        // Écouter la fin de la vidéo pour la redirection
                         transitionVideo.addEventListener('ended', function() {
-                            console.log('Vidéo de transition terminée - Redirection IMMÉDIATE...');
+                            console.log('Vidéo terminée - Redirection IMMÉDIATE...');
                             handleRedirection();
                         }, { once: true });
-                        
+
                     }).catch(e => {
                         console.log('Erreur lors du lancement de la vidéo:', e);
                         // En cas d'erreur, redirection immédiate
                         handleRedirection();
                     });
-                    
-                    // Sécurité : vérifier la durée de la vidéo et forcer la redirection si nécessaire
-                    transitionVideo.addEventListener('loadedmetadata', function() {
-                        const videoDuration = transitionVideo.duration;
-                        console.log('Durée de la vidéo de transition:', videoDuration + 's');
-                        
-                        // Timeout basé sur la durée réelle de la vidéo + 1 seconde de sécurité
-                        setTimeout(() => {
-                            if (transitionVideo.classList.contains('active')) {
-                                console.log('Timeout sécurité - Forcer la redirection');
-                                handleRedirection();
-                            }
-                        }, (videoDuration + 1) * 1000);
-                    }, { once: true });
-                    
-                    // Fallback ultime : 15 secondes maximum
+
+                    // Fallback : 15 secondes maximum
                     setTimeout(() => {
-                        if (transitionVideo.classList.contains('active')) {
-                            console.log('Timeout ultime - Redirection forcée');
+                        if (transitionVideo.classList.contains('active') && !document.body.classList.contains('redirected')) {
+                            console.log('Timeout - Redirection forcée');
                             handleRedirection();
                         }
                     }, 15000);
                 });
-                
+
                 // Fonction de redirection
                 function handleRedirection() {
-                    console.log('>>> REDIRECTION VERS L\'INTERFACE <<<');
+                    if (document.body.classList.contains('redirected')) return;
 
-                    // Masquer la vidéo de transition
-                    transitionVideo.classList.remove('active');
+                    console.log('🚀 REDIRECTION VERS L\'INTERFACE');
+                    document.body.classList.add('redirected');
 
-                    // Redirection vers la page interface
-                    window.location.href = '/nationalgeographic.fr-mondesimmerges/interface/';
+                    // Redirection IMMÉDIATE
+                    window.location.href = '/mondes-immerges/interface/';
                 }
             }
             
