@@ -80,18 +80,28 @@ export class GlobeManager {
         
         this.updateCameraPosition();
         
-        // Créer le renderer avec vérifications WebGL
+        // Créer le renderer avec vérifications WebGL - OPTIMISÉ POUR MOBILE
         try {
-            this.renderer = new THREE.WebGLRenderer({ 
-                antialias: true, 
+            // Détection mobile pour optimisations
+            const isMobile = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isLowEnd = isMobile || (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4);
+
+            this.renderer = new THREE.WebGLRenderer({
+                antialias: !isMobile, // Désactiver antialiasing sur mobile (coûteux)
                 alpha: true,
-                logarithmicDepthBuffer: true,
-                powerPreference: "high-performance"
+                logarithmicDepthBuffer: !isLowEnd, // Désactiver sur appareils bas de gamme
+                powerPreference: "high-performance",
+                precision: isMobile ? 'mediump' : 'highp' // Précision réduite sur mobile
             });
             this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limiter pour les performances
-            this.renderer.shadowMap.enabled = true;
-            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            this.renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2)); // 1x sur mobile, 2x max desktop
+            this.renderer.shadowMap.enabled = !isMobile; // Pas de shadows sur mobile (très coûteux)
+            if (!isMobile) {
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            }
+
+            // Stocker le flag mobile pour utilisation ultérieure
+            this.isMobile = isMobile;
             
             // Vérifier les capacités WebGL
             const gl = this.renderer.getContext();

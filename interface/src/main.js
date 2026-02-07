@@ -85,9 +85,16 @@ function initLoadingSpinner() {
 }
 
 /**
- * Initialise le curseur personnalisé de manière optimisée
+ * Initialise le curseur personnalisé de manière optimisée - VERSION PROFESSIONNELLE
  */
 function initCustomCursor() {
+    // Désactiver sur mobile pour économiser ressources
+    const isMobile = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+        console.log('📱 Curseur désactivé sur mobile');
+        return;
+    }
+
     const cursor = document.querySelector('.cursor');
     const follower = document.querySelector('.cursor-follower');
 
@@ -99,25 +106,30 @@ function initCustomCursor() {
     let followerY = 0;
     let rafId = null;
 
-    // Un seul écouteur de mouvement
+    // Throttle pour mousemove (60fps max)
+    let lastMoveTime = 0;
+    const moveThrottle = 16; // ~60fps
+
     const handleMouseMove = (e) => {
+        const now = performance.now();
+        if (now - lastMoveTime < moveThrottle) return;
+        lastMoveTime = now;
+
         mouseX = e.clientX;
         mouseY = e.clientY;
     };
 
     document.addEventListener('mousemove', handleMouseMove, { passive: true });
 
-    // Animation optimisée avec RAF
+    // Animation optimisée avec RAF et transform (plus performant)
     function animate() {
-        // Curseur principal
-        cursor.style.left = mouseX + 'px';
-        cursor.style.top = mouseY + 'px';
+        // Curseur principal - utiliser transform au lieu de left/top
+        cursor.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
 
         // Curseur suiveur avec interpolation
         followerX += (mouseX - followerX) * 0.1;
         followerY += (mouseY - followerY) * 0.1;
-        follower.style.left = followerX + 'px';
-        follower.style.top = followerY + 'px';
+        follower.style.transform = `translate(${followerX}px, ${followerY}px)`;
 
         rafId = requestAnimationFrame(animate);
     }
@@ -128,9 +140,9 @@ function initCustomCursor() {
     window.addEventListener('beforeunload', () => {
         if (rafId) cancelAnimationFrame(rafId);
         document.removeEventListener('mousemove', handleMouseMove);
-    });
+    }, { once: true });
 
-    console.log('✅ Curseur initialisé');
+    console.log('✅ Curseur initialisé (desktop)');
 }
 
 /**
