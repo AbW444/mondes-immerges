@@ -1102,7 +1102,7 @@ body.loading .globe-video {
     height: 100%;
     position: relative;
     margin-top: 100px;
-    overflow: hidden; /* Conteneur des images avec overflow */
+    overflow: visible; /* Changé pour laisser les flèches visibles en dehors */
 }
 
 .gallery-track {
@@ -1111,6 +1111,7 @@ body.loading .globe-video {
     height: 100%;
     transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
     touch-action: pan-x;
+    overflow: hidden; /* Cache les images qui débordent */
 }
 
 .gallery-slide {
