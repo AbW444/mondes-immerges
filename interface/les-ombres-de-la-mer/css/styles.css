@@ -2232,6 +2232,14 @@ button:focus, a:focus, [tabindex]:focus {
     box-shadow: none !important;
 }
 
+/* Suppression du focus pour les liens de navigation latérale */
+.side-nav a:focus,
+.side-nav .nav-link:focus,
+.side-nav .nav-link:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
 /* Suppression du zoom sur iOS */
 input, textarea, select {
     font-size: 16px;
