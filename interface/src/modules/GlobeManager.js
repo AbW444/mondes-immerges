@@ -46,9 +46,13 @@ export class GlobeManager {
             sunPosition: new THREE.Vector3(100, 20, 100),
             moonPosition: new THREE.Vector3(-70, 30, -50)
         };
-        
+
         this._savedState = null;
-        
+
+        // Chemins des vidéos du globe
+        this.currentVideoPath = `${import.meta.env.BASE_URL}videos/globe-video.webm`;
+        this.aberrationVideoPath = `${import.meta.env.BASE_URL}videos/globe-video-aberration.webm`;
+
         this.init();
     }
     
