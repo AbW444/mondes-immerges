@@ -245,14 +245,36 @@ h2 {
   left: 0;
 }
 
-/* Conteneur principal modernisé */
+/* Conteneur principal modernisé - AVEC FOND D'ÉTOILES FALLBACK */
 #main-container {
   position: relative;
   width: 100%;
   height: 100%;
   transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
   overflow: hidden;
-  background-color: #000000;
+  /* Fond noir avec gradient subtil pour donner de la profondeur */
+  background: radial-gradient(ellipse at center, #0a0a1a 0%, #000000 100%);
+  /* Fond d'étoiles CSS comme fallback si Three.js échoue */
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, white, transparent),
+    radial-gradient(2px 2px at 60px 70px, white, transparent),
+    radial-gradient(1px 1px at 50px 50px, white, transparent),
+    radial-gradient(1px 1px at 130px 80px, white, transparent),
+    radial-gradient(2px 2px at 90px 10px, white, transparent),
+    radial-gradient(1px 1px at 170px 150px, white, transparent),
+    radial-gradient(1px 1px at 210px 60px, white, transparent),
+    radial-gradient(2px 2px at 250px 120px, white, transparent),
+    radial-gradient(1px 1px at 300px 180px, white, transparent);
+  background-repeat: repeat;
+  background-size: 350px 250px;
+  background-position: 0 0, 40px 60px, 130px 270px, 70px 100px, 0 0, 40px 60px, 130px 270px, 70px 100px, 0 0;
+  animation: starsMovement 200s linear infinite;
+}
+
+/* Animation de mouvement subtil des étoiles */
+@keyframes starsMovement {
+  from { background-position: 0 0, 40px 60px, 130px 270px, 70px 100px, 0 0, 40px 60px, 130px 270px, 70px 100px, 0 0; }
+  to { background-position: 350px 0, 390px 60px, 480px 270px, 420px 100px, 350px 0, 390px 60px, 480px 270px, 420px 100px, 350px 0; }
 }
 
 #globe-container {
@@ -261,6 +283,15 @@ h2 {
   left: 0;
   width: 100%;
   height: 100%;
+  /* Transparent pour laisser voir le fond d'étoiles du main-container */
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Le canvas Three.js doit aussi être transparent */
+#globe-container canvas {
+  background: transparent !important;
+  pointer-events: auto;
 }
 
 /* Interface HUD modernisée - GLASSMORPHISME scientifique */

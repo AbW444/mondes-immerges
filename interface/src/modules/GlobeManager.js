@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { gsap } from 'gsap';
 // Import corrigé pour la redirection
 import { getRedirectUrl } from '../data/redirect-config.js';
+// Import du VideoManager professionnel
+import { videoManager } from '../utils/VideoManager.js';
 
 
 export class GlobeManager {
@@ -295,18 +297,19 @@ export class GlobeManager {
                 }
             });
 
-            video.addEventListener('ended', () => {
-                video.play();
-            });
-
-            setInterval(() => {
-                if (video.paused && !video.ended) {
-                    console.log("Vidéo en pause, relance...");
-                    video.play().catch(e => {
-                        console.error("Impossible de relancer la vidéo:", e);
-                    });
+            // Enregistrer la vidéo avec le VideoManager professionnel
+            videoManager.register(video, {
+                loop: true,
+                muted: true,
+                autoRetry: true,
+                name: 'globe-texture',
+                onError: (e) => {
+                    console.error('❌ Erreur critique vidéo du globe:', e);
+                },
+                onPlay: () => {
+                    console.log('▶️ Vidéo du globe en lecture');
                 }
-            }, 1000);
+            });
 
             this.videoTexture = new THREE.VideoTexture(video);
             this.videoTexture.minFilter = THREE.LinearFilter;
@@ -436,15 +439,16 @@ export class GlobeManager {
                 (texture) => {
                     if (!resolved) {
                         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-                        this.renderer.toneMappingExposure = 0.3;
+                        this.renderer.toneMappingExposure = 0.6; // Augmenté de 0.3 à 0.6 pour plus de luminosité
 
                         const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
                         rt.fromEquirectangularTexture(this.renderer, texture);
                         this.scene.background = rt.texture;
 
-                        this.scene.fog = new THREE.FogExp2(0x000011, 0.00008);
+                        // Fog plus légère pour voir davantage les étoiles
+                        this.scene.fog = new THREE.FogExp2(0x000011, 0.00005);
 
-                        console.log('✅ Skybox chargée');
+                        console.log('✅ Skybox chargée avec exposition améliorée');
                         resolved = true;
                         clearTimeout(timeout);
                         resolve();
@@ -486,6 +490,10 @@ export class GlobeManager {
                     console.error('Erreur lecture vidéo:', e);
                 });
             }
+
+            // Démarrer la surveillance du VideoManager
+            videoManager.startMonitoring(2000);
+            console.log('✅ VideoManager: Surveillance active');
         }).catch((error) => {
             console.error('❌ Erreur durant le préchargement:', error);
             // Continuer quand même pour ne pas bloquer l'application
@@ -494,6 +502,9 @@ export class GlobeManager {
                     console.error('Erreur lecture vidéo:', e);
                 });
             }
+
+            // Démarrer la surveillance même en cas d'erreur
+            videoManager.startMonitoring(2000);
         });
     }
     

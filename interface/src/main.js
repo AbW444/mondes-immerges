@@ -1,6 +1,7 @@
 // Point d'entrée principal de l'application Mondes Immergés - VERSION OPTIMISÉE
 import './styles/main.css';
 import { initApp, getAppInstance } from './app.js';
+import { videoManager } from './utils/VideoManager.js';
 // ldrs (jelly loader) est chargé via script tag dans index.html
 
 // État global de l'application
@@ -181,6 +182,14 @@ async function playTransitionVideo() {
             loadingScreen.style.background = 'transparent';
             console.log('✅ Loading-screen transparent');
         }
+
+        // Enregistrer la vidéo de transition avec le VideoManager
+        videoManager.register(transitionVideo, {
+            loop: false, // Ne pas boucler les transitions
+            muted: true,
+            autoRetry: true,
+            name: 'transition-video-in'
+        });
 
         // Activer la vidéo de transition - EXACTEMENT comme accueil
         transitionVideo.classList.add('active');
