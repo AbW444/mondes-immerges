@@ -1383,20 +1383,25 @@
             function changeBackgroundVideo() {
                 // Passer à la vidéo suivante
                 currentVideoIndex = (currentVideoIndex + 1) % videoSources.length;
-                
+
                 // Mettre à jour la source de la vidéo
                 const newSource = videoSources[currentVideoIndex];
                 backgroundVideo.src = newSource;
-                
-                // Recharger et relancer la vidéo
-                backgroundVideo.load();
-                backgroundVideo.play().catch(function(e) {
-                    console.log('Erreur lors de la lecture de la nouvelle vidéo:', e);
-                });
-                
-                // Mettre à jour l'indicateur
+
+                // Mettre à jour l'indicateur avec état de chargement
                 updateVideoIndicator();
-                
+
+                // Recharger et relancer la vidéo avec meilleure gestion du buffering
+                backgroundVideo.load();
+
+                // Attendre que suffisamment de données soient chargées avant de jouer
+                backgroundVideo.addEventListener('canplay', function onCanPlay() {
+                    backgroundVideo.play().catch(function(e) {
+                        console.log('Erreur lors de la lecture de la nouvelle vidéo:', e);
+                    });
+                    backgroundVideo.removeEventListener('canplay', onCanPlay);
+                }, { once: true });
+
                 console.log(`Vidéo changée vers: ${newSource} (${currentVideoIndex + 1}/${videoSources.length})`);
             }
             
@@ -1524,15 +1529,25 @@
             // Gestion des vidéos de fond
             const bgVideo = document.querySelector('.bg-video');
             const logoVideo = document.getElementById('logoVideo');
-            
+
             if (bgVideo) {
                 bgVideo.addEventListener('loadeddata', function() {
                     bgVideo.play().catch(function(e) {
                         console.log('Autoplay prevented for background video:', e);
                     });
                 });
-                
+
+                // Gestion du buffering pour les vidéos de 20MB
+                bgVideo.addEventListener('waiting', function() {
+                    console.log('Vidéo en cours de buffering...');
+                });
+
+                bgVideo.addEventListener('playing', function() {
+                    console.log('Vidéo en lecture');
+                });
+
                 bgVideo.addEventListener('error', function() {
+                    console.log('Erreur de chargement vidéo, tentative de rechargement...');
                     setTimeout(function() {
                         bgVideo.load();
                     }, 1000);
