@@ -14,10 +14,10 @@ mondes-immerges/
 
 ## URLs du site
 
-- **Accueil principal** : https://abw444.github.io/mondes-immerges/
-- **Globe interactif** : https://abw444.github.io/mondes-immerges/interface/
-- **Les Ombres de la Mer** : https://abw444.github.io/mondes-immerges/interface/les-ombres-de-la-mer/
-- **Into The Okavango** : https://abw444.github.io/mondes-immerges/interface/into-the-okavango/
+- **Accueil principal** : https://holosene.github.io/mondes-immerges/
+- **Globe interactif** : https://holosene.github.io/mondes-immerges/interface/
+- **Les Ombres de la Mer** : https://holosene.github.io/mondes-immerges/interface/les-ombres-de-la-mer/
+- **Into The Okavango** : https://holosene.github.io/mondes-immerges/interface/into-the-okavango/
 
 ## Pages
 
