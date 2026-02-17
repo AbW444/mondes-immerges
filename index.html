@@ -1477,10 +1477,7 @@
                 });
             }
             
-            // Gestion des vidéos de fond
-            const bgVideo = document.querySelector('.bg-video');
-            const logoVideo = document.getElementById('logoVideo');
-            
+            // Gestion des vidéos de fond (bgVideo et logoVideo déjà déclarés plus haut)
             if (bgVideo) {
                 bgVideo.addEventListener('loadeddata', function() {
                     bgVideo.play().catch(function(e) {
