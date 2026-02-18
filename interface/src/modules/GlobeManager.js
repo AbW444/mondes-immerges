@@ -331,7 +331,7 @@ export class GlobeManager {
             this.videoTexture.format = THREE.RGBFormat;
             this.videoTexture.colorSpace = THREE.SRGBColorSpace;
 
-            const depthGeometry = new THREE.SphereGeometry(1.99, 32, 32);
+            const depthGeometry = new THREE.SphereGeometry(1.99, 64, 64);
             const depthMaterial = new THREE.MeshBasicMaterial({
                 color: 0x000000,
                 transparent: true,
@@ -346,7 +346,7 @@ export class GlobeManager {
             this.scene.add(depthSphere);
             this.depthSphere = depthSphere;
 
-            const globeGeometry = new THREE.SphereGeometry(2, 32, 32);
+            const globeGeometry = new THREE.SphereGeometry(2, 64, 64);
 
             const globeMaterial = new THREE.MeshBasicMaterial({
                 map: this.videoTexture,
@@ -459,9 +459,7 @@ export class GlobeManager {
                             // FIX: Limiter la résolution du cubemap pour éviter GL_OUT_OF_MEMORY
                             // L'image originale fait 8192x4096 - utiliser la hauteur complète
                             // créerait 6 faces de 4096x4096 = ~384 MB de VRAM
-                            // Réduit à 512px max pour tous les devices car la vidéo texture
-                            // du globe consomme déjà beaucoup de VRAM
-                            const maxCubemapSize = this.isMobile ? 256 : 512;
+                            const maxCubemapSize = this.isMobile ? 512 : 1024;
                             const cubemapSize = Math.min(texture.image.height, maxCubemapSize);
                             console.log(`📐 Cubemap: ${cubemapSize}px (image: ${texture.image.width}x${texture.image.height})`);
 

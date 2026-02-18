@@ -72,7 +72,17 @@ button, a, input, select, textarea, label, [role="button"], .hotspot-label {
   cursor: none !important;
 }
 
-body, html {
+html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #000000;
+  cursor: none !important;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -82,6 +92,9 @@ body, html {
   cursor: none !important;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* Réduction globale de 20% - équivalent zoom 80% navigateur */
+  transform: scale(0.8);
+  transform-origin: center center;
 }
 
 body::-webkit-scrollbar {
