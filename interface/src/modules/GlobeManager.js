@@ -148,19 +148,6 @@ export class GlobeManager {
         // Ajouter les écouteurs d'événements
         window.addEventListener('resize', this.onWindowResize.bind(this));
         this.container.addEventListener('click', this.onMouseClick.bind(this));
-
-        // Support tactile mobile
-        if (this.isMobile) {
-            this.container.addEventListener('touchend', (e) => {
-                if (e.changedTouches.length === 1) {
-                    const touch = e.changedTouches[0];
-                    this.onMouseClick({
-                        clientX: touch.clientX,
-                        clientY: touch.clientY
-                    });
-                }
-            }, { passive: true });
-        }
     }
     
     // Méthode pour gérer les erreurs WebGL
@@ -344,8 +331,7 @@ export class GlobeManager {
             this.videoTexture.format = THREE.RGBFormat;
             this.videoTexture.colorSpace = THREE.SRGBColorSpace;
 
-            const sphereSegments = this.isMobile ? 32 : 64;
-            const depthGeometry = new THREE.SphereGeometry(1.99, sphereSegments, sphereSegments);
+            const depthGeometry = new THREE.SphereGeometry(1.99, 64, 64);
             const depthMaterial = new THREE.MeshBasicMaterial({
                 color: 0x000000,
                 transparent: true,
@@ -360,7 +346,7 @@ export class GlobeManager {
             this.scene.add(depthSphere);
             this.depthSphere = depthSphere;
 
-            const globeGeometry = new THREE.SphereGeometry(2, sphereSegments, sphereSegments);
+            const globeGeometry = new THREE.SphereGeometry(2, 64, 64);
 
             const globeMaterial = new THREE.MeshBasicMaterial({
                 map: this.videoTexture,
