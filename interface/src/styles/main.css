@@ -72,17 +72,7 @@ button, a, input, select, textarea, label, [role="button"], .hotspot-label {
   cursor: none !important;
 }
 
-html {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: #000000;
-  cursor: none !important;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-body {
+body, html {
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -92,9 +82,6 @@ body {
   cursor: none !important;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  /* Réduction globale de 20% - équivalent zoom 80% navigateur */
-  transform: scale(0.8);
-  transform-origin: center center;
 }
 
 body::-webkit-scrollbar {
@@ -104,8 +91,8 @@ body::-webkit-scrollbar {
 /* Curseur personnalisé sophistiqué - follower plus proche */
 .cursor {
   position: fixed;
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background-color: var(--primary-color-bright);
   mix-blend-mode: difference;
@@ -117,8 +104,8 @@ body::-webkit-scrollbar {
 
 .cursor-follower {
   position: fixed;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border: 2px solid var(--primary-color-bright);
   border-radius: 50%;
   pointer-events: none;
@@ -131,13 +118,13 @@ body::-webkit-scrollbar {
 
 /* Effets de survol pour le curseur */
 .cursor.hover {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
 }
 
 .cursor-follower.hover {
-  width: 70px;
-  height: 70px;
+  width: 56px;
+  height: 56px;
   opacity: 1;
 }
 
@@ -314,7 +301,7 @@ h2 {
   z-index: 100;
   color: var(--nat-geo-yellow);
   font-family: var(--primary-font);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 500;
   text-shadow: 0 0 8px rgba(255, 204, 0, 0.5), 0 0 3px rgba(0, 0, 0, 0.8);
 
@@ -323,8 +310,8 @@ h2 {
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
 
-  padding: 18px 24px;
-  border-radius: 12px;
+  padding: 14px 19px;
+  border-radius: 10px;
   border: 1.5px solid rgba(255, 204, 0, 0.3);
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.4),
@@ -345,14 +332,14 @@ h2 {
 }
 
 .hud-top-left {
-  top: 20px;
-  left: 20px;
+  top: 16px;
+  left: 16px;
   text-align: left;
 }
 
 .hud-top-right {
-  top: 20px;
-  right: 20px;
+  top: 16px;
+  right: 16px;
   text-align: right;
 }
 
@@ -375,8 +362,8 @@ h2 {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 24px;
-  height: 24px;
+  width: 19px;
+  height: 19px;
   border: 2px solid var(--nat-geo-yellow);
   border-radius: 50%;
   box-shadow:
@@ -403,8 +390,8 @@ h2 {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 110px;
-  height: 110px;
+  width: 88px;
+  height: 88px;
   border: 1.5px solid rgba(255, 204, 0, 0.4);
   border-radius: 50%;
   border-style: dashed;
@@ -444,7 +431,7 @@ h2 {
 /* Affichage des coordonnées - GLASSMORPHISME */
 .coordinates-display {
   position: absolute;
-  bottom: 30px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
 
@@ -454,20 +441,20 @@ h2 {
   -webkit-backdrop-filter: blur(16px) saturate(180%);
 
   border: 1.5px solid rgba(255, 204, 0, 0.3);
-  padding: 14px 30px;
-  border-radius: 30px;
+  padding: 11px 24px;
+  border-radius: 24px;
   font-family: var(--primary-font);
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--nat-geo-yellow);
-  min-width: 380px;
+  min-width: 300px;
   text-align: center;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.4),
     0 0 20px rgba(255, 204, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   text-shadow: 0 0 8px rgba(255, 204, 0, 0.5);
 }
 
@@ -564,26 +551,26 @@ h2 {
 /* UI Controls avec fond noir amélioré */
 #ui-controls {
   position: absolute;
-  bottom: 30px;
-  left: 30px;
+  bottom: 24px;
+  left: 24px;
   z-index: 50;
   transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
 #navigation-controls {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
   /* FOND SUPPRIMÉ - Boutons transparents */
 }
 
 #navigation-controls button {
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
   border: 2px solid rgba(255, 204, 0, 0.4);
 
   /* GLASSMORPHISME */
@@ -597,7 +584,7 @@ h2 {
   transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
   font-family: var(--primary-font);
   letter-spacing: 1px;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: bold;
   display: flex;
   align-items: center;
@@ -619,8 +606,8 @@ h2 {
 }
 
 #info-button {
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
 
   /* GLASSMORPHISME SATELLITE */
@@ -636,7 +623,7 @@ h2 {
   cursor: none;
   transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
   font-family: var(--mono-font);
-  font-size: 24px;
+  font-size: 19px;
   font-weight: 700;
   box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.5),
@@ -711,9 +698,9 @@ body.info-visible .hotspot-connector {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 
-  padding: 45px 65px;
-  border-radius: 16px;
-  max-width: 1400px;
+  padding: 36px 52px;
+  border-radius: 13px;
+  max-width: 1120px;
   width: 85%;
   position: relative;
   border: 2px solid rgba(255, 204, 0, 0.4);
@@ -724,8 +711,8 @@ body.info-visible .hotspot-connector {
 
 .overlay-content h3 {
   font-family: var(--title-font);
-  font-size: 3.2rem;
-  margin-bottom: 30px;
+  font-size: 2.6rem;
+  margin-bottom: 24px;
   color: #ffffff;
   letter-spacing: 2px;
   font-weight: normal;
@@ -737,11 +724,11 @@ body.info-visible .hotspot-connector {
   margin-bottom: 0;
   line-height: 1.9;
   color: #f5f5f5;
-  font-size: 1.1rem;
+  font-size: 0.88rem;
   font-family: var(--primary-font);
   font-weight: 400;
   text-align: center;
-  max-width: 1100px;
+  max-width: 880px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -758,7 +745,7 @@ body.info-visible .hotspot-connector {
 }
 
 #close-info {
-  padding: 14px 40px;
+  padding: 11px 32px;
   border: 2px solid rgba(255, 204, 0, 0.4);
 
   /* Glassmorphisme comme les autres boutons */
@@ -771,8 +758,8 @@ body.info-visible .hotspot-connector {
   cursor: none;
   transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
   font-family: var(--primary-font);
-  letter-spacing: 1.5px;
-  font-size: 15px;
+  letter-spacing: 1.2px;
+  font-size: 12px;
   font-weight: 600;
   box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.3),
@@ -808,8 +795,8 @@ body.info-visible .hotspot-connector {
 }
 
 .spinner {
-  width: 80px;
-  height: 80px;
+  width: 64px;
+  height: 64px;
   position: relative;
   margin-bottom: 0;
 }
@@ -889,10 +876,10 @@ body.info-visible .hotspot-connector {
 
   color: var(--nat-geo-yellow) !important;
   border: 1.5px solid rgba(255, 204, 0, 0.4) !important;
-  padding: 12px 20px !important; /* Padding augmenté pour centrage */
-  border-radius: 8px !important;
+  padding: 10px 16px !important;
+  border-radius: 6px !important;
   font-family: var(--title-font) !important;
-  font-size: 18px !important; /* Typo augmentée pour meilleure visibilité */
+  font-size: 14px !important;
   font-weight: 500 !important;
   white-space: nowrap !important;
   z-index: 100 !important;
@@ -902,7 +889,7 @@ body.info-visible .hotspot-connector {
     0 4px 20px rgba(0, 0, 0, 0.4) !important,
     0 0 15px rgba(255, 204, 0, 0.15) !important,
     inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-  letter-spacing: 1.2px !important;
+  letter-spacing: 1px !important;
   text-shadow: 0 0 8px rgba(255, 204, 0, 0.5), 0 0 3px rgba(0, 0, 0, 0.8) !important;
   text-transform: uppercase !important;
   transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1) !important;
@@ -968,7 +955,7 @@ body.info-visible .hotspot-connector {
 .notification {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
 
   /* GLASSMORPHISME */
   background: rgba(0, 10, 20, 0.7);
@@ -976,14 +963,14 @@ body.info-visible .hotspot-connector {
   -webkit-backdrop-filter: blur(16px) saturate(180%);
 
   color: #ffffff;
-  padding: 16px 22px;
-  border-radius: 12px;
+  padding: 13px 18px;
+  border-radius: 10px;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.4),
     0 0 20px rgba(255, 204, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   font-family: var(--primary-font);
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 500;
   max-width: 100%;
   pointer-events: all;
@@ -1006,8 +993,8 @@ body.info-visible .hotspot-connector {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   color: #000;
   font-weight: bold;
@@ -1099,7 +1086,7 @@ canvas {
 
 /* Amélioration du logo National Geographic */
 .natgeo-logo {
-  height: 40px;
+  height: 32px;
   width: auto;
   filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.7));
   transition: all 0.3s ease;
