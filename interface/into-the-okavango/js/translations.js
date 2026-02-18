@@ -484,14 +484,11 @@ class OkavangoTranslator {
     }
     
     init() {
-        console.log('=== INITIALISATION TRADUCTEUR OKAVANGO ===');
-        
         // Récupérer les éléments du DOM
         this.translateButton = document.querySelector('.translate-button');
         this.translateText = document.querySelector('.translate-current');
         
         if (!this.translateButton || !this.translateText) {
-            console.error('Éléments de traduction non trouvés');
             return;
         }
         
@@ -504,7 +501,6 @@ class OkavangoTranslator {
         // Configurer les événements
         this.setupEvents();
         
-        console.log('Traducteur Okavango initialisé avec langue:', this.currentLang);
     }
     
     loadSavedLanguage() {
@@ -520,7 +516,7 @@ class OkavangoTranslator {
                 }
             }
         } catch (error) {
-            console.log('Impossible de charger la langue sauvegardée:', error);
+            /* Production: error silenced */
         }
     }
     
@@ -555,15 +551,13 @@ class OkavangoTranslator {
     }
     
     translatePage(lang) {
-        console.log(`>>> TRADUCTION VERS ${lang.toUpperCase()} <<<`);
-        
         this.currentLang = lang;
         
         // Sauvegarder la langue
         try {
             localStorage.setItem('okavango-language', lang);
         } catch (error) {
-            console.log('Impossible de sauvegarder la langue:', error);
+            /* Production: error silenced */
         }
         
         // Mettre à jour l'affichage du bouton
@@ -574,11 +568,10 @@ class OkavangoTranslator {
             try {
                 updateFunction();
             } catch (error) {
-                console.log(`Erreur traduction ${selector}:`, error);
+                /* Production: error silenced */
             }
         });
         
-        console.log(`Page traduite en ${lang.toUpperCase()}`);
     }
     
     updateButtonDisplay() {
@@ -596,7 +589,6 @@ class OkavangoTranslator {
             if (value && typeof value === 'object' && key in value) {
                 value = value[key];
             } else {
-                console.warn(`Traduction manquante: ${path} pour ${this.currentLang}`);
                 return path;
             }
         }
@@ -777,8 +769,6 @@ class OkavangoTranslator {
 let okavangoTranslator = null;
 
 function initOkavangoTranslator() {
-    console.log('=== INITIALISATION SYSTÈME DE TRADUCTION OKAVANGO ===');
-    
     // Attendre que les éléments soient disponibles
     const checkElements = () => {
         const translateButton = document.querySelector('.translate-button');
@@ -786,9 +776,7 @@ function initOkavangoTranslator() {
         
         if (translateButton && translateText) {
             window.okavangoTranslator = new OkavangoTranslator();
-            console.log('Système de traduction Okavango initialisé avec succès');
         } else {
-            console.log('Éléments de traduction non trouvés, nouvelle tentative...');
             setTimeout(checkElements, 500);
         }
     };

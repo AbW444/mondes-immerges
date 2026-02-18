@@ -1299,7 +1299,6 @@
 
             function checkAllReady() {
                 if ((bgVideoReady || !bgVideo) && (logoVideoReady || !logoVideo) && contentReady) {
-                    console.log('✅ Tout est prêt - Masquer l\'écran de chargement');
                     setTimeout(() => {
                         loadingScreen.classList.add('hidden');
                     }, 500);
@@ -1316,14 +1315,12 @@
             if (bgVideo) {
                 bgVideo.addEventListener('canplaythrough', function() {
                     bgVideoReady = true;
-                    console.log('✅ Vidéo de fond prête');
                     checkAllReady();
                 }, { once: true });
 
                 bgVideo.addEventListener('loadeddata', function() {
                     if (!bgVideoReady) {
                         bgVideoReady = true;
-                        console.log('✅ Vidéo de fond chargée');
                         checkAllReady();
                     }
                 }, { once: true });
@@ -1332,14 +1329,12 @@
             if (logoVideo) {
                 logoVideo.addEventListener('canplaythrough', function() {
                     logoVideoReady = true;
-                    console.log('✅ Vidéo logo prête');
                     checkAllReady();
                 }, { once: true });
 
                 logoVideo.addEventListener('loadeddata', function() {
                     if (!logoVideoReady) {
                         logoVideoReady = true;
-                        console.log('✅ Vidéo logo chargée');
                         checkAllReady();
                     }
                 }, { once: true });
@@ -1348,7 +1343,6 @@
             // Timeout de sécurité : masquer après 3 secondes maximum
             setTimeout(() => {
                 if (!loadingScreen.classList.contains('hidden')) {
-                    console.log('⏱ Timeout - Masquer l\'écran de chargement');
                     loadingScreen.classList.add('hidden');
                 }
             }, 3000);
@@ -1450,8 +1444,8 @@
             // Gestion des vidéos de fond (bgVideo et logoVideo déjà déclarés plus haut)
             if (bgVideo) {
                 bgVideo.addEventListener('loadeddata', function() {
-                    bgVideo.play().catch(function(e) {
-                        console.log('Autoplay prevented for background video:', e);
+                    bgVideo.play().catch(function() {
+                        /* Autoplay prevented */
                     });
                 });
                 
@@ -1465,8 +1459,8 @@
             // Gestion de la vidéo du logo
             if (logoVideo) {
                 logoVideo.addEventListener('loadeddata', function() {
-                    logoVideo.play().catch(function(e) {
-                        console.log('Autoplay prevented for logo video:', e);
+                    logoVideo.play().catch(function() {
+                        /* Autoplay prevented */
                     });
                 });
                 
@@ -1475,11 +1469,9 @@
                     setTimeout(() => {
                         logoVideo.style.display = 'none';
                     }, 500);
-                    console.log('Logo video finished, hiding overlay');
                 });
-                
+
                 logoVideo.addEventListener('error', function() {
-                    console.log('Logo video error, hiding overlay');
                     logoVideo.style.opacity = '0';
                     setTimeout(() => {
                         logoVideo.style.display = 'none';
@@ -1493,7 +1485,6 @@
                         setTimeout(() => {
                             logoVideo.style.display = 'none';
                         }, 500);
-                        console.log('Logo video timeout, hiding overlay');
                     }
                 }, 10000);
             }
@@ -1504,43 +1495,25 @@
             
             if (exploreBtn && transitionVideo) {
                 exploreBtn.addEventListener('click', function() {
-                    console.log('>>> DÉCLENCHEMENT DE LA TRANSITION <<<');
-                    
                     // Activer la vidéo de transition
                     transitionVideo.classList.add('active');
                     transitionVideo.currentTime = 0;
 
                     // Lancer la vidéo
                     transitionVideo.play().then(() => {
-                        console.log('Vidéo de transition lancée');
-
-                        // Écouter la fin de la vidéo pour la redirection EXACTE
                         transitionVideo.addEventListener('ended', function() {
-                            console.log('Vidéo de transition terminée - Blocage sur dernière frame');
-
-                            // Bloquer la vidéo sur la dernière frame
                             transitionVideo.classList.add('freeze-last-frame');
-
-                            // Redirection IMMÉDIATE sans masquer la vidéo
-                            console.log('>>> REDIRECTION IMMÉDIATE VERS L\'INTERFACE <<<');
                             window.location.href = '/mondes-immerges/interface/';
                         }, { once: true });
-
-                    }).catch(e => {
-                        console.log('Erreur lors du lancement de la vidéo:', e);
-                        // En cas d'erreur, redirection immédiate
+                    }).catch(() => {
                         window.location.href = '/mondes-immerges/interface/';
                     });
                     
                     // Sécurité : vérifier la durée de la vidéo et forcer la redirection si nécessaire
                     transitionVideo.addEventListener('loadedmetadata', function() {
                         const videoDuration = transitionVideo.duration;
-                        console.log('Durée de la vidéo de transition:', videoDuration + 's');
-
-                        // Timeout basé sur la durée réelle de la vidéo + 0.5 seconde de sécurité
                         setTimeout(() => {
                             if (transitionVideo.classList.contains('active') && !transitionVideo.classList.contains('freeze-last-frame')) {
-                                console.log('Timeout sécurité - Forcer la redirection');
                                 transitionVideo.classList.add('freeze-last-frame');
                                 window.location.href = '/mondes-immerges/interface/';
                             }
@@ -1550,7 +1523,6 @@
                     // Fallback ultime : 15 secondes maximum
                     setTimeout(() => {
                         if (!transitionVideo.classList.contains('freeze-last-frame')) {
-                            console.log('Timeout ultime - Redirection forcée');
                             transitionVideo.classList.add('freeze-last-frame');
                             window.location.href = '/mondes-immerges/interface/';
                         }
@@ -1575,13 +1547,11 @@
                 });
             });
 
-            console.log('Page Mondes Immergés initialisée avec succès');
         });
 
         // Reset transition video when page is restored from cache (back button)
         window.addEventListener('pageshow', function(event) {
             if (event.persisted || (performance.navigation && performance.navigation.type === 2)) {
-                console.log('Page restaurée depuis le cache - Reset de la vidéo de transition');
                 const transitionVideo = document.getElementById('transitionVideo');
                 if (transitionVideo) {
                     transitionVideo.classList.remove('active');

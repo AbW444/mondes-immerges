@@ -303,7 +303,6 @@ export class VisualEffects {
                     // Une fois que l'orbital est complètement visible,
                     // démarrer la transition du fond noir si on est dans un targetContainer
                     if (targetContainer && onComplete) {
-                        console.log('🎨 Orbital loader visible, début transition fond noir');
                         onComplete();
                     }
                 }
@@ -318,7 +317,6 @@ export class VisualEffects {
                 // Supprimer l'orbital instantanément (pas de fade)
                 loaderContainer.remove();
                 styleEl.remove();
-                console.log('✅ Orbital loader supprimé instantanément');
             } else {
                 // Comportement normal : tout disparaît ensemble
                 gsap.to(loaderContainer, {

@@ -18,7 +18,6 @@ export class VideoManager {
     onContextLost() {
         this._contextLost = true;
         this.stopMonitoring();
-        console.warn('🛑 VideoManager: WebGL context lost - arrêt de toutes les relances');
     }
 
     /**
@@ -26,7 +25,6 @@ export class VideoManager {
      */
     onContextRestored() {
         this._contextLost = false;
-        console.log('✅ VideoManager: WebGL context restored - reprise possible');
         // Relancer les vidéos
         this.videos.forEach((config, video) => {
             this.playVideo(video, config);
@@ -41,7 +39,6 @@ export class VideoManager {
      */
     register(video, options = {}) {
         if (!video || !(video instanceof HTMLVideoElement)) {
-            console.error('VideoManager: Élément vidéo invalide');
             return;
         }
 
@@ -71,8 +68,6 @@ export class VideoManager {
 
         // Attacher les event listeners
         this.attachListeners(video, config);
-
-        console.log(`✅ VideoManager: "${config.name}" enregistrée`);
     }
 
     /**
@@ -84,7 +79,6 @@ export class VideoManager {
         // Gestion de la fin de vidéo (si loop échoue)
         video.addEventListener('ended', () => {
             if (config.shouldLoop && this.isActive) {
-                console.log(`🔄 VideoManager: "${config.name}" - Relance après ended`);
                 this.playVideo(video, config);
             }
         });
@@ -102,7 +96,6 @@ export class VideoManager {
             if (this._contextLost) return;
 
             if (this.isActive) {
-                console.warn(`⚠️ VideoManager: "${config.name}" - Pause détectée, relance...`);
                 setTimeout(() => {
                     if (this.isActive && !this._contextLost) {
                         this.playVideo(video, config);
@@ -113,7 +106,6 @@ export class VideoManager {
 
         // Gestion du stalling (buffering)
         video.addEventListener('stalled', () => {
-            console.warn(`⚠️ VideoManager: "${config.name}" - Stalled (buffering)`);
             if (config.onStall) {
                 config.onStall(video);
             }
@@ -128,17 +120,16 @@ export class VideoManager {
 
         // Gestion du waiting (attente de données)
         video.addEventListener('waiting', () => {
-            console.log(`⏳ VideoManager: "${config.name}" - Waiting for data...`);
+            /* Production: waiting event silenced */
         });
 
         // Gestion de la suspension (économie de ressources)
         video.addEventListener('suspend', () => {
-            console.log(`💤 VideoManager: "${config.name}" - Suspended`);
+            /* Production: suspend event silenced */
         });
 
         // Gestion des erreurs
         video.addEventListener('error', (e) => {
-            console.error(`❌ VideoManager: "${config.name}" - Erreur:`, e);
             if (config.onError) {
                 config.onError(e);
             }
@@ -147,7 +138,6 @@ export class VideoManager {
             const attempts = this.retryAttempts.get(video) || 0;
             if (attempts < this.maxRetries && config.autoRetry && this.isActive && !this._contextLost) {
                 this.retryAttempts.set(video, attempts + 1);
-                console.log(`🔄 VideoManager: "${config.name}" - Tentative ${attempts + 1}/${this.maxRetries}`);
 
                 setTimeout(() => {
                     video.load();
@@ -158,12 +148,11 @@ export class VideoManager {
 
         // Gestion du chargement réussi
         video.addEventListener('loadeddata', () => {
-            console.log(`✅ VideoManager: "${config.name}" - Données chargées`);
+            /* Production: loadeddata event silenced */
         });
 
         // Gestion du play réussi
         video.addEventListener('play', () => {
-            console.log(`▶️ VideoManager: "${config.name}" - Lecture démarrée`);
             // Réinitialiser le compteur de tentatives
             this.retryAttempts.set(video, 0);
 
@@ -186,15 +175,11 @@ export class VideoManager {
         if (playPromise !== undefined) {
             playPromise
                 .then(() => {
-                    console.log(`✅ VideoManager: "${config.name}" - Play() réussi`);
+                    /* Production: play success silenced */
                 })
                 .catch(error => {
-                    console.error(`❌ VideoManager: "${config.name}" - Play() échoué:`, error);
-
                     // Si c'est un problème d'interaction utilisateur (autoplay bloqué)
                     if (error.name === 'NotAllowedError') {
-                        console.warn(`⚠️ VideoManager: "${config.name}" - Autoplay bloqué, en attente d'interaction...`);
-
                         // Essayer de rejouer au premier clic utilisateur
                         const retryOnClick = () => {
                             this.playVideo(video, config);
@@ -211,11 +196,8 @@ export class VideoManager {
      */
     startMonitoring(interval = 2000) {
         if (this.checkInterval) {
-            console.warn('VideoManager: Surveillance déjà active');
             return;
         }
-
-        console.log('🔍 VideoManager: Démarrage de la surveillance périodique');
 
         this.checkInterval = setInterval(() => {
             if (!this.isActive || this._contextLost) return;
@@ -223,13 +205,12 @@ export class VideoManager {
             this.videos.forEach((config, video) => {
                 // Vérifier si la vidéo devrait jouer mais est en pause
                 if (video.paused && !video.ended && config.shouldLoop) {
-                    console.warn(`⚠️ VideoManager: "${config.name}" - En pause (surveillance), relance...`);
                     this.playVideo(video, config);
                 }
 
                 // Vérifier le buffering
                 if (video.readyState < 3 && !video.paused) { // HAVE_FUTURE_DATA ou moins
-                    console.log(`⏳ VideoManager: "${config.name}" - Buffering...`);
+                    /* Production: buffering silenced */
                 }
             });
         }, interval);
@@ -242,7 +223,6 @@ export class VideoManager {
         if (this.checkInterval) {
             clearInterval(this.checkInterval);
             this.checkInterval = null;
-            console.log('⏹️ VideoManager: Surveillance arrêtée');
         }
     }
 
@@ -252,8 +232,6 @@ export class VideoManager {
      */
     unregister(video) {
         if (this.videos.has(video)) {
-            const config = this.videos.get(video);
-            console.log(`🗑️ VideoManager: "${config.name}" désenregistrée`);
             this.videos.delete(video);
             this.retryAttempts.delete(video);
         }
@@ -265,7 +243,6 @@ export class VideoManager {
     unregisterAll() {
         this.videos.clear();
         this.retryAttempts.clear();
-        console.log('🗑️ VideoManager: Toutes les vidéos désenregistrées');
     }
 
     /**
@@ -274,7 +251,6 @@ export class VideoManager {
     disable() {
         this.isActive = false;
         this.stopMonitoring();
-        console.log('⏸️ VideoManager: Désactivé');
     }
 
     /**
@@ -283,7 +259,6 @@ export class VideoManager {
     enable() {
         this.isActive = true;
         this.startMonitoring();
-        console.log('▶️ VideoManager: Activé');
     }
 
     /**
@@ -292,7 +267,6 @@ export class VideoManager {
     destroy() {
         this.disable();
         this.unregisterAll();
-        console.log('💥 VideoManager: Détruit');
     }
 }
 

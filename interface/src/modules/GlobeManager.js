@@ -102,30 +102,21 @@ export class GlobeManager {
             // Stocker le flag mobile pour utilisation ultérieure
             this.isMobile = isMobile;
             
-            // Vérifier les capacités WebGL
-            const gl = this.renderer.getContext();
-            console.log('WebGL Version:', gl.getParameter(gl.VERSION));
-            console.log('WebGL Vendor:', gl.getParameter(gl.VENDOR));
-            console.log('Max Texture Size:', gl.getParameter(gl.MAX_TEXTURE_SIZE));
-            
             this.container.appendChild(this.renderer.domElement);
 
             // Gérer la perte et restauration du contexte WebGL
             const canvas = this.renderer.domElement;
             canvas.addEventListener('webglcontextlost', (event) => {
                 event.preventDefault();
-                console.warn('⚠️ WebGL context lost - arrêt du rendu');
                 this._contextLost = true;
                 // Arrêter le VideoManager pour éviter la boucle infinie de relances
                 videoManager.onContextLost();
             });
             canvas.addEventListener('webglcontextrestored', () => {
-                console.log('✅ WebGL context restored - reprise du rendu');
                 this._contextLost = false;
                 videoManager.onContextRestored();
             });
         } catch (error) {
-            console.error('Erreur lors de la création du renderer WebGL:', error);
             this.handleWebGLError();
             return;
         }
@@ -268,14 +259,11 @@ export class GlobeManager {
             video.preload = 'auto'; // Forcer le préchargement complet
             this.videoElement = video;
 
-            console.log('📦 Préchargement de la vidéo du globe...', this.currentVideoPath);
-
             let resolved = false;
 
             // Timeout de sécurité: si pas chargé en 10 secondes, continuer quand même
             const timeout = setTimeout(() => {
                 if (!resolved) {
-                    console.warn('⚠️ Timeout préchargement vidéo - continuation');
                     resolved = true;
                     resolve();
                 }
@@ -284,7 +272,6 @@ export class GlobeManager {
             // Résoudre la promesse quand la vidéo est prête à être jouée
             video.addEventListener('canplaythrough', () => {
                 if (!resolved) {
-                    console.log('✅ Vidéo du globe préchargée et prête');
                     resolved = true;
                     clearTimeout(timeout);
                     resolve();
@@ -294,7 +281,6 @@ export class GlobeManager {
             // Alternative: résoudre dès que suffisamment de données sont chargées
             video.addEventListener('canplay', () => {
                 if (!resolved) {
-                    console.log('✅ Vidéo du globe peut être jouée');
                     resolved = true;
                     clearTimeout(timeout);
                     resolve();
@@ -303,8 +289,6 @@ export class GlobeManager {
 
             video.addEventListener('error', (e) => {
                 if (!resolved) {
-                    console.error('❌ Erreur chargement vidéo globe:', e);
-                    console.warn('Continuation malgré l\'erreur');
                     resolved = true;
                     clearTimeout(timeout);
                     resolve(); // Résoudre au lieu de rejeter pour ne pas bloquer
@@ -318,10 +302,10 @@ export class GlobeManager {
                 autoRetry: true,
                 name: 'globe-texture',
                 onError: (e) => {
-                    console.error('❌ Erreur critique vidéo du globe:', e);
+                    /* Production: error silenced */
                 },
                 onPlay: () => {
-                    console.log('▶️ Vidéo du globe en lecture');
+                    /* Production: play event silenced */
                 }
             });
 
@@ -434,14 +418,11 @@ export class GlobeManager {
             const loader = new THREE.TextureLoader();
             const skyTexturePath = `${import.meta.env.BASE_URL}images/night-sky.png`;
 
-            console.log('📦 Préchargement de la skybox...', skyTexturePath);
-
             let resolved = false;
 
             // Timeout de sécurité: si pas chargé en 8 secondes, continuer quand même
             const timeout = setTimeout(() => {
                 if (!resolved) {
-                    console.warn('⚠️ Timeout préchargement skybox - utilisation couleur par défaut');
                     this.scene.background = new THREE.Color(0x000011);
                     resolved = true;
                     resolve();
@@ -461,7 +442,6 @@ export class GlobeManager {
                             // créerait 6 faces de 4096x4096 = ~384 MB de VRAM
                             const maxCubemapSize = this.isMobile ? 512 : 1024;
                             const cubemapSize = Math.min(texture.image.height, maxCubemapSize);
-                            console.log(`📐 Cubemap: ${cubemapSize}px (image: ${texture.image.width}x${texture.image.height})`);
 
                             const rt = new THREE.WebGLCubeRenderTarget(cubemapSize);
                             rt.fromEquirectangularTexture(this.renderer, texture);
@@ -472,10 +452,7 @@ export class GlobeManager {
 
                             // Fog plus légère pour voir davantage les étoiles
                             this.scene.fog = new THREE.FogExp2(0x000011, 0.00005);
-
-                            console.log('✅ Skybox chargée avec exposition améliorée');
                         } catch (error) {
-                            console.error('❌ Erreur création cubemap skybox:', error);
                             this.scene.background = new THREE.Color(0x000011);
                         }
                         resolved = true;
@@ -486,7 +463,6 @@ export class GlobeManager {
                 undefined,
                 (error) => {
                     if (!resolved) {
-                        console.error('❌ Erreur chargement skybox:', error);
                         this.scene.background = new THREE.Color(0x000011);
                         resolved = true;
                         clearTimeout(timeout);
@@ -502,33 +478,24 @@ export class GlobeManager {
      * Retourne une Promise qui se résout quand tout est prêt
      */
     preloadAllAssets() {
-        console.log('🎬 DÉBUT DU PRÉCHARGEMENT COMPLET...');
-
         return Promise.all([
             this.createGlobe(),
             this.createSkybox()
         ]).then(() => {
-            console.log('✅ PRÉCHARGEMENT COMPLET TERMINÉ');
-            console.log('   - Vidéo du globe: PRÊTE');
-            console.log('   - Skybox étoilée: PRÊTE');
-            console.log('   - Tous les assets: PRÊTS À AFFICHER');
-
             // Démarrer la lecture de la vidéo maintenant que tout est chargé
             if (this.videoElement) {
                 this.videoElement.play().catch(e => {
-                    console.error('Erreur lecture vidéo:', e);
+                    /* Production: error silenced */
                 });
             }
 
             // Démarrer la surveillance du VideoManager
             videoManager.startMonitoring(2000);
-            console.log('✅ VideoManager: Surveillance active');
         }).catch((error) => {
-            console.error('❌ Erreur durant le préchargement:', error);
             // Continuer quand même pour ne pas bloquer l'application
             if (this.videoElement) {
                 this.videoElement.play().catch(e => {
-                    console.error('Erreur lecture vidéo:', e);
+                    /* Production: error silenced */
                 });
             }
 
@@ -638,8 +605,6 @@ export class GlobeManager {
             const y = hotspotRadius * Math.sin(lat);
             const z = hotspotRadius * Math.cos(lat) * Math.sin(lon);
 
-            console.log(`Hotspot ${title}: GPS(${position.lat}, ${position.lng}) -> 3D(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
-
             // Hotspot sphérique avec jaune vif DA
             const markerGeometry = new THREE.SphereGeometry(0.05, 16, 16);
             const markerMaterial = new THREE.MeshBasicMaterial({
@@ -743,7 +708,6 @@ export class GlobeManager {
             e.stopPropagation();
             const hotspot = marker.userData.hotspot;
             if (hotspot) {
-                console.log(`Label cliqué: ${hotspot.title}`);
                 this.activateHotspot(hotspot);
             }
         };
@@ -782,12 +746,9 @@ export class GlobeManager {
             const lat = 90 - (phi * 180 / Math.PI);
             const lng = (theta * 180 / Math.PI) - 180;
             
-            console.log(`Clic sur le globe à lat: ${lat.toFixed(2)}, lng: ${lng.toFixed(2)}`);
-            
             const clickedHotspot = this._findNearestHotspot(lat, lng, 10);
-            
+
             if (clickedHotspot) {
-                console.log(`Hotspot trouvé: ${clickedHotspot.title}`);
                 this.activateHotspot(clickedHotspot);
                 return;
             }
@@ -797,7 +758,6 @@ export class GlobeManager {
         
         if (hotspotIntersects.length > 0) {
             const selectedHotspot = hotspotIntersects[0].object.userData.hotspot;
-            console.log(`Hotspot sélectionné par raycasting: ${selectedHotspot.title}`);
             this.activateHotspot(selectedHotspot);
         }
     }
@@ -829,8 +789,6 @@ export class GlobeManager {
     // Vue verticale du hotspot
     activateHotspot(hotspot) {
         if (this.orbitParams.inHotspotMode) return;
-        
-        console.log(`=== ACTIVATION HOTSPOT: ${hotspot.title} ===`);
         
         // Convertir coordonnées GPS vers 3D
         const lat = hotspot.position.lat * (Math.PI / 180);
@@ -936,8 +894,6 @@ export class GlobeManager {
     
     // Fonction de redirection
    _redirectToExternalPage(hotspot) {
-       console.log("=== REDIRECTION VERS PAGE EXTERNE ===");
-
        // Jouer la vidéo de transition puis rediriger
        this.playTransitionVideoAndRedirect(hotspot.id);
    }
@@ -949,13 +905,10 @@ export class GlobeManager {
        const transitionVideo = document.getElementById('transition-video-out');
 
        if (!transitionVideo) {
-           console.warn('⚠️ Vidéo de transition de sortie introuvable, redirection directe');
            const redirectUrl = getRedirectUrl(hotspotId);
            window.location.href = redirectUrl;
            return;
        }
-
-       console.log('🎬 TRANSITION SORTIE (vidéo normale)');
 
        // Activer la vidéo (la rendre visible)
        transitionVideo.classList.add('active');
@@ -963,17 +916,13 @@ export class GlobeManager {
 
        // Lancer la vidéo
        transitionVideo.play().then(() => {
-           console.log('Vidéo de transition lancée');
-
            // Écouter la fin de la vidéo pour faire la redirection
            transitionVideo.addEventListener('ended', () => {
-               console.log('✅ Vidéo terminée, redirection...');
                const redirectUrl = getRedirectUrl(hotspotId);
                window.location.href = redirectUrl;
            }, { once: true });
 
        }).catch(e => {
-           console.error('❌ Erreur vidéo:', e);
            // En cas d'erreur, rediriger quand même
            const redirectUrl = getRedirectUrl(hotspotId);
            window.location.href = redirectUrl;
@@ -981,7 +930,6 @@ export class GlobeManager {
 
        // Timeout de sécurité
        setTimeout(() => {
-           console.warn('⚠️ Timeout vidéo, redirection forcée');
            const redirectUrl = getRedirectUrl(hotspotId);
            window.location.href = redirectUrl;
        }, 10000);
@@ -1074,8 +1022,6 @@ export class GlobeManager {
    exitHotspotMode() {
        if (!this.orbitParams.inHotspotMode) return;
        
-       console.log("Sortie du mode hotspot");
-       
        this.orbitParams.inHotspotMode = false;
        
        // Réinitialiser le champ de vision
@@ -1100,12 +1046,9 @@ export class GlobeManager {
    }
    
    handleVideoError() {
-       console.log("Tentative de résolution de l'erreur vidéo...");
-       
        const textureLoader = new THREE.TextureLoader();
        textureLoader.load(`${import.meta.env.BASE_URL}images/video-placeholder.jpg`, (texture) => {
            if (this.globe && this.globe.material) {
-               console.log("Application de la texture de secours");
                
                if (this.globe.material.uniforms && this.globe.material.uniforms.map) {
                    this.globe.material.uniforms.map.value = texture;
@@ -1276,7 +1219,6 @@ export class GlobeManager {
     */
    showLabels() {
        this.labelsVisible = true;
-       console.log('✅ Labels de hotspots activés + animation des markers');
 
        // Animer l'apparition des hotspots (markers) avec GSAP
        this.hotspotObjects.forEach((marker, index) => {
@@ -1364,7 +1306,7 @@ export class GlobeManager {
        // (le VideoManager gère déjà la relance via onContextRestored)
        if (this.videoElement && this.videoElement.paused && !this.videoElement.ended && !this._contextLost) {
            this.videoElement.play().catch(e => {
-               console.error('Erreur lors de la reprise de la vidéo:', e);
+               /* Production: error silenced */
            });
        }
        

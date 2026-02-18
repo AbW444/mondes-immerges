@@ -21,20 +21,16 @@ function checkWebGLCompatibility() {
         return true;
     }
 
-    console.log('🔍 Vérification WebGL...');
-
     try {
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 
         if (!gl) {
-            console.error('❌ WebGL non supporté');
             showWebGLError();
             APP_STATE.webGLChecked = false;
             return false;
         }
 
-        console.log('✅ WebGL compatible');
         APP_STATE.webGLChecked = true;
 
         // Libérer les ressources immédiatement
@@ -43,7 +39,6 @@ function checkWebGLCompatibility() {
 
         return true;
     } catch (error) {
-        console.error('❌ Erreur vérification WebGL:', error);
         return false;
     }
 }
@@ -82,7 +77,6 @@ function initLoadingSpinner() {
     }
 
     // Le jelly loader est déjà dans le HTML via <l-jelly>
-    console.log('✅ Spinner déjà présent dans le HTML');
 }
 
 /**
@@ -92,7 +86,6 @@ function initCustomCursor() {
     // Désactiver sur mobile pour économiser ressources
     const isMobile = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (isMobile) {
-        console.log('📱 Curseur désactivé sur mobile');
         return;
     }
 
@@ -142,8 +135,6 @@ function initCustomCursor() {
         if (rafId) cancelAnimationFrame(rafId);
         document.removeEventListener('mousemove', handleMouseMove);
     }, { once: true });
-
-    console.log('✅ Curseur initialisé (desktop)');
 }
 
 /**
@@ -157,12 +148,9 @@ async function playTransitionVideo() {
         const mainContainer = document.getElementById('main-container');
 
         if (!transitionVideo) {
-            console.warn('⚠️ Vidéo de transition d\'entrée introuvable');
             resolve();
             return;
         }
-
-        console.log('🎬 TRANSITION ENTRÉE (vidéo inversée)');
 
         // Cacher le jelly loader
         if (jellyLoader) {
@@ -174,13 +162,11 @@ async function playTransitionVideo() {
         // IMPORTANT: Afficher le globe IMMÉDIATEMENT
         if (mainContainer) {
             mainContainer.style.opacity = '1';
-            console.log('🌍 Globe visible immédiatement');
         }
 
         // IMPORTANT: Rendre le loading-screen transparent (garder la vidéo visible)
         if (loadingScreen) {
             loadingScreen.style.background = 'transparent';
-            console.log('✅ Loading-screen transparent');
         }
 
         // Enregistrer la vidéo de transition avec le VideoManager
@@ -197,11 +183,8 @@ async function playTransitionVideo() {
 
         // Lancer la vidéo
         transitionVideo.play().then(() => {
-            console.log('Vidéo de transition lancée');
-
             // Écouter la fin de la vidéo pour terminer la transition
             transitionVideo.addEventListener('ended', function() {
-                console.log('✅ Vidéo de transition terminée');
                 transitionVideo.classList.remove('active');
 
                 // Cacher le loading-screen APRÈS la vidéo
@@ -214,7 +197,6 @@ async function playTransitionVideo() {
             }, { once: true });
 
         }).catch(e => {
-            console.error('❌ Erreur lors du lancement de la vidéo:', e);
             transitionVideo.classList.remove('active');
             resolve();
         });
@@ -222,12 +204,10 @@ async function playTransitionVideo() {
         // Timeout de sécurité basé sur la durée de la vidéo
         transitionVideo.addEventListener('loadedmetadata', function() {
             const videoDuration = transitionVideo.duration;
-            console.log('📹 Durée de la vidéo:', videoDuration + 's');
 
             // Timeout = durée vidéo + 2 secondes de sécurité
             setTimeout(() => {
                 if (transitionVideo.classList.contains('active')) {
-                    console.warn('⚠️ Timeout vidéo transition');
                     transitionVideo.classList.remove('active');
                     resolve();
                 }
@@ -237,7 +217,6 @@ async function playTransitionVideo() {
         // Fallback ultime : 15 secondes
         setTimeout(() => {
             if (transitionVideo.classList.contains('active')) {
-                console.warn('⚠️ Timeout ultime');
                 transitionVideo.classList.remove('active');
                 resolve();
             }
@@ -250,11 +229,9 @@ async function playTransitionVideo() {
  */
 async function startApplication() {
     if (APP_STATE.appStarted) {
-        console.warn('⚠️  Application déjà démarrée');
         return;
     }
 
-    console.log('🚀 Démarrage application...');
     APP_STATE.appStarted = true;
 
     try {
@@ -266,19 +243,12 @@ async function startApplication() {
             throw new Error('Instance application non disponible');
         }
 
-        console.log('✅ Application initialisée');
-
         // Afficher le conteneur principal en arrière-plan (transparent pour l'instant)
         prepareMainContainer();
 
         // CRITIQUE: Précharger TOUS les assets avant de continuer
-        console.log('⏳ PRÉCHARGEMENT DES ASSETS EN COURS...');
-
         if (app.globeManager && app.globeManager.preloadAllAssets) {
             await app.globeManager.preloadAllAssets();
-            console.log('✅ TOUS LES ASSETS SONT PRÊTS');
-        } else {
-            console.warn('⚠️  preloadAllAssets non disponible, passage direct');
         }
 
         // Afficher et jouer la vidéo de transition
@@ -286,14 +256,12 @@ async function startApplication() {
         await playTransitionVideo();
 
         // Démarrer l'exploration et afficher l'interface immédiatement
-        console.log('🌊 Démarrage exploration...');
         app.startExploration(true);
 
         // Afficher les éléments UI immédiatement
         showInterfaceElements(app);
 
     } catch (error) {
-        console.error('❌ Erreur application:', error);
         showError(error);
     }
 }
@@ -320,7 +288,6 @@ function hideJellySpinner() {
         setTimeout(() => fallbackSpinner.remove(), 300);
     }
 
-    console.log('✅ Spinner caché, fond noir conservé');
 }
 
 /**
@@ -360,7 +327,6 @@ function prepareMainContainer() {
         scannerEffect.style.opacity = '0';
     }
 
-    console.log('✅ Interface initialisée en mode clear');
 }
 
 /**
@@ -376,8 +342,6 @@ function showInterfaceElements(appInstance) {
     const hotspotLabels = document.querySelectorAll('.hotspot-label');
     const connectorSvgs = document.querySelectorAll('svg'); // Tous les SVG sont des connector lines
     const scannerEffect = document.querySelector('.scanner-effect');
-
-    console.log('✨ Apparition des éléments UI + hotspots + connector lines');
 
     // IMPORTANT: Activer l'affichage des labels dans le GlobeManager
     if (appInstance && appInstance.globeManager) {
@@ -459,9 +423,6 @@ function hideLoadingScreenGradually() {
 
     if (!loadingScreen) return;
 
-    console.log('🌑 Début transition fond noir (100% → 0% sur 4s)');
-    console.log('🌍 Interface (globe) visible immédiatement derrière le fond noir');
-
     // IMPORTANT: Afficher l'interface (globe, espace) IMMÉDIATEMENT
     // Elle sera visible derrière le fond noir qui disparaît progressivement
     if (mainContainer) {
@@ -476,7 +437,6 @@ function hideLoadingScreenGradually() {
     setTimeout(() => {
         loadingScreen.style.display = 'none';
         loadingScreen.classList.add('hidden');
-        console.log('✅ Écran de chargement complètement masqué');
     }, 2500);
 }
 
@@ -502,7 +462,6 @@ function showMainContainer() {
     mainContainer.offsetHeight;
 
     mainContainer.style.opacity = '1';
-    console.log('✅ Conteneur principal visible');
 }
 
 /**
@@ -561,11 +520,9 @@ function prepareEnvironment() {
  */
 function initialize() {
     if (APP_STATE.initialized) {
-        console.warn('⚠️  Déjà initialisé');
         return;
     }
 
-    console.log('🌊 Initialisation Mondes Immergés...');
     APP_STATE.initialized = true;
 
     // Vérifier WebGL
@@ -585,7 +542,6 @@ function initialize() {
 
         if (progress >= 100) {
             clearInterval(interval);
-            console.log('✅ Chargement terminé');
 
             // Petit délai avant de démarrer l'app
             setTimeout(() => {
@@ -601,7 +557,6 @@ function initialize() {
 function cleanup() {
     if (APP_STATE.cleanupDone) return;
 
-    console.log('🧹 Nettoyage des ressources...');
     APP_STATE.cleanupDone = true;
 
     // Le nettoyage spécifique se fait dans les écouteurs individuels
@@ -610,11 +565,9 @@ function cleanup() {
 // Point d'entrée principal - UN SEUL écouteur DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
     if (APP_STATE.domReady) {
-        console.warn('⚠️  DOM déjà prêt');
         return;
     }
 
-    console.log('📄 DOM chargé');
     APP_STATE.domReady = true;
 
     // Initialiser le curseur
@@ -630,16 +583,12 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('error', (e) => {
     // Ignorer les erreurs de ressources externes
     if (e.target !== window && (e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT')) {
-        console.warn('⚠️  Ressource non chargée:', e.target.src || e.target.href);
         return;
     }
-
-    console.error('❌ Erreur:', e.message);
 }, { once: false, capture: true });
 
 // UN SEUL écouteur pour les promesses rejetées
 window.addEventListener('unhandledrejection', (e) => {
-    console.error('❌ Promesse rejetée:', e.reason);
     e.preventDefault();
 }, { once: false });
 
@@ -650,7 +599,6 @@ window.addEventListener('beforeunload', cleanup, { once: true });
 // Recharger la page si elle vient du cache (bouton retour)
 window.addEventListener('pageshow', (event) => {
     if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-        console.log('🔄 Page restaurée depuis le cache, rechargement...');
         window.location.reload();
     }
 });

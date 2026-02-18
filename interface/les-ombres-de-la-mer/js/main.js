@@ -12,8 +12,6 @@ let pauseHideTimeout;
 let docVideo, videoContainer, playButton; // DÉCLARATION GLOBALE
 
 document.addEventListener("DOMContentLoaded", function() {
-    console.log('=== DEMARRAGE APPLICATION MOBILE/TACTILE ===');
-    
     // Détection du type d'appareil
     const isMobile = window.innerWidth < 768;
     const isTablet = window.innerWidth >= 768 && window.innerWidth < 1025;
@@ -61,8 +59,6 @@ document.addEventListener("DOMContentLoaded", function() {
     customLoader.appendChild(jellyLoader);
     document.body.appendChild(customLoader);
     
-    console.log('Loader l-jelly créé et affiché');
-    
     // Force le retour en haut
     history.scrollRestoration = 'manual';
     window.scrollTo(0, 0);
@@ -74,8 +70,6 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // MASQUER LE LOADER ET JOUER LA VIDÉO DE TRANSITION INVERSÉE
     setTimeout(() => {
-        console.log('=== MASQUAGE JELLY LOADER ET RÉVÉLATION SITE ===');
-
         // Masquer le jelly loader
         customLoader.style.opacity = '0';
 
@@ -86,10 +80,7 @@ document.addEventListener("DOMContentLoaded", function() {
             // Initialiser le curseur personnalisé UNIQUEMENT sur desktop avec souris
             if (isDesktop && !isTouchDevice) {
                 initCustomCursor();
-                console.log('Curseur personnalisé initialisé pour desktop');
             }
-
-            console.log('Site révélé');
         }, 800);
 
     }, 2000);
@@ -141,8 +132,6 @@ document.addEventListener("DOMContentLoaded", function() {
         window.scrollTo(0, 0);
     }, 100);
     
-    console.log('=== INITIALISATION TERMINEE ===');
-    console.log('Type d\'appareil:', { isMobile, isTablet, isDesktop, isTouchDevice });
 });
 
 // ========================================
@@ -364,11 +353,8 @@ const translations = {
 // FONCTION DE TRADUCTION COMPLÈTE
 // ========================================
 function translateSite(targetLang) {
-    console.log(`>>> TRADUCTION COMPLÈTE VERS: ${targetLang} <<<`);
-    
     const t = translations[targetLang];
     if (!t) {
-        console.error(`Langue ${targetLang} non supportée`);
         return;
     }
     
@@ -586,7 +572,6 @@ function translateSite(targetLang) {
     // Mettre à jour le titre de la page
     document.title = `National Geographic | ${t.title}`;
     
-    console.log(`>>> SITE ENTIÈREMENT TRADUIT EN ${targetLang.toUpperCase()} <<<`);
 }
 
 // Fonctions pour les contrôles vidéo - DÉPLACÉES EN GLOBAL
@@ -621,8 +606,6 @@ function showControlsTemporarily() {
 function startGlobeVideoImmediately() {
     const globeVideo = document.querySelector('.globe-video');
     if (globeVideo) {
-        console.log('>>> LANCEMENT IMMÉDIAT DE LA VIDÉO TEXTURE <<<');
-        
         globeVideo.muted = true;
         globeVideo.loop = true;
         globeVideo.playsInline = true;
@@ -635,22 +618,18 @@ function startGlobeVideoImmediately() {
         const playVideo = async function() {
             try {
                 await globeVideo.play();
-                console.log("Vidéo texture lancée immédiatement");
-                
                 // Révéler la vidéo après le début de lecture
                 setTimeout(() => {
                     globeVideo.style.opacity = '1';
                 }, 500);
                 
             } catch (error) {
-                console.log("Erreur lecture vidéo:", error);
                 setTimeout(async () => {
                     try {
                         await globeVideo.play();
-                        console.log("Vidéo texture - 2ème tentative réussie");
                         globeVideo.style.opacity = '1';
                     } catch (e) {
-                        console.log("Vidéo texture - 2ème tentative échouée");
+                        /* Production: error silenced */
                     }
                 }, 1000);
             }
@@ -666,8 +645,7 @@ function startGlobeVideoImmediately() {
         // Surveillance continue
         setInterval(() => {
             if (globeVideo.paused && !document.body.classList.contains('loading')) {
-                console.log("Vidéo s'est arrêtée - relancement...");
-                globeVideo.play().catch(e => console.log("Erreur relancement:", e));
+                globeVideo.play().catch(e => { /* Production: error silenced */ });
             }
         }, 3000);
     }
@@ -684,15 +662,12 @@ window.addEventListener('load', function() {
 
 // Initialisation du menu mobile/tablette
 function initMobileMenu() {
-    console.log('=== INITIALISATION MENU MOBILE ===');
-    
     const menuToggle = document.querySelector('.mobile-menu-toggle');
     const sideNav = document.querySelector('.side-nav');
     const menuOverlay = document.querySelector('.menu-overlay');
     const navLinks = document.querySelectorAll('.nav-link');
     
     if (!menuToggle || !sideNav || !menuOverlay) {
-        console.error('Éléments du menu mobile manquants');
         return;
     }
     
@@ -740,7 +715,6 @@ function initMobileMenu() {
         menuToggle.classList.add('active');
         document.body.style.overflow = 'hidden';
         isMenuOpen = true;
-        console.log('Menu ouvert');
     }
     
     function closeMenu() {
@@ -749,7 +723,6 @@ function initMobileMenu() {
         menuToggle.classList.remove('active');
         document.body.style.overflow = '';
         isMenuOpen = false;
-        console.log('Menu fermé');
     }
     
     // Fermer le menu avec la touche Escape
@@ -764,13 +737,10 @@ function initMobileMenu() {
 // INITIALISATION DU BOUTON DE TRADUCTION COMPLÈTE
 // ========================================
 function initTranslateButton() {
-    console.log('=== INITIALISATION BOUTON TRADUCTION COMPLÈTE ===');
-    
     const translateButton = document.querySelector('.translate-button');
     const translateCurrent = document.querySelector('.translate-current');
     
     if (!translateButton || !translateCurrent) {
-        console.error('Éléments du bouton de traduction manquants');
         return;
     }
     
@@ -794,8 +764,6 @@ function initTranslateButton() {
         if (translateButton.classList.contains('changing')) return;
         
         const newLang = currentLanguage === 'fr' ? 'en' : 'fr';
-        
-        console.log(`>>> CHANGEMENT DE LANGUE COMPLET: ${currentLanguage} -> ${newLang} <<<`);
         
         // Animation de changement
         translateButton.classList.add('changing');
@@ -827,7 +795,6 @@ function initTranslateButton() {
 			translateSite('fr');
 		}
 		updateTranslateButton();
-		console.log('>>> SITE FORCÉ EN FRANÇAIS AU DÉMARRAGE <<<');
 	}, 500);
 }
 
@@ -838,27 +805,20 @@ function updateTranslateButton() {
         // Afficher la langue OPPOSÉE (vers laquelle on peut basculer)
         const nextLang = currentLanguage === 'fr' ? 'en' : 'fr';
         translateCurrent.textContent = nextLang.toUpperCase();
-        console.log(`Bouton mis à jour: ${nextLang.toUpperCase()} (site actuellement en ${currentLanguage})`);
     }
 }
 
 // Initialisation du bouton "retour à l'exploration" - AVEC ANIMATION DYNAMIQUE
 function initReturnExploration() {
-    console.log('=== INITIALISATION BOUTON RETOUR EXPLORATION ===');
-    
     const returnBtn = document.querySelector('.return-exploration');
-    console.log('Bouton trouvé:', returnBtn);
-    
+
     if (!returnBtn) {
-        console.error('ERREUR: Bouton retour à l\'exploration non trouvé dans le DOM');
         return;
     }
-    
+
     const expeditionSection = document.querySelector('#expedition');
-    console.log('Section expédition trouvée:', expeditionSection);
-    
+
     if (!expeditionSection) {
-        console.error('ERREUR: Section expédition non trouvée');
         return;
     }
 	
@@ -869,19 +829,13 @@ function initReturnExploration() {
     // Observer pour détecter la visite de l'expédition
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            console.log('Observer déclenché - isIntersecting:', entry.isIntersecting);
-            console.log('Intersection ratio:', entry.intersectionRatio);
-            
             if (entry.isIntersecting && entry.intersectionRatio >= 0.5 && !expeditionVisited) {
                 expeditionVisited = true;
-                console.log('>>> EXPEDITION VRAIMENT VISITEE (50%) - AFFICHAGE DU BOUTON <<<');
-                
+
                 returnBtn.style.opacity = '1';
                 returnBtn.style.pointerEvents = 'all';
                 returnBtn.style.transform = 'translateY(0)';
                 returnBtn.classList.add('visible');
-                
-                console.log('Bouton affiché - styles appliqués');
             }
         });
     }, {
@@ -890,8 +844,7 @@ function initReturnExploration() {
     });
     
     observer.observe(expeditionSection);
-    console.log('Observer attaché avec seuil 50%');
-    
+
     // NOUVEAU: Animation dynamique quand on est en haut du site
     window.addEventListener('scroll', function() {
         if (returnBtn.classList.contains('visible')) {
@@ -908,8 +861,6 @@ function initReturnExploration() {
     // Gestion du clic - REDIRECTION DIRECTE
     returnBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('>>> CLIC SUR BOUTON RETOUR - REDIRECTION ===');
-
         // Animation de clic
         returnBtn.style.transform = 'scale(0.95)';
 
@@ -919,7 +870,6 @@ function initReturnExploration() {
         }, 150);
     });
     
-    console.log('=== FIN INITIALISATION BOUTON ===');
 }
 
 // Initialisation du loader global
@@ -961,8 +911,6 @@ function initGlobalLoader() {
 
 // Initialisation de la galerie - Version complète avec support tactile
 function initGallery() {
-    console.log('=== INITIALISATION GALERIE TACTILE ===');
-
     loadGalleryImages();
 
     const galleryTrack = document.querySelector('.gallery-track');
@@ -973,7 +921,6 @@ function initGallery() {
     let autoplayInterval;
 
     if (!galleryTrack) {
-        console.error('Galerie non trouvée');
         return;
     }
 
@@ -1013,7 +960,6 @@ function initGallery() {
         }
 
         currentGalleryIndex = index;
-        console.log('Slide active:', index);
     }
 
     // Navigation par boutons
@@ -1237,13 +1183,9 @@ function initBackToTop() {
 
 // Gestion des vidéos - Optimisée tactile avec contrôles intelligents
 function fixVideos() {
-    console.log('=== INITIALISATION DES VIDEOS ===');
-    
     // Vidéo de texture (hero)
     const globeVideo = document.querySelector('.globe-video');
     if (globeVideo) {
-        console.log('Vidéo texture trouvée - configuration...');
-        
         globeVideo.pause();
         globeVideo.currentTime = 0;
         globeVideo.autoplay = false;
@@ -1252,11 +1194,7 @@ function fixVideos() {
         globeVideo.playsInline = true;
         globeVideo.style.opacity = '0';
         
-        console.log('Vidéo texture mise en pause - attente fin du chargement');
-        
         function startGlobeVideo() {
-            console.log('>>> LANCEMENT VIDÉO TEXTURE APRÈS CHARGEMENT <<<');
-            
             globeVideo.style.opacity = '1';
             globeVideo.style.transition = 'opacity 1s ease';
             globeVideo.load();
@@ -1265,16 +1203,12 @@ function fixVideos() {
                 try {
                     globeVideo.currentTime = 0;
                     await globeVideo.play();
-                    console.log("Vidéo texture lancée avec succès");
                 } catch (error) {
-                    console.log("Erreur lecture vidéo texture:", error);
-                    
                     setTimeout(async () => {
                         try {
                             await globeVideo.play();
-                            console.log("Vidéo texture - 2ème tentative réussie");
                         } catch (e) {
-                            console.log("Vidéo texture - 2ème tentative échouée");
+                            /* Production: error silenced */
                         }
                     }, 1000);
                 }
@@ -1285,13 +1219,11 @@ function fixVideos() {
             // Surveillance continue
             setInterval(() => {
                 if (globeVideo.paused || globeVideo.ended) {
-                    console.log("Vidéo texture s'est arrêtée - relancement...");
                     globeVideo.currentTime = 0;
                     globeVideo.play().catch(e => {
-                        console.log("Erreur relancement vidéo texture:", e);
                         globeVideo.load();
                         setTimeout(() => {
-                            globeVideo.play().catch(err => console.log("Rechargement forcé échoué:", err));
+                            globeVideo.play().catch(err => { /* Production: error silenced */ });
                         }, 1000);
                     });
                 }
@@ -1302,18 +1234,15 @@ function fixVideos() {
         
         // Gestionnaires d'événements
         globeVideo.addEventListener('ended', function() {
-            console.log('Vidéo texture terminée - relancement immédiat');
             this.currentTime = 0;
             this.play();
         });
         
         globeVideo.addEventListener('pause', function() {
-            console.log('Vidéo texture en pause - relancement');
             this.play();
         });
         
         globeVideo.addEventListener('stalled', function() {
-            console.log('Vidéo texture bloquée - rechargement');
             this.load();
             setTimeout(() => {
                 this.play();
@@ -1321,17 +1250,14 @@ function fixVideos() {
         });
         
         globeVideo.addEventListener('error', function(e) {
-            console.log('Erreur vidéo texture:', e);
             setTimeout(() => {
                 this.load();
                 this.play();
             }, 2000);
         });
         
-    } else {
-        console.error('Vidéo texture non trouvée');
     }
-    
+
     // Vidéo du documentaire - AVEC CONTRÔLES INTELLIGENTS
     docVideo = document.querySelector('.main-video');
     videoContainer = document.querySelector('.video-container');
@@ -1388,7 +1314,6 @@ function fixVideos() {
                     })
                     .catch(error => {
                         hideGlobalLoader();
-                        console.log("Impossible de lancer la vidéo: ", error);
                     });
             } else {
                 hideGlobalLoader();
@@ -1511,7 +1436,6 @@ function fixVideos() {
                             hideControlsAfterDelay(3000);
                         }).catch(err => {
                             hideGlobalLoader();
-                            console.log("Erreur lors du lancement automatique");
                         });
                     }, 1000);
                 }
@@ -1842,8 +1766,6 @@ document.addEventListener('keydown', function(e) {
         // Empêcher le comportement par défaut
         e.preventDefault();
         
-        console.log('>>> TOUCHE ENTRÉE DÉTECTÉE - REDIRECTION VERS COLLECTION <<<');
-        
         // Afficher le loader pour une transition fluide
         if (typeof showGlobalLoader === 'function') {
             showGlobalLoader();
@@ -1856,5 +1778,3 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-console.log('=== REDIRECTION TOUCHE ENTRÉE ACTIVÉE ===');
-console.log('=== TRADUCTION COMPLÈTE INTÉGRÉE ===');

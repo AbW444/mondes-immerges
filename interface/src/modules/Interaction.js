@@ -71,12 +71,6 @@ export class Interaction {
     // Démarrer la détection d'inactivité
     this.startInterfaceAutoHide();
     
-    console.log("=== INTERACTIONS INITIALISÉES ===");
-    console.log("- Scroll: Activé (contrôle vitesse orbite)");
-    console.log("- Clic: Activé (sélection hotspots)");
-    console.log("- Glissement: DÉSACTIVÉ");
-    console.log("- Touch: DÉSACTIVÉ");
-    console.log("- Touche Entrée: GÉRÉE PAR GLOBEMANAGER (changement vidéo)");
 }
     
     
@@ -369,7 +363,6 @@ export class Interaction {
                 this.globeManager.orbitParams.isOrbiting = wasOrbiting;
             }, 500);
         } catch (e) {
-            console.error("Erreur lors de la navigation par flèches:", e);
             // Restaurer l'angle original en cas d'erreur
             if (this.globeManager && this.globeManager.orbitParams) {
                 this.globeManager.orbitParams.orbitAngle = backupAngle;

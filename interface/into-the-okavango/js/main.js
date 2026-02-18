@@ -6,8 +6,6 @@ let touchEndX = 0;
 let isMenuOpen = false;
 
 document.addEventListener("DOMContentLoaded", function() {
-    console.log('=== DEMARRAGE APPLICATION INTO THE OKAVANGO ===');
-    
     // Détection du type d'appareil
     const isMobile = window.innerWidth < 768;
     const isTablet = window.innerWidth >= 768 && window.innerWidth < 1025;
@@ -55,8 +53,6 @@ document.addEventListener("DOMContentLoaded", function() {
     customLoader.appendChild(jellyLoader);
     document.body.appendChild(customLoader);
     
-    console.log('Loader National Geographic l-jelly créé et affiché');
-    
     // Force le retour en haut
     history.scrollRestoration = 'manual';
     window.scrollTo(0, 0);
@@ -68,8 +64,6 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // MASQUER LE LOADER ET JOUER LA VIDÉO DE TRANSITION INVERSÉE
     setTimeout(() => {
-        console.log('=== MASQUAGE JELLY LOADER ET RÉVÉLATION SITE ===');
-
         // Masquer le jelly loader
         customLoader.style.opacity = '0';
 
@@ -80,10 +74,7 @@ document.addEventListener("DOMContentLoaded", function() {
             // Initialiser le curseur personnalisé UNIQUEMENT sur desktop avec souris
             if (isDesktop && !isTouchDevice) {
                 initCustomCursor();
-                console.log('Curseur personnalisé initialisé pour desktop Into the Okavango');
             }
-
-            console.log('Site Into the Okavango révélé');
         }, 800);
 
     }, 2000);
@@ -137,16 +128,12 @@ document.addEventListener("DOMContentLoaded", function() {
         window.scrollTo(0, 0);
     }, 100);
     
-    console.log('=== INITIALISATION OKAVANGO TERMINEE ===');
-    console.log('Type d\'appareil:', { isMobile, isTablet, isDesktop, isTouchDevice });
 });
 
 // Nouvelle fonction pour lancer la vidéo texture Okavango immédiatement
 function startGlobeVideoImmediately() {
     const globeVideo = document.querySelector('.globe-video');
     if (globeVideo) {
-        console.log('>>> LANCEMENT IMMÉDIAT DE LA VIDÉO TEXTURE OKAVANGO <<<');
-        
         globeVideo.muted = true;
         globeVideo.loop = true;
         globeVideo.playsInline = true;
@@ -160,22 +147,18 @@ function startGlobeVideoImmediately() {
         const playVideo = async function() {
             try {
                 await globeVideo.play();
-                console.log("Vidéo texture Okavango lancée immédiatement");
-                
                 // Révéler la vidéo après le début de lecture
                 setTimeout(() => {
                     globeVideo.style.opacity = '1';
                 }, 500);
                 
             } catch (error) {
-                console.log("Erreur lecture vidéo Okavango:", error);
                 setTimeout(async () => {
                     try {
                         await globeVideo.play();
-                        console.log("Vidéo texture Okavango - 2ème tentative réussie");
                         globeVideo.style.opacity = '1';
                     } catch (e) {
-                        console.log("Vidéo texture Okavango - 2ème tentative échouée");
+                        /* Production: error silenced */
                     }
                 }, 1000);
             }
@@ -191,8 +174,7 @@ function startGlobeVideoImmediately() {
         // Surveillance continue
         setInterval(() => {
             if (globeVideo.paused && !document.body.classList.contains('loading')) {
-                console.log("Vidéo Okavango s'est arrêtée - relancement...");
-                globeVideo.play().catch(e => console.log("Erreur relancement:", e));
+                globeVideo.play().catch(e => { /* Production: error silenced */ });
             }
         }, 3000);
     }
@@ -209,15 +191,12 @@ window.addEventListener('load', function() {
 
 // Initialisation du menu mobile/tablette - Thème Okavango
 function initMobileMenu() {
-    console.log('=== INITIALISATION MENU MOBILE OKAVANGO ===');
-    
     const menuToggle = document.querySelector('.mobile-menu-toggle');
     const sideNav = document.querySelector('.side-nav');
     const menuOverlay = document.querySelector('.menu-overlay');
     const navLinks = document.querySelectorAll('.nav-link');
     
     if (!menuToggle || !sideNav || !menuOverlay) {
-        console.error('Éléments du menu mobile manquants');
         return;
     }
     
@@ -265,7 +244,6 @@ function initMobileMenu() {
         menuToggle.classList.add('active');
         document.body.style.overflow = 'hidden';
         isMenuOpen = true;
-        console.log('Menu Okavango ouvert');
     }
     
     function closeMenu() {
@@ -274,7 +252,6 @@ function initMobileMenu() {
         menuToggle.classList.remove('active');
         document.body.style.overflow = '';
         isMenuOpen = false;
-        console.log('Menu Okavango fermé');
     }
     
     // Fermer le menu avec la touche Escape
@@ -287,21 +264,15 @@ function initMobileMenu() {
 
 // Initialisation du bouton "retour à l'exploration" - THÈME OKAVANGO
 function initReturnExploration() {
-    console.log('=== INITIALISATION BOUTON RETOUR EXPLORATION OKAVANGO ===');
-    
     const returnBtn = document.querySelector('.return-exploration');
-    console.log('Bouton trouvé:', returnBtn);
-    
+
     if (!returnBtn) {
-        console.error('ERREUR: Bouton retour à l\'exploration non trouvé dans le DOM');
         return;
     }
-    
+
     const expeditionSection = document.querySelector('#expedition');
-    console.log('Section expédition trouvée:', expeditionSection);
-    
+
     if (!expeditionSection) {
-        console.error('ERREUR: Section expédition non trouvée');
         return;
     }
     
@@ -311,19 +282,13 @@ function initReturnExploration() {
     // Observer pour détecter la visite de l'expédition
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            console.log('Observer Okavango déclenché - isIntersecting:', entry.isIntersecting);
-            console.log('Intersection ratio:', entry.intersectionRatio);
-            
             if (entry.isIntersecting && entry.intersectionRatio >= 0.5 && !expeditionVisited) {
                 expeditionVisited = true;
-                console.log('>>> EXPEDITION OKAVANGO VRAIMENT VISITEE (50%) - AFFICHAGE DU BOUTON <<<');
-                
+
                 returnBtn.style.opacity = '1';
                 returnBtn.style.pointerEvents = 'all';
                 returnBtn.style.transform = 'translateY(0)';
                 returnBtn.classList.add('visible');
-                
-                console.log('Bouton Okavango affiché - styles appliqués');
             }
         });
     }, {
@@ -332,8 +297,7 @@ function initReturnExploration() {
     });
     
     observer.observe(expeditionSection);
-    console.log('Observer Okavango attaché avec seuil 50%');
-    
+
     // NOUVEAU: Animation dynamique quand on est en haut du site
     window.addEventListener('scroll', function() {
         if (returnBtn.classList.contains('visible')) {
@@ -350,8 +314,6 @@ function initReturnExploration() {
     // Gestion du clic - REDIRECTION DIRECTE
     returnBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('>>> CLIC SUR BOUTON RETOUR - REDIRECTION ===');
-
         // Animation de clic
         returnBtn.style.transform = 'scale(0.95)';
 
@@ -361,7 +323,6 @@ function initReturnExploration() {
         }, 150);
     });
     
-    console.log('=== FIN INITIALISATION BOUTON OKAVANGO ===');
 }
 
 // Initialisation du loader global - Thème National Geographic
@@ -404,8 +365,6 @@ function initGlobalLoader() {
 // Initialisation de la galerie Okavango avec support tactile
 // Initialisation de la galerie - Version complète avec support tactile
 function initGallery() {
-    console.log('=== INITIALISATION GALERIE TACTILE ===');
-
     loadGalleryImages();
 
     const galleryTrack = document.querySelector('.gallery-track');
@@ -416,7 +375,6 @@ function initGallery() {
     let autoplayInterval;
 
     if (!galleryTrack) {
-        console.error('Galerie non trouvée');
         return;
     }
 
@@ -456,7 +414,6 @@ function initGallery() {
         }
 
         currentGalleryIndex = index;
-        console.log('Slide active:', index);
     }
 
     // Navigation par boutons
@@ -568,7 +525,6 @@ function loadGalleryImages() {
         image.className = 'gallery-image';
         
         image.onerror = function() {
-            console.log(`Erreur chargement image Okavango: ${imageData.src}`);
             // Image de fallback si l'image n'existe pas
             image.src = 'images/expedition.jpeg';
         };
@@ -706,13 +662,9 @@ function initBackToTop() {
 
 // Gestion des vidéos - Optimisée tactile Okavango
 function fixVideos() {
-    console.log('=== INITIALISATION DES VIDEOS OKAVANGO ===');
-    
     // Vidéo de texture (hero) avec filtres Okavango
     const globeVideo = document.querySelector('.globe-video');
     if (globeVideo) {
-        console.log('Vidéo texture Okavango trouvée - configuration...');
-        
         globeVideo.pause();
         globeVideo.currentTime = 0;
         globeVideo.autoplay = false;
@@ -721,11 +673,7 @@ function fixVideos() {
         globeVideo.playsInline = true;
         globeVideo.style.opacity = '0';
         
-        console.log('Vidéo texture Okavango mise en pause - attente fin du chargement');
-        
         function startGlobeVideo() {
-            console.log('>>> LANCEMENT VIDÉO TEXTURE OKAVANGO APRÈS CHARGEMENT <<<');
-            
             globeVideo.style.opacity = '1';
             globeVideo.style.transition = 'opacity 1s ease';
             globeVideo.style.filter = 'brightness(0.7) contrast(1.1) hue-rotate(10deg)';
@@ -735,16 +683,12 @@ function fixVideos() {
                 try {
                     globeVideo.currentTime = 0;
                     await globeVideo.play();
-                    console.log("Vidéo texture Okavango lancée avec succès");
                 } catch (error) {
-                    console.log("Erreur lecture vidéo texture Okavango:", error);
-                    
                     setTimeout(async () => {
                         try {
                             await globeVideo.play();
-                            console.log("Vidéo texture Okavango - 2ème tentative réussie");
                         } catch (e) {
-                            console.log("Vidéo texture Okavango - 2ème tentative échouée");
+                            /* Production: error silenced */
                         }
                     }, 1000);
                 }
@@ -755,13 +699,11 @@ function fixVideos() {
             // Surveillance continue
             setInterval(() => {
                 if (globeVideo.paused || globeVideo.ended) {
-                    console.log("Vidéo texture Okavango s'est arrêtée - relancement...");
                     globeVideo.currentTime = 0;
                     globeVideo.play().catch(e => {
-                        console.log("Erreur relancement vidéo texture Okavango:", e);
                         globeVideo.load();
                         setTimeout(() => {
-                            globeVideo.play().catch(err => console.log("Rechargement forcé échoué:", err));
+                            globeVideo.play().catch(err => { /* Production: error silenced */ });
                         }, 1000);
                     });
                 }
@@ -772,18 +714,15 @@ function fixVideos() {
         
         // Gestionnaires d'événements
         globeVideo.addEventListener('ended', function() {
-            console.log('Vidéo texture Okavango terminée - relancement immédiat');
             this.currentTime = 0;
             this.play();
         });
         
         globeVideo.addEventListener('pause', function() {
-            console.log('Vidéo texture Okavango en pause - relancement');
             this.play();
         });
         
         globeVideo.addEventListener('stalled', function() {
-            console.log('Vidéo texture Okavango bloquée - rechargement');
             this.load();
             setTimeout(() => {
                 this.play();
@@ -791,15 +730,12 @@ function fixVideos() {
         });
         
         globeVideo.addEventListener('error', function(e) {
-            console.log('Erreur vidéo texture Okavango:', e);
             setTimeout(() => {
                 this.load();
                 this.play();
             }, 2000);
         });
         
-    } else {
-        console.error('Vidéo texture Okavango non trouvée');
     }
     
     // Vidéo du documentaire - Adaptée tactile avec contrôles intelligents
@@ -874,7 +810,6 @@ function fixVideos() {
                     })
                     .catch(error => {
                         hideGlobalLoader();
-                        console.log("Impossible de lancer la vidéo Into the Okavango: ", error);
                     });
             } else {
                 hideGlobalLoader();
@@ -983,7 +918,6 @@ function fixVideos() {
                             }, 500);
                         }).catch(err => {
                             hideGlobalLoader();
-                            console.log("Erreur lors du lancement automatique Into the Okavango");
                         });
                     }, 1000);
                 }
@@ -1317,16 +1251,8 @@ window.addEventListener('load', function() {
 
 // Fonctions utilitaires spécifiques à Into the Okavango
 function logOkavangoMessage(message) {
-    console.log(`🎬 INTO THE OKAVANGO: ${message}`);
+    /* Production: logging silenced */
 }
-
-// Easter egg pour les développeurs
-console.log(`
-📽️ INTO THE OKAVANGO 🐘
-Une expédition épique de National Geographic
-Développé avec passion pour la conservation
-Delta de l'Okavango - Dernier refuge sauvage
-`);
 
 // Performance monitoring pour Into the Okavango
 if (window.performance && window.performance.mark) {

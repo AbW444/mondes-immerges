@@ -36,8 +36,6 @@ class MondesImmergesApp {
      * Initialise l'application complète
      */
     init() {
-        console.log('Initialisation de l\'application Mondes Immergés');
-        
         if (this.isInitialized) return;
         this.isInitialized = true;
 
@@ -85,12 +83,11 @@ class MondesImmergesApp {
             contentPanelElements.titleElement && contentPanelElements.descriptionElement) {
             this.contentPanel = new ContentPanel(contentPanelElements);
         } else {
-            console.warn('ContentPanel: Éléments DOM du panneau de contenu manquants, fonctionnalité désactivée');
             // Créer un objet mock pour éviter les erreurs
             this.contentPanel = {
-                show: () => console.log('ContentPanel.show() appelé mais panneau désactivé'),
-                hide: () => console.log('ContentPanel.hide() appelé mais panneau désactivé'),
-                update: () => console.log('ContentPanel.update() appelé mais panneau désactivé')
+                show: () => { /* Production: panel disabled */ },
+                hide: () => { /* Production: panel disabled */ },
+                update: () => { /* Production: panel disabled */ }
             };
         }
         
@@ -113,7 +110,6 @@ class MondesImmergesApp {
         // Ajouter le logo National Geographic
         this.addNatGeoLogo();
         
-        console.log('Initialisation terminée avec succès');
     }
     
     /**
@@ -170,7 +166,6 @@ class MondesImmergesApp {
         // Si skipStartupAnimation est true, on saute complètement la transition
         // pour éviter le flash noir qui coupe l'animation de chargement
         if (skipStartupAnimation) {
-            console.log("Séquence de démarrage fictive ignorée - pas de transition");
             this.isExploring = true;
         } else {
             // Transition visuelle normale
@@ -236,7 +231,6 @@ class MondesImmergesApp {
         // Vérifier si le logo existe déjà pour éviter les duplications
         const existingLogo = this.mainContainer.querySelector('.nat-geo-logo-container');
         if (existingLogo) {
-            console.log('Logo déjà présent, mise à jour uniquement');
             return;
         }
 
@@ -267,7 +261,6 @@ class MondesImmergesApp {
         logoContainer.appendChild(logo);
         this.mainContainer.appendChild(logoContainer);
 
-        console.log('✅ Logo National Geographic ajouté');
     }
     
     /**
@@ -413,8 +406,6 @@ class MondesImmergesApp {
      * @param {Object} hotspot - Le point d'intérêt sélectionné
      */
     handleHotspotSelect(hotspot) {
-        console.log(`Point d'intérêt sélectionné: ${hotspot.title}`);
-        
         // Mettre à jour l'état actuel
         this.currentHotspot = hotspot;
         
@@ -471,11 +462,6 @@ class MondesImmergesApp {
             
             // Afficher le panneau
             this.contentPanel.show();
-        } else {
-            console.log('ContentPanel non disponible, affichage des informations dans la console:');
-            console.log('Titre:', hotspot.title);
-            console.log('Description:', hotspot.description);
-            console.log('Coordonnées:', hotspot.position);
         }
         
         // Masquer les contrôles de l'interface utilisateur

@@ -1459,8 +1459,7 @@
                 const videoSrc = bgVideo.dataset.src;
                 if (!videoSrc) return;
 
-                console.log('⏳ Chargement différé de la vidéo d\'arrière-plan...');
-
+                
                 // Créer un élément source
                 const source = document.createElement('source');
                 source.src = videoSrc;
@@ -1472,22 +1471,12 @@
 
                 // Événements optimisés
                 bgVideo.addEventListener('canplaythrough', function onReady() {
-                    console.log('✅ Vidéo d\'arrière-plan prête');
-                    bgVideo.play().catch(function(e) {
-                        console.log('Autoplay prevented for background video:', e);
+                    bgVideo.play().catch(function() {
+                        /* Autoplay prevented */
                     });
                 }, { once: true });
 
-                bgVideo.addEventListener('waiting', function() {
-                    console.log('⏸ Vidéo en buffering...');
-                });
-
-                bgVideo.addEventListener('playing', function() {
-                    console.log('▶ Vidéo en lecture');
-                }, { once: true });
-
-                bgVideo.addEventListener('error', function(e) {
-                    console.error('❌ Erreur vidéo:', e);
+                bgVideo.addEventListener('error', function() {
                     // Retry une seule fois
                     setTimeout(() => bgVideo.load(), 2000);
                 }, { once: true });
@@ -1498,8 +1487,8 @@
                 let logoHandled = false;
 
                 logoVideo.addEventListener('loadeddata', function() {
-                    logoVideo.play().catch(function(e) {
-                        console.log('Autoplay prevented for logo video:', e);
+                    logoVideo.play().catch(function() {
+                        /* Autoplay prevented */
                     });
                 }, { once: true });
 
@@ -1519,20 +1508,17 @@
                         loadBackgroundVideo();
                     }, { timeout: 1000 });
 
-                    console.log('✅ Logo terminé, chargement vidéo arrière-plan...');
                 };
 
                 logoVideo.addEventListener('ended', handleLogoEnd, { once: true });
 
                 logoVideo.addEventListener('error', function() {
-                    console.log('Logo video error, hiding overlay');
                     handleLogoEnd();
                 }, { once: true });
 
                 // Sécurité : masquer après 10 secondes maximum
                 setTimeout(function() {
                     if (!logoHandled) {
-                        console.log('Logo video timeout');
                         handleLogoEnd();
                     }
                 }, 10000);
@@ -1550,7 +1536,6 @@
                 let blackScreenShown = false;
 
                 exploreBtn.addEventListener('click', function() {
-                    console.log('>>> DÉCLENCHEMENT DE LA TRANSITION <<<');
 
                     // Masquer le contenu et activer la vidéo de transition
                     document.body.classList.add('transition-active');
@@ -1565,7 +1550,6 @@
                         // Quand il reste 0.3 seconde ou moins, afficher l'écran noir
                         if (timeLeft <= 0.3 && !blackScreenShown) {
                             blackScreenShown = true;
-                            console.log('>>> FIN DE VIDÉO APPROCHE - ÉCRAN NOIR IMMÉDIAT <<<');
 
                             // Afficher l'écran noir IMMÉDIATEMENT au-dessus de tout
                             loadingOverlay.style.display = 'flex';
@@ -1580,25 +1564,13 @@
 
                     // Lancer la vidéo
                     transitionVideo.play().then(() => {
-                        console.log('Vidéo de transition lancée');
-
-                        // Écouter la fin de la vidéo pour la redirection
                         transitionVideo.addEventListener('ended', function() {
                             if (document.body.classList.contains('redirected')) return;
-
-                            console.log('Vidéo terminée - Blocage sur dernière frame');
                             document.body.classList.add('redirected');
-
-                            // Bloquer la vidéo sur la dernière frame
                             transitionVideo.classList.add('freeze-last-frame');
-
-                            // Redirection IMMÉDIATE sans masquer la vidéo
-                            console.log('🚀 REDIRECTION IMMÉDIATE VERS L\'INTERFACE');
                             window.location.href = '/mondes-immerges/interface/';
                         }, { once: true });
-
-                    }).catch(e => {
-                        console.log('Erreur lors du lancement de la vidéo:', e);
+                    }).catch(() => {
                         // En cas d'erreur, redirection immédiate
                         if (!document.body.classList.contains('redirected')) {
                             document.body.classList.add('redirected');
@@ -1610,7 +1582,6 @@
                     // Fallback : 15 secondes maximum
                     setTimeout(() => {
                         if (!document.body.classList.contains('redirected')) {
-                            console.log('Timeout - Redirection forcée');
                             document.body.classList.add('redirected');
                             transitionVideo.classList.add('freeze-last-frame');
                             window.location.href = '/mondes-immerges/interface/';
@@ -1636,13 +1607,11 @@
                 });
             });
 
-            console.log('Page Mondes Immergés initialisée avec succès');
         });
 
         // Reset transition video when page is restored from cache (back button)
         window.addEventListener('pageshow', function(event) {
             if (event.persisted || (performance.navigation && performance.navigation.type === 2)) {
-                console.log('Page restaurée depuis le cache - Reset de la vidéo de transition');
                 const transitionVideo = document.getElementById('transitionVideo');
                 const loadingOverlay = document.getElementById('loadingOverlay');
 
