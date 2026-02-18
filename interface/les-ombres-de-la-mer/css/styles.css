@@ -2264,8 +2264,8 @@ input, textarea, select {
         top: 0;
         left: -100%;
         width: 80%;
-        max-width: 300px;
-        height: 100vh;
+        max-width: 280px;
+        height: 100dvh;
         background: rgba(0, 0, 0, 0.95);
         backdrop-filter: blur(10px);
         padding: 80px 20px 20px;
@@ -2304,7 +2304,8 @@ input, textarea, select {
     
     /* Hero adapté mobile */
     .hero {
-        padding-top: 80px;
+        padding-top: 60px;
+        height: 100dvh;
     }
     
     .title-container {
@@ -2315,7 +2316,7 @@ input, textarea, select {
     }
     
     .title {
-        font-size: clamp(2rem, 8vw, 3rem);
+        font-size: clamp(1.5rem, 7vw, 2.5rem);
     }
     
     /* SOUS-TITRE MOBILE PLUS GROS */
@@ -2329,11 +2330,12 @@ input, textarea, select {
     .return-exploration {
         right: 15px !important;
         top: 15px !important;
-        font-size: 10px !important; /* Encore plus petit sur mobile */
-        padding: 6px 10px !important; /* Encore plus réduit */
+        font-size: 12px !important; /* Encore plus petit sur mobile */
+        padding: 10px 16px !important; /* Encore plus réduit */
         max-width: calc(100vw - 30px) !important;
         gap: 6px !important; /* Réduit */
         border-radius: 15px !important; /* Plus petit */
+        min-height: 44px !important;
     }
     
     .return-exploration.at-top {
@@ -2751,7 +2753,7 @@ input, textarea, select {
 /* Optimisations pour très petits écrans - 480px et moins */
 @media screen and (max-width: 480px) {
     .title {
-        font-size: clamp(1.5rem, 7vw, 2.5rem);
+        font-size: clamp(1.3rem, 6vw, 2rem);
     }
     
     /* SOUS-TITRE TRÈS PETITS ÉCRANS PLUS GROS */

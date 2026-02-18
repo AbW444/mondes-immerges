@@ -2266,8 +2266,8 @@ input, textarea, select {
         top: 0;
         left: -100%;
         width: 80%;
-        max-width: 300px;
-        height: 100vh;
+        max-width: 280px;
+        height: 100dvh;
         background: rgba(0, 0, 0, 0.95);
         backdrop-filter: blur(10px);
         padding: 80px 20px 20px;
@@ -2305,9 +2305,10 @@ input, textarea, select {
     }
     
     .hero {
-        padding-top: 80px;
+        padding-top: 60px;
+        height: 100dvh;
     }
-    
+
     .title-container {
         top: 80px;
         left: 20px;
@@ -2316,7 +2317,7 @@ input, textarea, select {
     }
     
     .title {
-        font-size: clamp(2rem, 8vw, 3rem);
+        font-size: clamp(1.5rem, 7vw, 2.5rem);
     }
     
     .subtitle {
@@ -2328,8 +2329,9 @@ input, textarea, select {
     .return-exploration {
         right: 15px !important;
         top: 15px !important;
-        font-size: 10px !important;
-        padding: 6px 10px !important;
+        font-size: 12px !important;
+        padding: 10px 16px !important;
+        min-height: 44px !important;
         max-width: calc(100vw - 30px) !important;
         gap: 6px !important;
         border-radius: 15px !important;
@@ -2716,9 +2718,15 @@ input, textarea, select {
 /* Très petits écrans - 480px et moins */
 @media screen and (max-width: 480px) {
     .title {
-        font-size: clamp(1.5rem, 7vw, 2.5rem);
+        font-size: clamp(1.3rem, 6vw, 2rem);
     }
-    
+
+    .return-exploration {
+        font-size: 12px !important;
+        padding: 10px 16px !important;
+        min-height: 44px !important;
+    }
+
     .subtitle {
         font-size: clamp(1.1rem, 4.5vw, 1.4rem) !important;
     }

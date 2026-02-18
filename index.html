@@ -605,122 +605,343 @@
             }
         }
 
-        /* Media Queries existantes inchangées */
-        @media (max-width: 768px) {
-            .nav-menu {
-                gap: var(--spacing-sm);
-            }
-
-            .nav-menu a {
-                padding: var(--spacing-xs) var(--spacing-sm);
-                font-size: 11px;
-            }
-
-            .immerse-content {
-                padding: 0 var(--spacing-md);
-            }
-        }
-
-        @media (max-width: 640px) {
-            .header-container {
-                padding: 0 var(--spacing-md);
-            }
-
-            .nav-menu {
-                flex-wrap: wrap;
-                gap: var(--spacing-xs);
-            }
-
-            .immerse-content {
-                padding: 0 var(--spacing-md);
-            }
-        }
-
         /* ========================================
-           CORRECTIONS RESPONSIVE URGENTES
+           RESPONSIVE MOBILE-FIRST REFONTE
            ======================================== */
 
-        /* CORRECTION POUR TABLETTES ET MOBILES PAYSAGE */
-        @media (max-width: 1024px) {
-            /* Header corrigé avec plus de hauteur pour les menus */
+        /* SMARTPHONES PORTRAIT (320-480px) */
+        @media (max-width: 480px) {
+            /* Curseur désactivé */
+            .cursor, .cursor-follower { display: none !important; }
+            * { cursor: auto !important; }
+            .side-nav { display: none; }
+
+            /* Header compact - burger style */
+            .top-nav {
+                padding: 6px 12px;
+                font-size: 10px;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .top-nav::-webkit-scrollbar { display: none; }
+            .top-nav a {
+                margin-left: 6px;
+                font-size: 10px;
+                padding: 8px 10px; /* Touch target 44px min */
+                white-space: nowrap;
+                min-height: 36px;
+                display: inline-flex;
+                align-items: center;
+            }
+
             .header-container {
                 height: auto;
-                min-height: 70px; /* Augmenté pour plus d'espace */
-                padding: 8px 10px 12px 10px; /* Plus d'espace en bas */
+                min-height: 52px;
+                padding: 6px 12px;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
             }
-            
+
             .logo {
                 position: relative;
                 left: auto;
                 top: auto;
-                height: 28px; /* Logo plus petit */
-                margin-bottom: 15px; /* Plus d'espace sous le logo */
-                order: 1;
+                height: 22px;
+                margin-bottom: 8px;
             }
-            
+
             .nav-menu {
-                width: 100%;
-                justify-content: center;
-                flex-wrap: wrap;
-                gap: 10px; /* Plus d'espace entre les éléments */
+                overflow-x: auto;
+                justify-content: flex-start;
+                padding: 0 4px;
                 margin: 0;
-                padding: 8px 0 4px 0; /* Plus d'espace vertical */
-                order: 2;
-                min-height: 35px; /* Hauteur minimum pour éviter les coupures */
+                width: 100%;
+                scrollbar-width: none;
+                gap: 0;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
             }
-            
+            .nav-menu::-webkit-scrollbar { display: none; }
             .nav-menu li {
-                margin: 3px 5px; /* Plus d'espace autour des éléments */
+                margin: 0 2px;
                 flex-shrink: 0;
             }
-            
             .nav-menu a {
-                font-size: 10px; /* Taille légèrement plus grande */
-                padding: 6px 10px; /* Plus de padding */
-                white-space: nowrap;
-                background: rgba(0, 0, 0, 0.1);
-                border-radius: 15px;
-                line-height: 1.2;
-            }
-
-            /* Top nav corrigé avec plus d'espace */
-            .top-nav {
-                padding: 6px 10px 8px 10px; /* Plus d'espace vertical */
                 font-size: 10px;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 8px; /* Plus d'espace entre les éléments */
-                min-height: 30px; /* Hauteur minimum */
-            }
-            
-            .top-nav a {
-                margin: 3px;
-                font-size: 10px; /* Taille légèrement plus grande */
-                padding: 4px 8px; /* Plus de padding */
-                border-radius: 10px;
-                background: rgba(255, 255, 255, 0.1);
-                line-height: 1.2;
+                padding: 8px 10px; /* Touch target >= 36px */
+                white-space: nowrap;
+                min-height: 36px;
+                display: inline-flex;
+                align-items: center;
+                border-radius: 12px;
+                background: rgba(0, 0, 0, 0.15);
             }
 
-            /* Contenu principal avec bouton plus bas */
+            /* Hero content */
             .immerse-content {
-                padding: 80px 3% 8% 3%; /* Plus d'espace en haut */
-                justify-content: space-between; /* Répartition verticale */
-                align-items: center;
+                padding: 48px 5% 5% 5%;
+                justify-content: center;
                 text-align: center;
-                height: calc(100vh - 100px); /* Prendre en compte la hauteur du header */
+                align-items: center;
+                height: calc(100dvh - 80px);
             }
-            
+
+            .immerse-title {
+                font-size: clamp(1.6rem, 10vw, 2.8rem);
+                line-height: 0.85;
+                text-align: center;
+                position: static;
+                margin-bottom: 12px;
+            }
+
+            .title-separator {
+                position: relative;
+                top: auto;
+                left: auto;
+                margin: 10px auto;
+                width: 40px;
+            }
+
+            .immerse-subtitle {
+                position: relative;
+                top: auto;
+                left: auto;
+                text-align: center;
+                font-size: clamp(0.85rem, 3.8vw, 1.1rem);
+                max-width: 95%;
+                margin: 12px auto 24px;
+                line-height: 1.5;
+            }
+
+            .explore-globe-btn {
+                position: relative;
+                padding: 14px 28px;
+                font-size: 14px;
+                letter-spacing: 0.5px;
+                margin: 24px auto 0;
+                min-height: 48px; /* Touch target */
+            }
+
+            /* Transition video safe on mobile */
+            .transition-video {
+                position: fixed;
+                width: 100%;
+                height: 100dvh;
+            }
+
+            @keyframes expandSeparator {
+                0% { width: 0; opacity: 0; }
+                50% { opacity: 1; }
+                100% { width: 60px; opacity: 1; }
+            }
+        }
+
+        /* SMARTPHONES PAYSAGE */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .immerse-content {
+                padding: 36px 5% 4% 5%;
+                justify-content: center;
+                height: 100dvh;
+            }
+            .immerse-title {
+                font-size: clamp(1.3rem, 6vw, 2.5rem);
+                line-height: 0.9;
+                margin-bottom: 8px;
+            }
+            .immerse-subtitle {
+                font-size: clamp(0.85rem, 2.5vw, 1.1rem);
+                margin: 8px auto 16px;
+            }
+            .title-separator { margin: 6px auto; }
+            .explore-globe-btn {
+                padding: 12px 24px;
+                font-size: 14px;
+                margin-top: 12px;
+                min-height: 44px;
+            }
+        }
+
+        /* MOBILES LARGES (481-768px) */
+        @media (min-width: 481px) and (max-width: 768px) {
+            .cursor, .cursor-follower { display: none !important; }
+            * { cursor: auto !important; }
+            .side-nav { display: none; }
+
+            .top-nav {
+                padding: 6px 12px;
+                font-size: 10px;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+            .top-nav a {
+                margin-left: 8px;
+                font-size: 10px;
+                padding: 8px 10px;
+                white-space: nowrap;
+                min-height: 36px;
+                display: inline-flex;
+                align-items: center;
+            }
+
+            .header-container {
+                height: auto;
+                min-height: 60px;
+                padding: 6px 12px;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .logo {
+                position: relative;
+                left: auto;
+                top: auto;
+                height: 28px;
+                margin-bottom: 8px;
+            }
+
+            .nav-menu {
+                overflow-x: auto;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 6px;
+                padding: 4px 0;
+                width: 100%;
+                scrollbar-width: none;
+            }
+            .nav-menu::-webkit-scrollbar { display: none; }
+            .nav-menu li { margin: 2px 4px; flex-shrink: 0; }
+            .nav-menu a {
+                font-size: 10px;
+                padding: 8px 12px;
+                white-space: nowrap;
+                min-height: 36px;
+                display: inline-flex;
+                align-items: center;
+                border-radius: 14px;
+                background: rgba(0, 0, 0, 0.1);
+            }
+
+            .immerse-content {
+                padding: 64px 5% 6% 5%;
+                justify-content: center;
+                text-align: center;
+                align-items: center;
+                height: calc(100dvh - 90px);
+            }
+
             .immerse-title {
                 font-size: clamp(1.8rem, 8vw, 3.5rem);
                 line-height: 0.85;
                 text-align: center;
+                position: static;
+                margin-bottom: 16px;
+            }
+
+            .title-separator {
+                position: relative;
+                top: auto;
+                left: auto;
+                margin: 12px auto;
+                width: 50px;
+            }
+
+            .immerse-subtitle {
+                position: relative;
+                top: auto;
+                left: auto;
+                text-align: center;
+                font-size: clamp(0.95rem, 3.5vw, 1.3rem);
+                max-width: 90%;
+                margin: 12px auto 32px;
+                line-height: 1.5;
+            }
+
+            .explore-globe-btn {
+                position: relative;
+                padding: 16px 32px;
+                font-size: 16px;
+                letter-spacing: 1px;
+                margin: 32px auto 0;
+                min-height: 48px;
+            }
+
+            @keyframes expandSeparator {
+                0% { width: 0; opacity: 0; }
+                50% { opacity: 1; }
+                100% { width: 80px; opacity: 1; }
+            }
+        }
+
+        /* TABLETTES (769-1024px) */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .top-nav {
+                padding: 8px 15px;
+                font-size: 11px;
+            }
+            .top-nav a { margin-left: 10px; }
+
+            .header-container {
+                padding: 0 15px;
+                height: auto;
+                min-height: 70px;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .logo {
+                position: relative;
+                left: auto;
+                top: auto;
+                height: 32px;
+                margin-bottom: 12px;
+            }
+
+            .nav-menu {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 6px 0;
+            }
+            .nav-menu li { margin: 3px 5px; flex-shrink: 0; }
+            .nav-menu a {
+                font-size: 10px;
+                padding: 8px 12px;
+                white-space: nowrap;
+                background: rgba(0, 0, 0, 0.1);
+                border-radius: 15px;
+                min-height: 36px;
+                display: inline-flex;
+                align-items: center;
+            }
+
+            .side-nav {
+                padding: var(--spacing-sm) var(--spacing-xs);
+            }
+            .side-nav li { margin: var(--spacing-sm) 0; }
+            .nav-link { font-size: 11px; }
+
+            .immerse-content {
+                padding: 80px 4% 8% 4%;
+                justify-content: space-between;
+                align-items: center;
+                text-align: center;
+                height: calc(100dvh - 100px);
+            }
+
+            .immerse-title {
+                font-size: clamp(2.2rem, 6vw, 4rem);
+                line-height: 0.85;
+                text-align: center;
+                position: static;
                 margin-bottom: 20px;
             }
-            
+
             .title-separator {
                 position: relative;
                 top: auto;
@@ -728,423 +949,24 @@
                 margin: 15px auto;
                 width: 60px;
             }
-            
+
             .immerse-subtitle {
                 position: relative;
                 top: auto;
                 left: auto;
                 text-align: center;
-                font-size: clamp(1rem, 3.5vw, 1.4rem);
-                max-width: 90%;
-                margin: 0 auto 40px auto; /* Plus d'espace avant le bouton */
+                font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+                max-width: 500px;
+                margin: 0 auto 40px;
                 line-height: 1.4;
             }
 
             .explore-globe-btn {
                 position: relative;
-                margin: 80px auto 60px; /* Bouton encore plus bas */
-                padding: 18px 36px;
-                font-size: 18px;
-                letter-spacing: 1px;
-            }
-        }
-
-        /* CORRECTIONS SPÉCIFIQUES MOBILES */
-        @media (max-width: 768px) {
-            .header-container {
-                height: auto;
-                min-height: 65px; /* Plus d'espace */
-                padding: 6px 8px 10px 8px;
-            }
-            
-            .logo {
-                height: 24px; /* Logo plus petit */
-                margin-bottom: 12px;
-            }
-            
-            .nav-menu {
-                min-height: 30px;
-                padding: 6px 0 3px 0;
-                gap: 8px;
-            }
-            
-            .nav-menu a {
-                font-size: 9px;
-                padding: 5px 8px;
-            }
-            
-            .top-nav {
-                padding: 5px 8px 6px 8px;
-                font-size: 9px;
-                min-height: 25px;
-                gap: 6px;
-            }
-            
-            .top-nav a {
-                font-size: 9px;
-                padding: 3px 6px;
-            }
-
-            .immerse-content {
-                padding: 70px 4% 6% 4%;
-                height: calc(100vh - 90px);
-            }
-            
-            .immerse-title {
-                font-size: clamp(1.5rem, 10vw, 3rem);
-                margin-bottom: 15px;
-            }
-            
-            .title-separator {
-                width: 50px;
-                margin: 12px auto;
-            }
-            
-            .immerse-subtitle {
-                font-size: clamp(0.9rem, 4vw, 1.2rem);
-                margin: 0 auto 35px auto;
-                max-width: 95%;
-            }
-
-            .explore-globe-btn {
-                padding: 16px 30px;
-                font-size: 16px;
-                margin: 70px auto 50px; /* Bouton plus bas */
-            }
-        }
-
-        /* CORRECTION POUR TRÈS PETITS ÉCRANS */
-        @media (max-width: 480px) {
-            .header-container {
-                min-height: 60px;
-                padding: 5px 6px 8px 6px;
-            }
-            
-            .logo {
-                height: 20px; /* Logo encore plus petit */
-                margin-bottom: 10px;
-            }
-            
-            .nav-menu {
-                min-height: 28px;
-                padding: 5px 0 2px 0;
-                gap: 6px;
-            }
-            
-            .nav-menu a {
-                font-size: 8px;
-                padding: 4px 6px;
-            }
-            
-            .top-nav {
-                padding: 4px 6px 5px 6px;
-                font-size: 8px;
-                min-height: 22px;
-                gap: 4px;
-            }
-            
-            .top-nav a {
-                font-size: 8px;
-                padding: 2px 4px;
-            }
-
-            .immerse-content {
-                padding: 60px 3% 5% 3%;
-                height: calc(100vh - 80px);
-            }
-            
-            .immerse-title {
-                font-size: clamp(1.3rem, 12vw, 2.5rem);
-                margin-bottom: 12px;
-            }
-            
-            .title-separator {
-                width: 40px;
-                margin: 10px auto;
-            }
-            
-            .immerse-subtitle {
-                font-size: clamp(0.8rem, 4.5vw, 1.1rem);
-                margin: 0 auto 30px auto;
-            }
-
-            .explore-globe-btn {
-                padding: 14px 26px;
-                font-size: 15px;
-                margin: 60px auto 40px; /* Bouton plus bas */
-            }
-        }
-
-        /* ========================================
-           NOUVELLES RÈGLES RESPONSIVE AJOUTÉES
-           ======================================== */
-
-        /* TABLETTES (768px - 1024px) */
-        @media (max-width: 1024px) and (min-width: 769px) {
-            .top-nav {
-                padding: 8px 15px;
-                font-size: 11px;
-            }
-            
-            .top-nav a {
-                margin-left: 10px;
-            }
-
-            .header-container {
-                padding: 0 15px;
-                height: 55px;
-            }
-            
-            .logo {
-                left: 15px;
-                top: 8px;
-                height: 38px;
-            }
-            
-            .nav-menu li {
-                margin: 0 8px;
-            }
-            
-            .nav-menu a {
-                font-size: 10px;
-                padding: 4px 0;
-            }
-
-            .immerse-content {
-                padding: 70px 4% 8% 4%;
-            }
-            
-            .immerse-title {
-                font-size: clamp(2.5rem, 7vw, 5rem);
-            }
-            
-            .immerse-subtitle {
-                font-size: clamp(1.1rem, 2vw, 1.5rem);
-                max-width: 500px;
-            }
-
-            .explore-globe-btn {
+                margin: 60px auto;
                 padding: 20px 36px;
                 font-size: 18px;
                 letter-spacing: 1.5px;
-            }
-
-            .side-nav {
-                padding: var(--spacing-sm) var(--spacing-xs);
-            }
-            
-            .side-nav li {
-                margin: var(--spacing-sm) 0;
-            }
-
-            .nav-link {
-                font-size: 11px;
-            }
-        }
-
-        /* MOBILES GÉNÉRAUX (max-width: 768px) */
-        @media (max-width: 768px) {
-            /* Curseur désactivé sur mobile */
-            .cursor,
-            .cursor-follower {
-                display: none !important;
-            }
-            
-            * {
-                cursor: auto !important;
-            }
-
-            .top-nav {
-                padding: 6px 10px;
-                font-size: 10px;
-                overflow-x: auto;
-                flex-wrap: nowrap;
-            }
-            
-            .top-nav a {
-                margin-left: 8px;
-                font-size: 10px;
-                white-space: nowrap;
-            }
-
-            .header-container {
-                padding: 0 10px;
-                height: 50px;
-                flex-direction: column;
-                justify-content: center;
-            }
-            
-            .logo {
-                position: relative;
-                left: auto;
-                top: auto;
-                height: 32px;
-                margin-bottom: 5px;
-            }
-            
-            .nav-menu {
-                overflow-x: auto;
-                justify-content: flex-start;
-                padding: 0 5px;
-                margin: 0;
-                width: auto;
-                max-width: 100%;
-                scrollbar-width: none;
-                -ms-overflow-style: none;
-                gap: 0;
-                flex-wrap: nowrap;
-            }
-            
-            .nav-menu::-webkit-scrollbar {
-                display: none;
-            }
-            
-            .nav-menu li {
-                margin: 0 6px;
-                flex-shrink: 0;
-            }
-            
-            .nav-menu a {
-                font-size: 9px;
-                padding: 3px 0;
-                white-space: nowrap;
-            }
-
-            .immerse-content {
-                padding: 60px 4% 6% 4%;
-                justify-content: center;
-                text-align: center;
-                align-items: center;
-            }
-            
-            .immerse-title {
-                font-size: clamp(2rem, 12vw, 4rem);
-                line-height: 0.85;
-                text-align: center;
-                position: static;
-            }
-            
-            .title-separator {
-                position: relative;
-                top: 16px;
-                margin: 0 auto;
-                left: auto;
-            }
-            
-            .immerse-subtitle {
-                position: relative;
-                top: 32px;
-                left: auto;
-                text-align: center;
-                font-size: clamp(1rem, 4vw, 1.3rem);
-                max-width: 90%;
-                margin: 0 auto;
-            }
-
-            .explore-globe-btn {
-                padding: 18px 32px;
-                font-size: 17px;
-                letter-spacing: 1px;
-                margin-top: 20px;
-            }
-
-            .side-nav {
-                display: none;
-            }
-
-            @keyframes expandSeparator {
-                0% {
-                    width: 0;
-                    opacity: 0;
-                }
-                50% {
-                    opacity: 1;
-                }
-                100% {
-                    width: 80px;
-                    opacity: 1;
-                }
-            }
-        }
-
-        /* PETITS MOBILES (max-width: 480px) */
-        @media (max-width: 480px) {
-            .top-nav {
-                padding: 4px 8px;
-                font-size: 9px;
-            }
-            
-            .top-nav a {
-                margin-left: 6px;
-                font-size: 9px;
-            }
-
-            .header-container {
-                height: 45px;
-                padding: 0 8px;
-            }
-            
-            .logo {
-                height: 28px;
-                margin-bottom: 3px;
-            }
-            
-            .nav-menu li {
-                margin: 0 4px;
-            }
-            
-            .nav-menu a {
-                font-size: 8px;
-                padding: 2px 0;
-            }
-
-            .immerse-content {
-                padding: 50px 3% 5% 3%;
-            }
-            
-            .immerse-title {
-                font-size: clamp(1.8rem, 14vw, 3.5rem);
-                line-height: 0.8;
-            }
-            
-            .immerse-subtitle {
-                font-size: clamp(0.9rem, 4.5vw, 1.2rem);
-                max-width: 95%;
-            }
-
-            .explore-globe-btn {
-                padding: 16px 28px;
-                font-size: 16px;
-                letter-spacing: 0.5px;
-                margin-top: 15px;
-            }
-        }
-
-        /* PAYSAGE MOBILE */
-        @media (max-width: 768px) and (orientation: landscape) {
-            .immerse-content {
-                padding: 40px 4% 4% 4%;
-                justify-content: center;
-            }
-            
-            .immerse-title {
-                font-size: clamp(1.5rem, 8vw, 3rem);
-                line-height: 0.9;
-            }
-            
-            .immerse-subtitle {
-                font-size: clamp(0.9rem, 3vw, 1.2rem);
-                top: 20px;
-            }
-
-            .title-separator {
-                top: 12px;
-            }
-
-            .explore-globe-btn {
-                padding: 14px 26px;
-                font-size: 15px;
-                margin-top: 10px;
             }
         }
 
@@ -1154,33 +976,37 @@
                 padding: 8px 40px;
                 font-size: 13px;
             }
-            
+
             .header-container {
                 padding: 0 40px;
                 height: 70px;
             }
-            
+
             .logo {
                 left: 40px;
                 top: 15px;
                 height: 45px;
             }
-            
-            .nav-menu li {
-                margin: 0 15px;
-            }
-            
-            .nav-menu a {
-                font-size: 12px;
-            }
-            
+
+            .nav-menu li { margin: 0 15px; }
+            .nav-menu a { font-size: 12px; }
+
             .immerse-content {
                 padding: 100px 6% 12% 6%;
             }
-            
+
             .explore-globe-btn {
                 padding: 24px 44px;
                 font-size: 21px;
+            }
+        }
+
+        /* REDUCED MOTION */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
             }
         }
         /* Écran de chargement - fondu au noir simple */
