@@ -111,12 +111,24 @@ export class GlobeManager {
             console.log('Max Texture Size:', gl.getParameter(gl.MAX_TEXTURE_SIZE));
             
             this.container.appendChild(this.renderer.domElement);
+
+            // Gérer la perte et restauration du contexte WebGL
+            const canvas = this.renderer.domElement;
+            canvas.addEventListener('webglcontextlost', (event) => {
+                event.preventDefault();
+                console.warn('⚠️ WebGL context lost - arrêt du rendu');
+                this._contextLost = true;
+            });
+            canvas.addEventListener('webglcontextrestored', () => {
+                console.log('✅ WebGL context restored - reprise du rendu');
+                this._contextLost = false;
+            });
         } catch (error) {
             console.error('Erreur lors de la création du renderer WebGL:', error);
             this.handleWebGLError();
             return;
         }
-        
+
         // L'arrière-plan étoilé sera créé via preloadAllAssets()
         this.skyboxLoaded = false;
 
@@ -318,7 +330,7 @@ export class GlobeManager {
             this.videoTexture = new THREE.VideoTexture(video);
             this.videoTexture.minFilter = THREE.LinearFilter;
             this.videoTexture.magFilter = THREE.LinearFilter;
-            this.videoTexture.format = THREE.RGBAFormat;
+            this.videoTexture.format = THREE.RGBFormat;
             this.videoTexture.colorSpace = THREE.SRGBColorSpace;
 
             const depthGeometry = new THREE.SphereGeometry(1.99, 64, 64);
@@ -442,17 +454,32 @@ export class GlobeManager {
                 skyTexturePath,
                 (texture) => {
                     if (!resolved) {
-                        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-                        this.renderer.toneMappingExposure = 0.6; // Augmenté de 0.3 à 0.6 pour plus de luminosité
+                        try {
+                            this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                            this.renderer.toneMappingExposure = 0.6;
 
-                        const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
-                        rt.fromEquirectangularTexture(this.renderer, texture);
-                        this.scene.background = rt.texture;
+                            // FIX: Limiter la résolution du cubemap pour éviter GL_OUT_OF_MEMORY
+                            // L'image originale fait 8192x4096 - utiliser la hauteur complète
+                            // créerait 6 faces de 4096x4096 = ~384 MB de VRAM
+                            const maxCubemapSize = this.isMobile ? 512 : 1024;
+                            const cubemapSize = Math.min(texture.image.height, maxCubemapSize);
+                            console.log(`📐 Cubemap: ${cubemapSize}px (image: ${texture.image.width}x${texture.image.height})`);
 
-                        // Fog plus légère pour voir davantage les étoiles
-                        this.scene.fog = new THREE.FogExp2(0x000011, 0.00005);
+                            const rt = new THREE.WebGLCubeRenderTarget(cubemapSize);
+                            rt.fromEquirectangularTexture(this.renderer, texture);
+                            this.scene.background = rt.texture;
 
-                        console.log('✅ Skybox chargée avec exposition améliorée');
+                            // Libérer la texture equirectangulaire originale (plus besoin après conversion)
+                            texture.dispose();
+
+                            // Fog plus légère pour voir davantage les étoiles
+                            this.scene.fog = new THREE.FogExp2(0x000011, 0.00005);
+
+                            console.log('✅ Skybox chargée avec exposition améliorée');
+                        } catch (error) {
+                            console.error('❌ Erreur création cubemap skybox:', error);
+                            this.scene.background = new THREE.Color(0x000011);
+                        }
                         resolved = true;
                         clearTimeout(timeout);
                         resolve();
@@ -1273,6 +1300,9 @@ export class GlobeManager {
 
    animate() {
        requestAnimationFrame(this.animate.bind(this));
+
+       // Ne pas rendre si le contexte WebGL est perdu
+       if (this._contextLost) return;
 
        const delta = this.clock.getDelta();
        const time = this.clock.getElapsedTime() * 1000;
