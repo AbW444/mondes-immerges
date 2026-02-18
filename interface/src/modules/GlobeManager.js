@@ -96,10 +96,8 @@ export class GlobeManager {
             });
             this.renderer.setSize(window.innerWidth, window.innerHeight);
             this.renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2)); // 1x sur mobile, 2x max desktop
-            this.renderer.shadowMap.enabled = !isMobile; // Pas de shadows sur mobile (très coûteux)
-            if (!isMobile) {
-                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            }
+            // Shadows désactivées - pas nécessaires pour le globe et consomment de la VRAM
+            this.renderer.shadowMap.enabled = false;
 
             // Stocker le flag mobile pour utilisation ultérieure
             this.isMobile = isMobile;
@@ -118,10 +116,13 @@ export class GlobeManager {
                 event.preventDefault();
                 console.warn('⚠️ WebGL context lost - arrêt du rendu');
                 this._contextLost = true;
+                // Arrêter le VideoManager pour éviter la boucle infinie de relances
+                videoManager.onContextLost();
             });
             canvas.addEventListener('webglcontextrestored', () => {
                 console.log('✅ WebGL context restored - reprise du rendu');
                 this._contextLost = false;
+                videoManager.onContextRestored();
             });
         } catch (error) {
             console.error('Erreur lors de la création du renderer WebGL:', error);
@@ -186,10 +187,7 @@ export class GlobeManager {
         
         const sunLight = new THREE.DirectionalLight(0xffffff, 1);
         sunLight.position.copy(this.celestialParams.sunPosition);
-        sunLight.castShadow = true;
-        
-        sunLight.shadow.mapSize.width = 2048;
-        sunLight.shadow.mapSize.height = 2048;
+        sunLight.castShadow = false;
         
         this.scene.add(sunLight);
         this.sunLight = sunLight;
@@ -333,7 +331,7 @@ export class GlobeManager {
             this.videoTexture.format = THREE.RGBFormat;
             this.videoTexture.colorSpace = THREE.SRGBColorSpace;
 
-            const depthGeometry = new THREE.SphereGeometry(1.99, 64, 64);
+            const depthGeometry = new THREE.SphereGeometry(1.99, 32, 32);
             const depthMaterial = new THREE.MeshBasicMaterial({
                 color: 0x000000,
                 transparent: true,
@@ -348,7 +346,7 @@ export class GlobeManager {
             this.scene.add(depthSphere);
             this.depthSphere = depthSphere;
 
-            const globeGeometry = new THREE.SphereGeometry(2, 64, 64);
+            const globeGeometry = new THREE.SphereGeometry(2, 32, 32);
 
             const globeMaterial = new THREE.MeshBasicMaterial({
                 map: this.videoTexture,
@@ -461,7 +459,9 @@ export class GlobeManager {
                             // FIX: Limiter la résolution du cubemap pour éviter GL_OUT_OF_MEMORY
                             // L'image originale fait 8192x4096 - utiliser la hauteur complète
                             // créerait 6 faces de 4096x4096 = ~384 MB de VRAM
-                            const maxCubemapSize = this.isMobile ? 512 : 1024;
+                            // Réduit à 512px max pour tous les devices car la vidéo texture
+                            // du globe consomme déjà beaucoup de VRAM
+                            const maxCubemapSize = this.isMobile ? 256 : 512;
                             const cubemapSize = Math.min(texture.image.height, maxCubemapSize);
                             console.log(`📐 Cubemap: ${cubemapSize}px (image: ${texture.image.width}x${texture.image.height})`);
 
@@ -1362,7 +1362,9 @@ export class GlobeManager {
            this.globe.material.uniforms.time.value = time;
        }
        
-       if (this.videoElement && this.videoElement.paused && !this.videoElement.ended) {
+       // Ne pas tenter de relancer la vidéo si le contexte WebGL est perdu
+       // (le VideoManager gère déjà la relance via onContextRestored)
+       if (this.videoElement && this.videoElement.paused && !this.videoElement.ended && !this._contextLost) {
            this.videoElement.play().catch(e => {
                console.error('Erreur lors de la reprise de la vidéo:', e);
            });

@@ -9,6 +9,29 @@ export class VideoManager {
         this.maxRetries = 5;
         this.checkInterval = null;
         this.isActive = true;
+        this._contextLost = false; // Flag WebGL context lost - stop all retries
+    }
+
+    /**
+     * Signal que le contexte WebGL est perdu - arrêter toute tentative de relance
+     */
+    onContextLost() {
+        this._contextLost = true;
+        this.stopMonitoring();
+        console.warn('🛑 VideoManager: WebGL context lost - arrêt de toutes les relances');
+    }
+
+    /**
+     * Signal que le contexte WebGL est restauré - reprendre la surveillance
+     */
+    onContextRestored() {
+        this._contextLost = false;
+        console.log('✅ VideoManager: WebGL context restored - reprise possible');
+        // Relancer les vidéos
+        this.videos.forEach((config, video) => {
+            this.playVideo(video, config);
+        });
+        this.startMonitoring(2000);
     }
 
     /**
@@ -74,10 +97,14 @@ export class VideoManager {
             // Ignorer si pause intentionnelle (via code)
             if (video.dataset.intentionalPause === 'true') return;
 
+            // CRITICAL: Ne pas relancer si WebGL context est perdu
+            // sinon boucle infinie pause->play->pause->play qui freeze le navigateur
+            if (this._contextLost) return;
+
             if (this.isActive) {
                 console.warn(`⚠️ VideoManager: "${config.name}" - Pause détectée, relance...`);
                 setTimeout(() => {
-                    if (this.isActive) {
+                    if (this.isActive && !this._contextLost) {
                         this.playVideo(video, config);
                     }
                 }, 100);
@@ -93,7 +120,7 @@ export class VideoManager {
 
             // Essayer de relancer après un court délai
             setTimeout(() => {
-                if (video.readyState >= 2 && this.isActive) { // HAVE_CURRENT_DATA ou plus
+                if (video.readyState >= 2 && this.isActive && !this._contextLost) {
                     this.playVideo(video, config);
                 }
             }, 500);
@@ -116,9 +143,9 @@ export class VideoManager {
                 config.onError(e);
             }
 
-            // Réessayer après un délai
+            // Réessayer après un délai (sauf si context WebGL perdu)
             const attempts = this.retryAttempts.get(video) || 0;
-            if (attempts < this.maxRetries && config.autoRetry && this.isActive) {
+            if (attempts < this.maxRetries && config.autoRetry && this.isActive && !this._contextLost) {
                 this.retryAttempts.set(video, attempts + 1);
                 console.log(`🔄 VideoManager: "${config.name}" - Tentative ${attempts + 1}/${this.maxRetries}`);
 
@@ -152,7 +179,7 @@ export class VideoManager {
      * @param {Object} config
      */
     playVideo(video, config) {
-        if (!video || !this.isActive) return;
+        if (!video || !this.isActive || this._contextLost) return;
 
         const playPromise = video.play();
 
@@ -191,7 +218,7 @@ export class VideoManager {
         console.log('🔍 VideoManager: Démarrage de la surveillance périodique');
 
         this.checkInterval = setInterval(() => {
-            if (!this.isActive) return;
+            if (!this.isActive || this._contextLost) return;
 
             this.videos.forEach((config, video) => {
                 // Vérifier si la vidéo devrait jouer mais est en pause
