@@ -1183,7 +1183,7 @@
                 font-size: 21px;
             }
         }
-        /* Écran de chargement noir */
+        /* Écran de chargement - fondu au noir simple */
         .loading-screen {
             position: fixed;
             top: 0;
@@ -1191,50 +1191,20 @@
             width: 100%;
             height: 100%;
             background: #000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
             z-index: 999999;
             opacity: 1;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.8s ease;
         }
 
         .loading-screen.hidden {
             opacity: 0;
             pointer-events: none;
         }
-
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 3px solid rgba(255, 206, 0, 0.2);
-            border-top: 3px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        .loading-text {
-            color: var(--text-color);
-            font-family: 'Geograph', sans-serif;
-            font-size: 14px;
-            margin-top: 20px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
-    <!-- Écran de chargement -->
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">Chargement...</div>
-    </div>
+    <!-- Fondu au noir -->
+    <div class="loading-screen" id="loadingScreen"></div>
 
     <!-- Curseur personnalisé -->
     <div class="cursor"></div>
