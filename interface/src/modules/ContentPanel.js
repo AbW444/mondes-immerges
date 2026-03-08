@@ -197,8 +197,12 @@ export class ContentPanel {
                 scrollbar-color: rgba(255, 204, 0, 0.7) rgba(0, 0, 0, 0.3);
             `;
             
-            // Ajouter des styles pour les scrollbars personnalisées
+            // PERF FIX: Add id to <style> to prevent duplicate injections on re-creation
+            if (document.getElementById('panel-scrollbar-style')) {
+                // Style already exists, skip
+            } else {
             const style = document.createElement('style');
+            style.id = 'panel-scrollbar-style';
             style.textContent = `
                 .panel-content::-webkit-scrollbar {
                     width: 6px;
@@ -219,8 +223,9 @@ export class ContentPanel {
                 }
             `;
             document.head.appendChild(style);
+            }
         }
-        
+
         // Améliorer le conteneur vidéo avec ombre portée et bordure
         const videoContainer = this.panel.querySelector('#video-container');
         if (videoContainer) {
@@ -332,8 +337,10 @@ export class ContentPanel {
             z-index: 101;
         `;
         
-        // Style pour la flèche améliorée
+        // PERF FIX: Add id to <style> to prevent duplicate injections
+        if (!document.getElementById('arrow-drawer-style')) {
         const style = document.createElement('style');
+        style.id = 'arrow-drawer-style';
         style.textContent = `
             .arrow {
                 width: 12px;
@@ -358,7 +365,8 @@ export class ContentPanel {
             }
         `;
         document.head.appendChild(style);
-        
+        }
+
         // Ajouter le bouton de toggle au panneau
         this.panel.appendChild(this.drawerToggle);
         

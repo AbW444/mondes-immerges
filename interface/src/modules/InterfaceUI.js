@@ -280,8 +280,10 @@ export class InterfaceUI {
                         font-size: 16px;
                     `;
                     
-                    // Ajouter un effet de hover
+                    // PERF FIX: Add id to <style> to prevent duplicate injections
+                    if (!document.getElementById('close-info-hover-style')) {
                     const closeInfoStyle = document.createElement('style');
+                    closeInfoStyle.id = 'close-info-hover-style';
                     closeInfoStyle.textContent = `
                         #close-info::before {
                             content: "";
@@ -305,6 +307,7 @@ export class InterfaceUI {
                         }
                     `;
                     document.head.appendChild(closeInfoStyle);
+                    }
                 }
             }
         }

@@ -501,8 +501,10 @@ function prepareEnvironment() {
         mainContainer.style.opacity = '0';
     }
 
-    // Style pour désactiver la sélection et le drag
+    // PERF FIX: Add id to <style> to prevent duplicate injections
+    if (document.getElementById('env-no-select-style')) return;
     const style = document.createElement('style');
+    style.id = 'env-no-select-style';
     style.textContent = `
         #main-container, #globe-container, canvas {
             user-select: none !important;
@@ -559,7 +561,11 @@ function cleanup() {
 
     APP_STATE.cleanupDone = true;
 
-    // Le nettoyage spécifique se fait dans les écouteurs individuels
+    // PERF FIX: Call app.destroy() to clean up all intervals, rAF loops, and listeners
+    const app = getAppInstance();
+    if (app && app.destroy) {
+        app.destroy();
+    }
 }
 
 // Point d'entrée principal - UN SEUL écouteur DOMContentLoaded
@@ -579,17 +585,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
 });
 
-// UN SEUL écouteur d'erreurs global
+// PERF FIX: Log errors instead of silently swallowing them — makes debugging possible
 window.addEventListener('error', (e) => {
     // Ignorer les erreurs de ressources externes
     if (e.target !== window && (e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT')) {
         return;
     }
+    console.warn('[MondesImmerges Error]', e.error || e.message);
 }, { once: false, capture: true });
 
-// UN SEUL écouteur pour les promesses rejetées
+// PERF FIX: Log unhandled rejections instead of swallowing them
 window.addEventListener('unhandledrejection', (e) => {
-    e.preventDefault();
+    console.warn('[MondesImmerges Rejection]', e.reason);
 }, { once: false });
 
 // Nettoyage avant déchargement

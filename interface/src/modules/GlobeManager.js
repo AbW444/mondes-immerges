@@ -23,6 +23,14 @@ export class GlobeManager {
         this.clock = new THREE.Clock();
         this.labelsVisible = false; // Flag pour contrôler l'apparition des labels
 
+        // PERF FIX: Pre-bind animate once to avoid creating a new function every frame
+        this.boundAnimate = this.animate.bind(this);
+        this.animationId = null;
+
+        // PERF FIX: Pre-allocate reusable objects for updateHotspotLabels (avoids ~720 allocations/sec)
+        this._tempDirection = new THREE.Vector3();
+        this._tempRaycaster = new THREE.Raycaster();
+
         // Paramètres pour l'orbite ellipsoïdale - ZOOM AUGMENTÉ
         this.orbitParams = {
             isOrbiting: true,
@@ -39,7 +47,10 @@ export class GlobeManager {
             maxZoomLevel: 2.0,      // Permet de dézoomer largement
             minZoomLevel: 0.8,      // Limite le zoom à x0.8 (pas plus proche)
             inHotspotMode: false,
-            orbitHistory: []
+            // PERF FIX: Pre-allocated circular buffer — avoids new Vector3() every frame
+            orbitHistory: Array.from({ length: 100 }, () => new THREE.Vector3()),
+            orbitHistoryIndex: 0,
+            orbitHistorySize: 0
         };
         
         this.celestialParams = {
@@ -527,11 +538,10 @@ export class GlobeManager {
         
         this.orbitParams.orbitAngle += this.orbitParams.currentSpeed;
         
-        this.orbitParams.orbitHistory.push(new THREE.Vector3(x, y, z));
-        
-        if (this.orbitParams.orbitHistory.length > 100) {
-            this.orbitParams.orbitHistory.shift();
-        }
+        // PERF FIX: Reuse pre-allocated Vector3 in circular buffer instead of allocating new ones
+        this.orbitParams.orbitHistory[this.orbitParams.orbitHistoryIndex].set(x, y, z);
+        this.orbitParams.orbitHistoryIndex = (this.orbitParams.orbitHistoryIndex + 1) % 100;
+        if (this.orbitParams.orbitHistorySize < 100) this.orbitParams.orbitHistorySize++;
     }
     
     _updateCameraPositionManual() {
@@ -1153,10 +1163,10 @@ export class GlobeManager {
                return;
            }
 
-           // Vérifier occlusion par le globe
-           const direction = new THREE.Vector3().subVectors(worldPos, this.camera.position).normalize();
-           const raycaster = new THREE.Raycaster(this.camera.position, direction);
-           const intersects = raycaster.intersectObject(this.globe);
+           // PERF FIX: Reuse pre-allocated Vector3 and Raycaster instead of creating new ones per hotspot per frame
+           this._tempDirection.subVectors(worldPos, this.camera.position).normalize();
+           this._tempRaycaster.set(this.camera.position, this._tempDirection);
+           const intersects = this._tempRaycaster.intersectObject(this.globe);
 
            if (intersects.length > 0) {
                const distToIntersection = intersects[0].distance;
@@ -1239,7 +1249,8 @@ export class GlobeManager {
    }
 
    animate() {
-       requestAnimationFrame(this.animate.bind(this));
+       // PERF FIX: Use pre-bound function and store ID for cancelAnimationFrame in destroy()
+       this.animationId = requestAnimationFrame(this.boundAnimate);
 
        // Ne pas rendre si le contexte WebGL est perdu
        if (this._contextLost) return;
@@ -1303,7 +1314,45 @@ export class GlobeManager {
        }
        
        // Video playback is managed exclusively by VideoManager - no retry here
-       
+
        this.renderer.render(this.scene, this.camera);
+   }
+
+   // PERF FIX: Stop the rAF loop
+   stopAnimation() {
+       if (this.animationId) {
+           cancelAnimationFrame(this.animationId);
+           this.animationId = null;
+       }
+   }
+
+   // PERF FIX: Full cleanup — stop animation loop and dispose Three.js resources
+   destroy() {
+       this.stopAnimation();
+
+       // Dispose all Three.js objects to free GPU memory
+       if (this.scene) {
+           this.scene.traverse((obj) => {
+               if (obj.geometry) obj.geometry.dispose();
+               if (obj.material) {
+                   if (Array.isArray(obj.material)) {
+                       obj.material.forEach(m => m.dispose());
+                   } else {
+                       obj.material.dispose();
+                   }
+               }
+           });
+       }
+
+       if (this.videoTexture) {
+           this.videoTexture.dispose();
+           this.videoTexture = null;
+       }
+
+       if (this.renderer) {
+           this.renderer.dispose();
+           this.renderer.forceContextLoss();
+           this.renderer = null;
+       }
    }
 }

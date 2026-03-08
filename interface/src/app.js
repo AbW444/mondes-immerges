@@ -276,8 +276,8 @@ class MondesImmergesApp {
         const currentDateElement = document.getElementById('current-date');
         const currentTimeElement = document.getElementById('current-time');
         
-        // Mise à jour en temps réel
-        setInterval(() => {
+        // PERF FIX: Store interval ID for cleanup in destroy()
+        this.hudInterval = setInterval(() => {
             // Mettre à jour l'heure et la date
             const now = new Date();
             
@@ -409,12 +409,15 @@ class MondesImmergesApp {
         // Mettre à jour l'état actuel
         this.currentHotspot = hotspot;
         
-        // Ajouter à l'historique d'exploration
+        // PERF FIX: Limit exploration history to 50 entries to prevent unbounded growth
         this.explorationHistory.push({
             id: hotspot.id,
             title: hotspot.title,
             timestamp: Date.now()
         });
+        if (this.explorationHistory.length > 50) {
+            this.explorationHistory.shift();
+        }
         
         // Appliquer des effets visuels pour mettre en évidence la sélection
         this.visualEffects.highlightSelection(hotspot.position);
@@ -542,6 +545,20 @@ class MondesImmergesApp {
         `;
     }
     
+    // PERF FIX: Centralized cleanup to stop all intervals, listeners, and sub-module resources
+    destroy() {
+        if (this.hudInterval) {
+            clearInterval(this.hudInterval);
+            this.hudInterval = null;
+        }
+        if (this.globeManager && this.globeManager.destroy) {
+            this.globeManager.destroy();
+        }
+        if (this.visualEffects && this.visualEffects.destroy) {
+            this.visualEffects.destroy();
+        }
+    }
+
     /**
      * Gère la sortie du mode hotspot
      */

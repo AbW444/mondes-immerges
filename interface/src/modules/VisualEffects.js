@@ -13,7 +13,10 @@ export class VisualEffects {
         this.container = options.container;
         this.effectsContainer = null;
         this.notificationContainer = null;
-        
+        // PERF FIX: Track particle tweens for cleanup
+        this.particleTweens = [];
+        this.particlesContainer = null;
+
         this.init();
     }
     
@@ -247,8 +250,11 @@ export class VisualEffects {
         // Ajouter les éléments au DOM
         loaderContainer.appendChild(orbitalLoader);
         
-        // Ajouter le style des animations
+        // PERF FIX: Add id to <style> to prevent duplicate injections
+        const existingOrbitalStyle = document.getElementById('orbital-loader-style');
+        if (existingOrbitalStyle) existingOrbitalStyle.remove();
         const styleEl = document.createElement('style');
+        styleEl.id = 'orbital-loader-style';
         styleEl.textContent = `
             @keyframes orbit0 {
                 0% { transform: rotate(0deg); }
@@ -686,8 +692,8 @@ export class VisualEffects {
                 box-shadow: 0 0 ${size * 2}px rgba(255, 255, 255, ${opacity * 0.8});
             `;
             
-            // Animer la particule
-            gsap.to(particle, {
+            // PERF FIX: Store tween reference for cleanup in destroy()
+            const tween = gsap.to(particle, {
                 y: `${Math.random() * 20 - 10}%`,
                 x: `${Math.random() * 20 - 10}%`,
                 opacity: Math.random() * 0.5 + 0.1,
@@ -697,10 +703,22 @@ export class VisualEffects {
                 yoyo: true,
                 ease: "sine.inOut"
             });
-            
+            this.particleTweens.push(tween);
+
             particlesContainer.appendChild(particle);
         }
-        
+
+        this.particlesContainer = particlesContainer;
         config.container.appendChild(particlesContainer);
+    }
+
+    // PERF FIX: Kill all infinite GSAP tweens and remove particle DOM nodes
+    destroy() {
+        this.particleTweens.forEach(t => t.kill());
+        this.particleTweens = [];
+        if (this.particlesContainer) {
+            this.particlesContainer.remove();
+            this.particlesContainer = null;
+        }
     }
 }
