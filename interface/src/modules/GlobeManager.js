@@ -1302,12 +1302,14 @@ export class GlobeManager {
            this.globe.material.uniforms.time.value = time;
        }
        
-       // Ne pas tenter de relancer la vidéo si le contexte WebGL est perdu
-       // (le VideoManager gère déjà la relance via onContextRestored)
+       // Relance vidéo avec cooldown pour éviter le spam de play() qui freeze le navigateur
+       // Le VideoManager surveille déjà toutes les 2s, ici on vérifie seulement toutes les 3s
        if (this.videoElement && this.videoElement.paused && !this.videoElement.ended && !this._contextLost) {
-           this.videoElement.play().catch(e => {
-               /* Production: error silenced */
-           });
+           const now = performance.now();
+           if (!this._lastVideoRetry || now - this._lastVideoRetry > 3000) {
+               this._lastVideoRetry = now;
+               this.videoElement.play().catch(() => {});
+           }
        }
        
        this.renderer.render(this.scene, this.camera);

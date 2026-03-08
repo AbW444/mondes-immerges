@@ -10,6 +10,8 @@ export class VideoManager {
         this.checkInterval = null;
         this.isActive = true;
         this._contextLost = false; // Flag WebGL context lost - stop all retries
+        this._lastPlayAttempt = new Map(); // Cooldown pour éviter le spam de play()
+        this._playInProgress = new Map(); // Flag pour éviter les play() simultanés
     }
 
     /**
@@ -83,39 +85,42 @@ export class VideoManager {
             }
         });
 
-        // Gestion des pauses non désirées
+        // Gestion des pauses non désirées - avec cooldown pour éviter le spam
         video.addEventListener('pause', () => {
-            // Ignorer si la vidéo est à la fin (normal)
             if (video.ended) return;
-
-            // Ignorer si pause intentionnelle (via code)
             if (video.dataset.intentionalPause === 'true') return;
-
-            // CRITICAL: Ne pas relancer si WebGL context est perdu
-            // sinon boucle infinie pause->play->pause->play qui freeze le navigateur
             if (this._contextLost) return;
 
             if (this.isActive) {
+                // Cooldown de 1s minimum entre deux tentatives de relance sur pause
+                const now = performance.now();
+                const lastAttempt = this._lastPlayAttempt.get(video) || 0;
+                if (now - lastAttempt < 1000) return;
+
                 setTimeout(() => {
                     if (this.isActive && !this._contextLost) {
                         this.playVideo(video, config);
                     }
-                }, 100);
+                }, 500);
             }
         });
 
-        // Gestion du stalling (buffering)
+        // Gestion du stalling (buffering) - avec cooldown
         video.addEventListener('stalled', () => {
             if (config.onStall) {
                 config.onStall(video);
             }
 
-            // Essayer de relancer après un court délai
+            // Essayer de relancer après un délai, mais pas si on vient déjà de tenter
             setTimeout(() => {
+                const now = performance.now();
+                const lastAttempt = this._lastPlayAttempt.get(video) || 0;
+                if (now - lastAttempt < 2000) return;
+
                 if (video.readyState >= 2 && this.isActive && !this._contextLost) {
                     this.playVideo(video, config);
                 }
-            }, 500);
+            }, 1000);
         });
 
         // Gestion du waiting (attente de données)
@@ -170,17 +175,27 @@ export class VideoManager {
     playVideo(video, config) {
         if (!video || !this.isActive || this._contextLost) return;
 
+        // Éviter les play() simultanés sur la même vidéo (cause de freeze)
+        if (this._playInProgress.get(video)) return;
+
+        // Cooldown global par vidéo
+        const now = performance.now();
+        const lastAttempt = this._lastPlayAttempt.get(video) || 0;
+        if (now - lastAttempt < 500) return;
+
+        this._lastPlayAttempt.set(video, now);
+        this._playInProgress.set(video, true);
+
         const playPromise = video.play();
 
         if (playPromise !== undefined) {
             playPromise
                 .then(() => {
-                    /* Production: play success silenced */
+                    this._playInProgress.set(video, false);
                 })
                 .catch(error => {
-                    // Si c'est un problème d'interaction utilisateur (autoplay bloqué)
+                    this._playInProgress.set(video, false);
                     if (error.name === 'NotAllowedError') {
-                        // Essayer de rejouer au premier clic utilisateur
                         const retryOnClick = () => {
                             this.playVideo(video, config);
                             document.removeEventListener('click', retryOnClick);
@@ -188,13 +203,15 @@ export class VideoManager {
                         document.addEventListener('click', retryOnClick, { once: true });
                     }
                 });
+        } else {
+            this._playInProgress.set(video, false);
         }
     }
 
     /**
      * Démarre la surveillance périodique de toutes les vidéos
      */
-    startMonitoring(interval = 2000) {
+    startMonitoring(interval = 3000) {
         if (this.checkInterval) {
             return;
         }
@@ -204,13 +221,9 @@ export class VideoManager {
 
             this.videos.forEach((config, video) => {
                 // Vérifier si la vidéo devrait jouer mais est en pause
+                // playVideo() gère déjà le cooldown et la protection contre le spam
                 if (video.paused && !video.ended && config.shouldLoop) {
                     this.playVideo(video, config);
-                }
-
-                // Vérifier le buffering
-                if (video.readyState < 3 && !video.paused) { // HAVE_FUTURE_DATA ou moins
-                    /* Production: buffering silenced */
                 }
             });
         }, interval);
