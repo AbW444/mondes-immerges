@@ -285,7 +285,7 @@ h2 {
   height: 100%;
   /* Transparent pour laisser voir le fond d'étoiles du main-container */
   background: transparent;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 /* Le canvas Three.js doit aussi être transparent */
