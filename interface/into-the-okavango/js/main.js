@@ -138,45 +138,43 @@ function startGlobeVideoImmediately() {
         globeVideo.loop = true;
         globeVideo.playsInline = true;
         globeVideo.autoplay = true;
-        
+
         // Révéler la vidéo progressivement avec filtres Okavango
         globeVideo.style.opacity = '0';
         globeVideo.style.transition = 'opacity 1.5s ease';
         globeVideo.style.filter = 'brightness(0.7) contrast(1.1) hue-rotate(10deg)';
-        
-        const playVideo = async function() {
+
+        // Protection contre les play() simultanés
+        let playInProgress = false;
+        let lastPlayAttempt = 0;
+
+        const safePlay = async function() {
+            if (playInProgress) return;
+            const now = performance.now();
+            if (now - lastPlayAttempt < 1000) return;
+            lastPlayAttempt = now;
+            playInProgress = true;
             try {
                 await globeVideo.play();
-                // Révéler la vidéo après le début de lecture
-                setTimeout(() => {
-                    globeVideo.style.opacity = '1';
-                }, 500);
-                
-            } catch (error) {
-                setTimeout(async () => {
-                    try {
-                        await globeVideo.play();
-                        globeVideo.style.opacity = '1';
-                    } catch (e) {
-                        /* Production: error silenced */
-                    }
-                }, 1000);
+                setTimeout(() => { globeVideo.style.opacity = '1'; }, 500);
+            } catch (e) {
+                /* Autoplay may be blocked - will retry on user interaction */
             }
+            playInProgress = false;
         };
-        
-        // Lancer immédiatement
+
         if (globeVideo.readyState >= 2) {
-            playVideo();
+            safePlay();
         } else {
-            globeVideo.addEventListener('canplay', playVideo, { once: true });
+            globeVideo.addEventListener('canplay', safePlay, { once: true });
         }
-        
-        // Surveillance continue
+
+        // Surveillance avec cooldown raisonnable (5s)
         setInterval(() => {
-            if (globeVideo.paused && !document.body.classList.contains('loading')) {
-                globeVideo.play().catch(e => { /* Production: error silenced */ });
+            if (globeVideo.paused && !globeVideo.ended && !document.body.classList.contains('loading')) {
+                safePlay();
             }
-        }, 3000);
+        }, 5000);
     }
 }
 
@@ -672,70 +670,75 @@ function fixVideos() {
         globeVideo.loop = true;
         globeVideo.playsInline = true;
         globeVideo.style.opacity = '0';
-        
+
+        // Protection contre les play() simultanés
+        let playInProgress = false;
+        let lastPlayAttempt = 0;
+
+        const safePlay = async function() {
+            if (playInProgress) return;
+            const now = performance.now();
+            if (now - lastPlayAttempt < 1000) return;
+            lastPlayAttempt = now;
+            playInProgress = true;
+            try {
+                await globeVideo.play();
+            } catch (e) { /* will retry later */ }
+            playInProgress = false;
+        };
+
         function startGlobeVideo() {
             globeVideo.style.opacity = '1';
             globeVideo.style.transition = 'opacity 1s ease';
             globeVideo.style.filter = 'brightness(0.7) contrast(1.1) hue-rotate(10deg)';
             globeVideo.load();
-            
-            const playVideo = async function() {
-                try {
-                    globeVideo.currentTime = 0;
-                    await globeVideo.play();
-                } catch (error) {
-                    setTimeout(async () => {
-                        try {
-                            await globeVideo.play();
-                        } catch (e) {
-                            /* Production: error silenced */
-                        }
-                    }, 1000);
-                }
-            };
-            
-            playVideo();
-            
-            // Surveillance continue
+
+            globeVideo.addEventListener('canplay', function() {
+                safePlay();
+            }, { once: true });
+
+            // Surveillance avec cooldown (5s)
             setInterval(() => {
                 if (globeVideo.paused || globeVideo.ended) {
                     globeVideo.currentTime = 0;
-                    globeVideo.play().catch(e => {
-                        globeVideo.load();
-                        setTimeout(() => {
-                            globeVideo.play().catch(err => { /* Production: error silenced */ });
-                        }, 1000);
-                    });
+                    safePlay();
                 }
             }, 5000);
         }
-        
+
         window.startGlobeVideoAfterLoading = startGlobeVideo;
-        
-        // Gestionnaires d'événements
+
+        // Gestionnaires d'événements avec protection anti-spam
         globeVideo.addEventListener('ended', function() {
             this.currentTime = 0;
-            this.play();
+            safePlay();
         });
-        
+
+        // Pause non désirée : relancer avec cooldown
         globeVideo.addEventListener('pause', function() {
-            this.play();
+            if (globeVideo.ended || globeVideo.dataset.intentionalPause === 'true') return;
+            setTimeout(() => safePlay(), 500);
         });
-        
+
+        // Stalled : attendre que les données soient disponibles
         globeVideo.addEventListener('stalled', function() {
-            this.load();
             setTimeout(() => {
-                this.play();
-            }, 1000);
-        });
-        
-        globeVideo.addEventListener('error', function(e) {
-            setTimeout(() => {
-                this.load();
-                this.play();
+                if (globeVideo.readyState >= 2) safePlay();
             }, 2000);
         });
-        
+
+        // Erreur : recharger avec délai
+        let errorRetries = 0;
+        globeVideo.addEventListener('error', function() {
+            if (errorRetries >= 3) return;
+            errorRetries++;
+            setTimeout(() => {
+                globeVideo.load();
+                globeVideo.addEventListener('canplay', function() {
+                    safePlay();
+                }, { once: true });
+            }, 2000 * errorRetries);
+        });
     }
     
     // Vidéo du documentaire - Adaptée tactile avec contrôles intelligents
