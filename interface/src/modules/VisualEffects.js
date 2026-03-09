@@ -164,8 +164,7 @@ export class VisualEffects {
                 justify-content: center;
                 align-items: center;
                 z-index: 50;
-                background-color: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(5px);
+                background-color: rgba(0, 0, 0, 0.7); /* PERF FIX: removed backdrop-filter fullscreen */
             `;
         }
         
@@ -529,8 +528,7 @@ export class VisualEffects {
             pointer-events: all;
             transform: translateX(50px);
             opacity: 0;
-            border-left: 3px solid ${color};
-            backdrop-filter: blur(5px);
+            border-left: 3px solid ${color}; /* PERF FIX: removed backdrop-filter fullscreen */
         `;
         
         // Styles pour les éléments internes

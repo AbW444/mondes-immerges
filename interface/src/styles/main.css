@@ -668,9 +668,8 @@ h2 {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  /* PERF FIX: removed backdrop-filter fullscreen — replaced with opaque background */
+  background-color: rgba(0, 5, 15, 0.92);
   display: flex;
   justify-content: center;
   align-items: center;
