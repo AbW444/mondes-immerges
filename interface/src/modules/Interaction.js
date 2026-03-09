@@ -297,7 +297,7 @@ export class Interaction {
     }
     
     /**
-     * Gère le défilement de la molette pour zoomer/dézoomer la caméra
+     * Gère le défilement de la molette pour déplacer la caméra en orbite
      * @param {WheelEvent} event - Événement de défilement
      */
     handleMouseWheel(event) {
@@ -309,9 +309,27 @@ export class Interaction {
         // Réinitialiser la détection d'inactivité
         this.resetInterfaceAutoHide();
 
-        // Zoom : scroll vers le haut = zoom in, scroll vers le bas = zoom out
-        const zoomIn = event.deltaY < 0;
-        this.globeManager.zoom(zoomIn);
+        // Normaliser le delta (différents navigateurs/OS renvoient des valeurs très différentes)
+        let delta = event.deltaY;
+        if (event.deltaMode === 1) delta *= 40;   // lignes → pixels
+        if (event.deltaMode === 2) delta *= 800;  // pages → pixels
+
+        // Scroll vertical → rotation orbitale horizontale
+        this.globeManager.orbitParams.orbitAngle += delta * 0.0008;
+
+        // Scroll horizontal (shift+scroll ou trackpad) → inclinaison verticale
+        if (event.deltaX !== 0) {
+            let deltaX = event.deltaX;
+            if (event.deltaMode === 1) deltaX *= 40;
+            if (event.deltaMode === 2) deltaX *= 800;
+
+            const newInclination = this.globeManager.orbitParams.inclination - deltaX * 0.0005;
+            this.globeManager.orbitParams.inclination = Math.max(0.1, Math.min(Math.PI / 3, newInclination));
+        }
+
+        if (typeof this.globeManager._updateCameraPositionManual === 'function') {
+            this.globeManager._updateCameraPositionManual();
+        }
     }
     
     /**
