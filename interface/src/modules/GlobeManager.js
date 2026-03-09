@@ -49,6 +49,9 @@ export class GlobeManager {
 
         this._savedState = null;
 
+        // Binding unique pour animate (évite de recréer le binding à chaque frame)
+        this._boundAnimate = this.animate.bind(this);
+
         // Chemins des vidéos du globe
         this.currentVideoPath = `${import.meta.env.BASE_URL}videos/globe-video.webm`;
         this.aberrationVideoPath = `${import.meta.env.BASE_URL}videos/globe-video-aberration.webm`;
@@ -253,10 +256,13 @@ export class GlobeManager {
             video.src = this.currentVideoPath;
             video.loop = true;
             video.muted = true;
-            video.autoplay = false; // Désactiver autoplay pour contrôler le préchargement
+            video.autoplay = false;
             video.playsInline = true;
             video.crossOrigin = 'anonymous';
-            video.preload = 'auto'; // Forcer le préchargement complet
+            video.preload = 'auto';
+            video.setAttribute('fetchpriority', 'high');
+            // Désactiver le buffering adaptatif qui cause des saccades
+            video.disableRemotePlayback = true;
             this.videoElement = video;
 
             let resolved = false;
@@ -490,7 +496,7 @@ export class GlobeManager {
             }
 
             // Démarrer la surveillance du VideoManager
-            videoManager.startMonitoring(2000);
+            videoManager.startMonitoring(10000);
         }).catch((error) => {
             // Continuer quand même pour ne pas bloquer l'application
             if (this.videoElement) {
@@ -500,7 +506,7 @@ export class GlobeManager {
             }
 
             // Démarrer la surveillance même en cas d'erreur
-            videoManager.startMonitoring(2000);
+            videoManager.startMonitoring(10000);
         });
     }
     
@@ -1239,48 +1245,41 @@ export class GlobeManager {
    }
 
    animate() {
-       requestAnimationFrame(this.animate.bind(this));
+       requestAnimationFrame(this._boundAnimate);
 
        // Ne pas rendre si le contexte WebGL est perdu
        if (this._contextLost) return;
 
        const delta = this.clock.getDelta();
        const time = this.clock.getElapsedTime() * 1000;
-       
+
        if (this.orbitParams.isOrbiting && !this.orbitParams.inHotspotMode) {
            this.updateCameraPosition();
        }
-       
+
        if (this.updateSkyboxTime) {
            this.updateSkyboxTime(time);
        }
 
-       // Animer les ondes des hotspots (sprites)
+       // Animer les ondes des hotspots via scale (pas de recréation de géométrie)
        this.hotspotObjects.forEach(hotspot => {
            const waveRings = hotspot.userData.waveRings;
            if (waveRings) {
                waveRings.forEach(wave => {
-                   // Incrémenter le temps de vague
                    wave.userData.waveTime += delta;
 
-                   // Temps relatif avec délai initial
                    const relativeTime = wave.userData.waveTime - wave.userData.initialDelay;
 
                    if (relativeTime > 0) {
-                       // Durée d'une vague complète
                        const waveDuration = 2.5;
                        const progress = (relativeTime % waveDuration) / waveDuration;
 
-                       // Expansion de l'anneau
-                       const minRadius = 0.05;
-                       const maxRadius = 0.18;
-                       const currentRadius = minRadius + (maxRadius - minRadius) * progress;
+                       // Animer via scale au lieu de recréer la géométrie
+                       const minScale = 0.5;
+                       const maxScale = 1.8;
+                       const currentScale = minScale + (maxScale - minScale) * progress;
+                       wave.scale.set(currentScale, currentScale, 1);
 
-                       // Recréer la géométrie avec le nouveau rayon
-                       wave.geometry.dispose();
-                       wave.geometry = new THREE.RingGeometry(currentRadius, currentRadius + 0.02, 32);
-
-                       // Opacité qui diminue avec l'expansion
                        wave.material.opacity = 0.7 * (1 - progress);
                    }
                });
@@ -1289,21 +1288,21 @@ export class GlobeManager {
 
        // Mettre à jour les labels et connector lines (méthode optimisée)
        this.updateHotspotLabels();
-       
+
        if (this.clouds) {
            this.clouds.rotation.y += 0.0001;
        }
-       
+
        if (this.globe && !this.orbitParams.inHotspotMode) {
            this.globe.rotation.y += 0.0002;
        }
-       
+
        if (this.globe && this.globe.material.uniforms && this.globe.material.uniforms.time) {
            this.globe.material.uniforms.time.value = time;
        }
-       
+
        // Video playback is managed exclusively by VideoManager - no retry here
-       
+
        this.renderer.render(this.scene, this.camera);
    }
 }

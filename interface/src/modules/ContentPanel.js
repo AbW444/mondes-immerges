@@ -546,6 +546,7 @@ export class ContentPanel {
         // Mettre à jour la vidéo
         if (this.videoElement && content.videoSrc) {
             this.videoElement.style.display = 'block';
+            this.videoElement.preload = 'auto';
             if (this.videoElement.querySelector('source')) {
                 this.videoElement.querySelector('source').src = content.videoSrc;
             } else {
@@ -554,8 +555,9 @@ export class ContentPanel {
                 source.type = 'video/mp4';
                 this.videoElement.appendChild(source);
             }
-            
-            // Recharger la vidéo
+
+            // Masquer pendant le chargement pour éviter l'affichage saccadé
+            this.videoElement.style.opacity = '0';
             this.videoElement.load();
         } else if (this.videoElement) {
             this.videoElement.style.display = 'none';
