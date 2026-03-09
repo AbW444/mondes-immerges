@@ -585,15 +585,20 @@ window.addEventListener('error', (e) => {
     if (e.target !== window && (e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT')) {
         return;
     }
+    console.warn('[MondesImmerges]', e.error);
 }, { once: false, capture: true });
 
 // UN SEUL écouteur pour les promesses rejetées
 window.addEventListener('unhandledrejection', (e) => {
-    e.preventDefault();
+    console.warn('[MondesImmerges]', e.reason);
 }, { once: false });
 
 // Nettoyage avant déchargement
-window.addEventListener('beforeunload', cleanup, { once: true });
+window.addEventListener('beforeunload', () => {
+    cleanup();
+    const app = getAppInstance();
+    if (app) app.destroy();
+}, { once: true });
 
 // Corriger le bug de retour depuis les pages collection
 // Recharger la page si elle vient du cache (bouton retour)

@@ -277,7 +277,7 @@ class MondesImmergesApp {
         const currentTimeElement = document.getElementById('current-time');
         
         // Mise à jour en temps réel
-        setInterval(() => {
+        this.hudInterval = setInterval(() => {
             // Mettre à jour l'heure et la date
             const now = new Date();
             
@@ -401,6 +401,16 @@ class MondesImmergesApp {
         // Vous pouvez implémenter cette fonction selon vos besoins
     }
     
+    /**
+     * Nettoie les ressources de l'application
+     */
+    destroy() {
+        if (this.hudInterval) {
+            clearInterval(this.hudInterval);
+            this.hudInterval = null;
+        }
+    }
+
     /**
      * Gère la sélection d'un point d'intérêt
      * @param {Object} hotspot - Le point d'intérêt sélectionné

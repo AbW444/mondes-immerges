@@ -382,7 +382,7 @@ export class ContentPanel {
             color: white;
             display: none;
             border-top: 1px solid rgba(255, 204, 0, 0.7);
-            backdrop-filter: blur(10px);
+            background: rgba(2, 8, 20, 0.95);
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 204, 0, 0.7) rgba(0, 0, 0, 0.3);
         `;

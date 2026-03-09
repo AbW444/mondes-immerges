@@ -1695,22 +1695,4 @@ window.addEventListener('load', function() {
     }
 });
 
-// REDIRECTION TOUCHE ENTRÉE - Redirection vers la page collection
-document.addEventListener('keydown', function(e) {
-    // Vérifier si c'est la touche Entrée (keyCode 13 ou key === 'Enter')
-    if (e.key === 'Enter' || e.keyCode === 13) {
-        // Empêcher le comportement par défaut
-        e.preventDefault();
-        
-        // Afficher le loader pour une transition fluide
-        if (typeof showGlobalLoader === 'function') {
-            showGlobalLoader();
-        }
-        
-        // Redirection immédiate vers votre page collection
-        setTimeout(() => {
-            window.location.href = '../into-the-okavango/';
-        }, 200);
-    }
-});
 

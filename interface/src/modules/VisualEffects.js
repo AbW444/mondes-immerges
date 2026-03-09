@@ -13,7 +13,8 @@ export class VisualEffects {
         this.container = options.container;
         this.effectsContainer = null;
         this.notificationContainer = null;
-        
+        this.particleTweens = [];
+
         this.init();
     }
     
@@ -162,7 +163,6 @@ export class VisualEffects {
                 align-items: center;
                 z-index: 50;
                 background-color: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(5px);
             `;
         }
         
@@ -524,7 +524,6 @@ export class VisualEffects {
             transform: translateX(50px);
             opacity: 0;
             border-left: 3px solid ${color};
-            backdrop-filter: blur(5px);
         `;
         
         // Styles pour les éléments internes
@@ -687,7 +686,7 @@ export class VisualEffects {
             `;
             
             // Animer la particule
-            gsap.to(particle, {
+            const tween = gsap.to(particle, {
                 y: `${Math.random() * 20 - 10}%`,
                 x: `${Math.random() * 20 - 10}%`,
                 opacity: Math.random() * 0.5 + 0.1,
@@ -697,10 +696,19 @@ export class VisualEffects {
                 yoyo: true,
                 ease: "sine.inOut"
             });
-            
+            this.particleTweens.push(tween);
+
             particlesContainer.appendChild(particle);
         }
         
         config.container.appendChild(particlesContainer);
+    }
+
+    /**
+     * Nettoie les ressources (tweens de particules)
+     */
+    destroy() {
+        this.particleTweens.forEach(t => t.kill());
+        this.particleTweens = [];
     }
 }
