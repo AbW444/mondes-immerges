@@ -8,15 +8,10 @@ $repoRoot = "E:\projets_hso\mondes-immerges\git"
 $maxSizeMB = 20
 $maxSizeBytes = $maxSizeMB * 1024 * 1024
 
-# Liste des fichiers à traiter (chemin relatif depuis la racine du repo)
-$files = @(
-    "interface\les-ombres-de-la-mer\videos\globe.mp4",
-    "interface\les-ombres-de-la-mer\videos\globe.webm",
-    "interface\into-the-okavango\videos\main.mp4",
-    "accueil\videos\video-arriereplan.webm",
-    "interface\videos\globe-video.webm",
-    "interface\les-ombres-de-la-mer\videos\main.mp4"
-)
+# Scan automatique : tous les .mp4 et .webm > maxSizeMB dans le repo
+$files = Get-ChildItem -Path $repoRoot -Recurse -Include *.mp4,*.webm |
+    Where-Object { $_.Length -gt $maxSizeBytes -and $_.FullName -notmatch '\.backup\.' -and $_.FullName -notmatch 'node_modules' -and $_.FullName -notmatch '\\dist\\' } |
+    ForEach-Object { $_.FullName.Substring($repoRoot.Length + 1) }
 
 # Vérifier ffmpeg
 if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
