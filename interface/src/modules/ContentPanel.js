@@ -371,7 +371,7 @@ export class ContentPanel {
             left: 0;
             width: 100%;
             height: 70%;
-            background: linear-gradient(to bottom, rgba(0, 40, 80, 0.97) 0%, rgba(0, 10, 30, 0.97) 100%);
+            background: rgba(2, 8, 20, 0.95);
             transform: translateY(100%);
             transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
             z-index: 100;
@@ -382,7 +382,6 @@ export class ContentPanel {
             color: white;
             display: none;
             border-top: 1px solid rgba(255, 204, 0, 0.7);
-            backdrop-filter: blur(10px);
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 204, 0, 0.7) rgba(0, 0, 0, 0.3);
         `;

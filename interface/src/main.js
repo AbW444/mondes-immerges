@@ -559,7 +559,10 @@ function cleanup() {
 
     APP_STATE.cleanupDone = true;
 
-    // Le nettoyage spécifique se fait dans les écouteurs individuels
+    const app = getAppInstance();
+    if (app && app.destroy) {
+        app.destroy();
+    }
 }
 
 // Point d'entrée principal - UN SEUL écouteur DOMContentLoaded
@@ -585,11 +588,12 @@ window.addEventListener('error', (e) => {
     if (e.target !== window && (e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT')) {
         return;
     }
+    console.warn('[MondesImmerges]', e.error || e.message);
 }, { once: false, capture: true });
 
 // UN SEUL écouteur pour les promesses rejetées
 window.addEventListener('unhandledrejection', (e) => {
-    e.preventDefault();
+    console.warn('[MondesImmerges]', e.reason);
 }, { once: false });
 
 // Nettoyage avant déchargement

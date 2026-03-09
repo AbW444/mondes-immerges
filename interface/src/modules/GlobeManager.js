@@ -49,6 +49,14 @@ export class GlobeManager {
 
         this._savedState = null;
 
+        // Bound animate for rAF (avoid re-binding each frame)
+        this.boundAnimate = this.animate.bind(this);
+        this.animationId = null;
+
+        // Réutiliser raycaster/direction dans updateHotspotLabels
+        this._tempRaycaster = new THREE.Raycaster();
+        this._tempDirection = new THREE.Vector3();
+
         // Chemins des vidéos du globe
         this.currentVideoPath = `${import.meta.env.BASE_URL}videos/globe-video.webm`;
         this.aberrationVideoPath = `${import.meta.env.BASE_URL}videos/globe-video-aberration.webm`;
@@ -1153,10 +1161,10 @@ export class GlobeManager {
                return;
            }
 
-           // Vérifier occlusion par le globe
-           const direction = new THREE.Vector3().subVectors(worldPos, this.camera.position).normalize();
-           const raycaster = new THREE.Raycaster(this.camera.position, direction);
-           const intersects = raycaster.intersectObject(this.globe);
+           // Vérifier occlusion par le globe (réutilisation d'instances)
+           this._tempDirection.subVectors(worldPos, this.camera.position).normalize();
+           this._tempRaycaster.set(this.camera.position, this._tempDirection);
+           const intersects = this._tempRaycaster.intersectObject(this.globe);
 
            if (intersects.length > 0) {
                const distToIntersection = intersects[0].distance;
@@ -1238,8 +1246,15 @@ export class GlobeManager {
        });
    }
 
+   stopAnimation() {
+       if (this.animationId) {
+           cancelAnimationFrame(this.animationId);
+           this.animationId = null;
+       }
+   }
+
    animate() {
-       requestAnimationFrame(this.animate.bind(this));
+       this.animationId = requestAnimationFrame(this.boundAnimate);
 
        // Ne pas rendre si le contexte WebGL est perdu
        if (this._contextLost) return;

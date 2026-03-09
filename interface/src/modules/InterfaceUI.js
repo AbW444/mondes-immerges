@@ -208,8 +208,7 @@ export class InterfaceUI {
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background-color: rgba(0, 0, 0, 0.85);
-                backdrop-filter: blur(10px);
+                background: rgba(0, 5, 15, 0.92);
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -531,9 +530,8 @@ export class InterfaceUI {
             transform: translateX(50px);
             opacity: 0;
             border-left: 3px solid ${color};
-            backdrop-filter: blur(5px);
         `;
-        
+
         // Styles pour les éléments internes
         const iconStyle = `
             display: flex;

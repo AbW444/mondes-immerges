@@ -162,7 +162,6 @@ export class VisualEffects {
                 align-items: center;
                 z-index: 50;
                 background-color: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(5px);
             `;
         }
         
@@ -524,9 +523,8 @@ export class VisualEffects {
             transform: translateX(50px);
             opacity: 0;
             border-left: 3px solid ${color};
-            backdrop-filter: blur(5px);
         `;
-        
+
         // Styles pour les éléments internes
         const iconElement = notification.querySelector('.notification-icon');
         if (iconElement) {
@@ -647,7 +645,8 @@ export class VisualEffects {
         };
         
         const config = { ...defaults, ...options };
-        
+        this.particleTweens = [];
+
         // Créer un conteneur pour les particules
         const particlesContainer = document.createElement('div');
         particlesContainer.className = 'background-particles';
@@ -687,7 +686,7 @@ export class VisualEffects {
             `;
             
             // Animer la particule
-            gsap.to(particle, {
+            const tween = gsap.to(particle, {
                 y: `${Math.random() * 20 - 10}%`,
                 x: `${Math.random() * 20 - 10}%`,
                 opacity: Math.random() * 0.5 + 0.1,
@@ -697,10 +696,18 @@ export class VisualEffects {
                 yoyo: true,
                 ease: "sine.inOut"
             });
+            this.particleTweens.push(tween);
             
             particlesContainer.appendChild(particle);
         }
         
         config.container.appendChild(particlesContainer);
+    }
+
+    destroy() {
+        if (this.particleTweens) {
+            this.particleTweens.forEach(t => t.kill());
+            this.particleTweens = [];
+        }
     }
 }
