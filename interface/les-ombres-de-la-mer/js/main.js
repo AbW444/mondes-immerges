@@ -1,4 +1,13 @@
 // JavaScript principal avec support tactile et responsive
+
+// Corriger le bug de retour depuis la page interface (bfcache)
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        console.log('[OMBRES] Page restaurée depuis le cache — rechargement forcé');
+        window.location.reload();
+    }
+});
+
 // Variables globales
 let currentGalleryIndex = 0;
 let touchStartX = 0;
@@ -12,6 +21,7 @@ let pauseHideTimeout;
 let docVideo, videoContainer, playButton; // DÉCLARATION GLOBALE
 
 document.addEventListener("DOMContentLoaded", function() {
+    console.log('[OMBRES] DOMContentLoaded', performance.now().toFixed(0) + 'ms');
     // Détection du type d'appareil
     const isMobile = window.innerWidth < 768;
     const isTablet = window.innerWidth >= 768 && window.innerWidth < 1025;
@@ -604,8 +614,10 @@ function showControlsTemporarily() {
 
 // Nouvelle fonction pour lancer la vidéo immédiatement
 function startGlobeVideoImmediately() {
+    console.log('[OMBRES] startGlobeVideoImmediately()');
     const globeVideo = document.querySelector('.globe-video');
     if (globeVideo) {
+        console.log('[OMBRES] Globe vidéo trouvée, src:', globeVideo.querySelector('source')?.src || globeVideo.src);
         // Only set attributes - actual playback is managed by fixVideos() exclusively
         globeVideo.muted = true;
         globeVideo.loop = true;
@@ -1149,9 +1161,11 @@ function initBackToTop() {
 
 // Gestion des vidéos - Optimisée tactile avec contrôles intelligents
 function fixVideos() {
+    console.log('[OMBRES] fixVideos() appelé');
     // Vidéo de texture (hero) - SYSTÈME UNIQUE
     const globeVideo = document.querySelector('.globe-video');
     if (globeVideo) {
+        console.log('[OMBRES] Globe vidéo configurée, readyState:', globeVideo.readyState);
         globeVideo.muted = true;
         globeVideo.loop = true;
         globeVideo.playsInline = true;

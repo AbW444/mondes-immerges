@@ -6,11 +6,23 @@ import { getRedirectUrl } from '../data/redirect-config.js';
 // Import du VideoManager professionnel
 import { videoManager } from '../utils/VideoManager.js';
 
+// === DEBUG LOGGING ===
+function glog(tag, ...args) {
+    console.log(`[GLOBE:${tag}]`, performance.now().toFixed(0) + 'ms', ...args);
+}
+function gwarn(tag, ...args) {
+    console.warn(`[GLOBE:${tag}]`, performance.now().toFixed(0) + 'ms', ...args);
+}
+function gerr(tag, ...args) {
+    console.error(`[GLOBE:${tag}]`, performance.now().toFixed(0) + 'ms', ...args);
+}
 
 export class GlobeManager {
     constructor(options) {
+        glog('INIT', 'Construction GlobeManager, container:', options.containerId);
         this.options = options;
         this.container = document.getElementById(options.containerId);
+        if (!this.container) gerr('INIT', 'Container introuvable:', options.containerId);
         this.scene = null;
         this.camera = null;
         this.renderer = null;
@@ -247,9 +259,11 @@ export class GlobeManager {
     }
     
     createGlobe() {
+        glog('GLOBE', 'Création du globe...');
         return new Promise((resolve, reject) => {
             const video = document.createElement('video');
             // Utiliser la vidéo par défaut au démarrage
+            glog('GLOBE', 'Chemin vidéo:', this.currentVideoPath);
             video.src = this.currentVideoPath;
             video.loop = true;
             video.muted = true;
@@ -478,24 +492,30 @@ export class GlobeManager {
      * Retourne une Promise qui se résout quand tout est prêt
      */
     preloadAllAssets() {
+        glog('PRELOAD', 'Début préchargement de tous les assets...');
         return Promise.all([
             this.createGlobe(),
             this.createSkybox()
         ]).then(() => {
+            glog('PRELOAD', 'Tous les assets chargés OK');
             // Démarrer la lecture de la vidéo maintenant que tout est chargé
             if (this.videoElement) {
+                glog('PRELOAD', 'Lecture vidéo globe...');
                 this.videoElement.play().catch(e => {
-                    /* Production: error silenced */
+                    gwarn('PRELOAD', 'Erreur lecture vidéo:', e.message);
                 });
+            } else {
+                gwarn('PRELOAD', 'Pas de videoElement !');
             }
 
             // Démarrer la surveillance du VideoManager
             videoManager.startMonitoring(2000);
         }).catch((error) => {
+            gerr('PRELOAD', 'Erreur préchargement:', error);
             // Continuer quand même pour ne pas bloquer l'application
             if (this.videoElement) {
                 this.videoElement.play().catch(e => {
-                    /* Production: error silenced */
+                    gwarn('PRELOAD', 'Erreur lecture vidéo (fallback):', e.message);
                 });
             }
 

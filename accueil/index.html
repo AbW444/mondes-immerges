@@ -1332,6 +1332,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('[ACCUEIL] DOMContentLoaded', performance.now().toFixed(0) + 'ms');
             // Initialisation du curseur personnalisé (désactivé sur mobile) - VERSION OPTIMISÉE
             if (window.innerWidth > 768) {
                 const cursor = document.querySelector('.cursor');
@@ -1484,13 +1485,19 @@
 
             // Gestion de la vidéo du logo avec déclenchement lazy loading
             if (logoVideo) {
+                console.log('[ACCUEIL] Logo vidéo trouvée, readyState:', logoVideo.readyState);
                 let logoHandled = false;
 
                 logoVideo.addEventListener('loadeddata', function() {
-                    logoVideo.play().catch(function() {
-                        /* Autoplay prevented */
+                    console.log('[ACCUEIL] Logo vidéo loadeddata');
+                    logoVideo.play().catch(function(e) {
+                        console.warn('[ACCUEIL] Logo autoplay bloqué:', e.message);
                     });
                 }, { once: true });
+
+                logoVideo.addEventListener('error', function(e) {
+                    console.error('[ACCUEIL] Erreur logo vidéo:', e);
+                });
 
                 const handleLogoEnd = function() {
                     if (logoHandled) return;

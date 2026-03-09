@@ -580,7 +580,7 @@ body.loading .globe-video {
 /* SOUS-TITRE BEAUCOUP PLUS GROS */
 .subtitle {
     font-family: 'Geograph', sans-serif;
-    font-size: clamp(1.4rem, 2.2vw, 1.8rem) !important; /* Beaucoup plus gros */
+    font-size: clamp(0.84rem, 1.32vw, 1.08rem) !important; /* Réduit de 40% */
     font-weight: 500;
     max-width: 600px !important; /* Plus large */
     opacity: 0;
@@ -2318,9 +2318,9 @@ input, textarea, select {
         font-size: clamp(2rem, 8vw, 3rem);
     }
     
-    /* SOUS-TITRE MOBILE PLUS GROS */
+    /* SOUS-TITRE MOBILE RÉDUIT 40% */
     .subtitle {
-        font-size: clamp(1.2rem, 5vw, 1.6rem) !important;
+        font-size: clamp(0.72rem, 3vw, 0.96rem) !important;
         text-align: center;
         max-width: none;
     }
@@ -2588,9 +2588,9 @@ input, textarea, select {
         display: none;
     }
     
-    /* SOUS-TITRE TABLETTE PLUS GROS */
+    /* SOUS-TITRE TABLETTE RÉDUIT 40% */
     .subtitle {
-        font-size: clamp(1.3rem, 2vw, 1.7rem) !important;
+        font-size: clamp(0.78rem, 1.2vw, 1.02rem) !important;
     }
     
     /* Grilles hybrides */
@@ -2754,9 +2754,9 @@ input, textarea, select {
         font-size: clamp(1.5rem, 7vw, 2.5rem);
     }
     
-    /* SOUS-TITRE TRÈS PETITS ÉCRANS PLUS GROS */
+    /* SOUS-TITRE TRÈS PETITS ÉCRANS RÉDUIT 40% */
     .subtitle {
-        font-size: clamp(1.1rem, 4.5vw, 1.4rem) !important;
+        font-size: clamp(0.66rem, 2.7vw, 0.84rem) !important;
     }
     
     .fixed-logo {
@@ -2831,9 +2831,9 @@ input, textarea, select {
     }
     
     .subtitle {
-        font-size: clamp(0.9rem, 3.5vw, 1.2rem) !important;
+        font-size: clamp(0.54rem, 2.1vw, 0.72rem) !important;
     }
-    
+
     .scroll-indicator {
         bottom: 20px;
     }

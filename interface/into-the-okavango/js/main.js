@@ -1,4 +1,13 @@
 // JavaScript principal pour Into the Okavango - National Geographic
+
+// Corriger le bug de retour depuis la page interface (bfcache)
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        console.log('[OKAVANGO] Page restaurée depuis le cache — rechargement forcé');
+        window.location.reload();
+    }
+});
+
 // Variables globales
 let currentGalleryIndex = 0;
 let touchStartX = 0;
@@ -6,6 +15,7 @@ let touchEndX = 0;
 let isMenuOpen = false;
 
 document.addEventListener("DOMContentLoaded", function() {
+    console.log('[OKAVANGO] DOMContentLoaded', performance.now().toFixed(0) + 'ms');
     // Détection du type d'appareil
     const isMobile = window.innerWidth < 768;
     const isTablet = window.innerWidth >= 768 && window.innerWidth < 1025;
@@ -132,8 +142,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // Nouvelle fonction pour lancer la vidéo texture Okavango immédiatement
 function startGlobeVideoImmediately() {
+    console.log('[OKAVANGO] startGlobeVideoImmediately()');
     const globeVideo = document.querySelector('.globe-video');
     if (globeVideo) {
+        console.log('[OKAVANGO] Globe vidéo trouvée, src:', globeVideo.querySelector('source')?.src || globeVideo.src);
         // Only set attributes - actual playback is managed by fixVideos() exclusively
         globeVideo.muted = true;
         globeVideo.loop = true;
@@ -628,9 +640,11 @@ function initBackToTop() {
 
 // Gestion des vidéos - Optimisée tactile Okavango
 function fixVideos() {
+    console.log('[OKAVANGO] fixVideos() appelé');
     // Vidéo de texture (hero) avec filtres Okavango - SYSTÈME UNIQUE
     const globeVideo = document.querySelector('.globe-video');
     if (globeVideo) {
+        console.log('[OKAVANGO] Globe vidéo configurée, readyState:', globeVideo.readyState);
         globeVideo.muted = true;
         globeVideo.loop = true;
         globeVideo.playsInline = true;

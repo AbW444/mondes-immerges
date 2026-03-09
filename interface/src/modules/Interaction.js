@@ -1,6 +1,8 @@
 // Gestionnaire d'interactions pour Mondes Immergés
 import { gsap } from 'gsap';
 
+function ilog(...args) { console.log('[INTERACTION]', ...args); }
+
 export class Interaction {
     /**
      * Crée une instance du gestionnaire d'interactions
@@ -46,7 +48,8 @@ export class Interaction {
         // État de l'interface
         this.interfaceVisible = true;
         this.autoHideTimeout = null;
-        
+
+        ilog('Initialisation des interactions (drag désactivé, molette = orbite)');
         this.init();
     }
     
@@ -83,19 +86,10 @@ export class Interaction {
      * @param {MouseEvent} event
      */
     handleMouseDown(event) {
-        this.isDragging = true;
+        // Drag rotation désactivé — navigation par molette uniquement
         this.hasMoved = false;
         this.mouseStartX = event.clientX;
         this.mouseStartY = event.clientY;
-        this.lastPosition = { x: event.clientX, y: event.clientY };
-        this.velocityX = 0;
-        this.velocityY = 0;
-
-        // Stopper l'inertie en cours
-        if (this.inertiaAnimationId) {
-            cancelAnimationFrame(this.inertiaAnimationId);
-            this.inertiaAnimationId = null;
-        }
     }
 
     /**
@@ -103,32 +97,11 @@ export class Interaction {
      * @param {MouseEvent} event
      */
     handleMouseMove(event) {
-        if (!this.isDragging) return;
-
-        const currentX = event.clientX;
-        const currentY = event.clientY;
-        const deltaX = currentX - this.lastPosition.x;
-        const deltaY = currentY - this.lastPosition.y;
-
+        // Drag rotation désactivé — détection de mouvement uniquement pour les clics
+        const deltaX = event.clientX - this.mouseStartX;
+        const deltaY = event.clientY - this.mouseStartY;
         if (Math.abs(deltaX) > this.movementThreshold || Math.abs(deltaY) > this.movementThreshold) {
             this.hasMoved = true;
-        }
-
-        // Calculer la vélocité pour l'inertie
-        this.velocityX = 0.8 * this.velocityX + 0.2 * deltaX;
-        this.velocityY = 0.8 * this.velocityY + 0.2 * deltaY;
-
-        // Rotation du globe
-        this.globeManager.orbitParams.orbitAngle -= deltaX * 0.005;
-
-        // Inclinaison verticale
-        const newInclination = this.globeManager.orbitParams.inclination + deltaY * 0.003;
-        this.globeManager.orbitParams.inclination = Math.max(0.1, Math.min(Math.PI / 3, newInclination));
-
-        this.lastPosition = { x: currentX, y: currentY };
-
-        if (typeof this.globeManager._updateCameraPositionManual === 'function') {
-            this.globeManager._updateCameraPositionManual();
         }
     }
 
@@ -137,13 +110,7 @@ export class Interaction {
      * @param {MouseEvent} event
      */
     handleMouseUp(event) {
-        if (!this.isDragging) return;
-        this.isDragging = false;
-
-        // Lancer l'inertie si le mouvement était significatif
-        if (this.inertiaEnabled && this.hasMoved && (Math.abs(this.velocityX) > 1 || Math.abs(this.velocityY) > 1)) {
-            this.startInertia();
-        }
+        // Drag rotation désactivé — pas d'inertie
     }
 
     /**
@@ -182,19 +149,11 @@ export class Interaction {
      */
     handleTouchStart(event) {
         if (event.touches.length === 1) {
-            this.isDragging = true;
+            // Drag rotation désactivé — garder le tracking pour hotspot scroll uniquement
             this.hasMoved = false;
             this.mouseStartX = event.touches[0].clientX;
             this.mouseStartY = event.touches[0].clientY;
-            this.lastPosition = { x: event.touches[0].clientX, y: event.touches[0].clientY };
             this.scrollAmount = 0;
-            this.velocityX = 0;
-            this.velocityY = 0;
-
-            if (this.inertiaAnimationId) {
-                cancelAnimationFrame(this.inertiaAnimationId);
-                this.inertiaAnimationId = null;
-            }
         } else if (event.touches.length === 2) {
             this.isPinching = true;
             this.initialDistance = this.getTouchDistance(event.touches);
@@ -220,14 +179,7 @@ export class Interaction {
         if (this.isPinching && event.touches.length < 2) {
             this.isPinching = false;
         }
-
-        if (event.touches.length === 0) {
-            this.isDragging = false;
-
-            if (this.inertiaEnabled && this.hasMoved && (Math.abs(this.velocityX) > 1 || Math.abs(this.velocityY) > 1)) {
-                this.startInertia();
-            }
-        }
+        // Drag rotation désactivé — pas d'inertie
     }
 
     /**
@@ -252,7 +204,7 @@ export class Interaction {
             return;
         }
 
-        if (!this.isDragging || event.touches.length !== 1) return;
+        if (event.touches.length !== 1) return;
 
         // Si en mode hotspot, détecter le scroll vertical pour quitter
         if (this.globeManager.orbitParams.inHotspotMode) {
@@ -268,32 +220,7 @@ export class Interaction {
 
             this.mouseStartY = currentY;
         }
-        // Rotation du globe
-        else {
-            const currentX = event.touches[0].clientX;
-            const currentY = event.touches[0].clientY;
-
-            const deltaX = currentX - this.lastPosition.x;
-            const deltaY = currentY - this.lastPosition.y;
-
-            if (Math.abs(deltaX) > this.movementThreshold || Math.abs(deltaY) > this.movementThreshold) {
-                this.hasMoved = true;
-            }
-
-            this.velocityX = 0.8 * this.velocityX + 0.2 * deltaX;
-            this.velocityY = 0.8 * this.velocityY + 0.2 * deltaY;
-
-            this.globeManager.orbitParams.orbitAngle -= deltaX * 0.005;
-
-            const newInclination = this.globeManager.orbitParams.inclination + deltaY * 0.003;
-            this.globeManager.orbitParams.inclination = Math.max(0.1, Math.min(Math.PI / 3, newInclination));
-
-            this.lastPosition = { x: currentX, y: currentY };
-
-            if (typeof this.globeManager._updateCameraPositionManual === 'function') {
-                this.globeManager._updateCameraPositionManual();
-            }
-        }
+        // Drag rotation désactivé sur touch aussi
     }
     
     /**

@@ -292,6 +292,7 @@ h2 {
 #globe-container canvas {
   background: transparent !important;
   pointer-events: auto;
+  filter: saturate(1.4) contrast(1.05);
 }
 
 /* Interface HUD modernisée - GLASSMORPHISME scientifique */
@@ -305,10 +306,10 @@ h2 {
   font-weight: 500;
   text-shadow: 0 0 8px rgba(255, 204, 0, 0.5), 0 0 3px rgba(0, 0, 0, 0.8);
 
-  /* GLASSMORPHISME */
-  background: rgba(0, 10, 20, 0.5);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  /* GLASSMORPHISME RENFORCÉ */
+  background: rgba(0, 10, 20, 0.25);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
 
   padding: 14px 19px;
   border-radius: 10px;
@@ -435,12 +436,12 @@ h2 {
   left: 50%;
   transform: translateX(-50%);
 
-  /* GLASSMORPHISME */
-  background: rgba(0, 10, 20, 0.5);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  /* GLASSMORPHISME RENFORCÉ */
+  background: rgba(0, 10, 20, 0.25);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
 
-  border: 1.5px solid rgba(255, 204, 0, 0.3);
+  border: 1.5px solid rgba(255, 204, 0, 0.2);
   padding: 11px 24px;
   border-radius: 24px;
   font-family: var(--primary-font);
@@ -569,14 +570,14 @@ h2 {
 }
 
 #navigation-controls button {
-  width: 48px;
-  height: 48px;
-  border: 2px solid rgba(255, 204, 0, 0.4);
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid rgba(255, 204, 0, 0.25);
 
-  /* GLASSMORPHISME */
-  background: rgba(0, 10, 20, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* GLASSMORPHISME RENFORCÉ */
+  background: rgba(0, 10, 20, 0.3);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
 
   color: var(--nat-geo-yellow);
   border-radius: 50%;
@@ -584,14 +585,14 @@ h2 {
   transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
   font-family: var(--primary-font);
   letter-spacing: 1px;
-  font-size: 18px;
+  font-size: 13px;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   text-shadow: 0 0 8px rgba(255, 204, 0, 0.5);
 }
 
@@ -606,29 +607,29 @@ h2 {
 }
 
 #info-button {
-  width: 48px;
-  height: 48px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
 
-  /* GLASSMORPHISME SATELLITE */
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  /* GLASSMORPHISME RENFORCÉ */
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
 
   color: #ffdd00;
-  border: 2px solid rgba(255, 221, 0, 0.5);
+  border: 1.5px solid rgba(255, 221, 0, 0.25);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: none;
   transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
   font-family: var(--mono-font);
-  font-size: 19px;
+  font-size: 13px;
   font-weight: 700;
   box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(255, 221, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 0 20px rgba(255, 221, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   text-shadow: 0 0 12px rgba(255, 221, 0, 0.6);
   position: relative;
 }
@@ -1031,9 +1032,9 @@ body.info-visible .hotspot-connector {
   
   #navigation-controls button,
   #info-button {
-    width: 40px;
-    height: 40px;
-    font-size: 16px;
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
   }
   
   .overlay-content {

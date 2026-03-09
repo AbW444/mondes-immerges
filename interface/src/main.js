@@ -4,6 +4,19 @@ import { initApp, getAppInstance } from './app.js';
 import { videoManager } from './utils/VideoManager.js';
 // ldrs (jelly loader) est chargé via script tag dans index.html
 
+// === DEBUG LOGGING ===
+const DEBUG = true;
+function log(tag, ...args) {
+    if (DEBUG) console.log(`[MI:${tag}]`, performance.now().toFixed(0) + 'ms', ...args);
+}
+function logWarn(tag, ...args) {
+    console.warn(`[MI:${tag}]`, performance.now().toFixed(0) + 'ms', ...args);
+}
+function logError(tag, ...args) {
+    console.error(`[MI:${tag}]`, performance.now().toFixed(0) + 'ms', ...args);
+}
+log('BOOT', 'Script principal chargé');
+
 // État global de l'application
 const APP_STATE = {
     initialized: false,
@@ -18,6 +31,7 @@ const APP_STATE = {
  */
 function checkWebGLCompatibility() {
     if (APP_STATE.webGLChecked) {
+        log('WEBGL', 'Déjà vérifié');
         return true;
     }
 
@@ -26,12 +40,14 @@ function checkWebGLCompatibility() {
         const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 
         if (!gl) {
+            logError('WEBGL', 'WebGL non supporté');
             showWebGLError();
             APP_STATE.webGLChecked = false;
             return false;
         }
 
         APP_STATE.webGLChecked = true;
+        log('WEBGL', 'WebGL OK — renderer:', gl.getParameter(gl.RENDERER));
 
         // Libérer les ressources immédiatement
         const ext = gl.getExtension('WEBGL_lose_context');
@@ -39,6 +55,7 @@ function checkWebGLCompatibility() {
 
         return true;
     } catch (error) {
+        logError('WEBGL', 'Erreur vérification WebGL:', error);
         return false;
     }
 }
@@ -229,39 +246,52 @@ async function playTransitionVideo() {
  */
 async function startApplication() {
     if (APP_STATE.appStarted) {
+        log('APP', 'Déjà démarré, skip');
         return;
     }
 
     APP_STATE.appStarted = true;
+    log('APP', '=== DÉMARRAGE APPLICATION ===');
 
     try {
         // Initialiser l'app
+        log('APP', 'initApp()...');
         initApp();
 
         const app = getAppInstance();
         if (!app) {
             throw new Error('Instance application non disponible');
         }
+        log('APP', 'Instance app OK, globeManager:', !!app.globeManager);
 
         // Afficher le conteneur principal en arrière-plan (transparent pour l'instant)
         prepareMainContainer();
 
         // CRITIQUE: Précharger TOUS les assets avant de continuer
         if (app.globeManager && app.globeManager.preloadAllAssets) {
+            log('APP', 'Préchargement assets...');
             await app.globeManager.preloadAllAssets();
+            log('APP', 'Assets préchargés OK');
+        } else {
+            logWarn('APP', 'preloadAllAssets non disponible');
         }
 
         // Afficher et jouer la vidéo de transition
-        // Le globe devient visible dès que la vidéo commence (géré dans playTransitionVideo)
+        log('APP', 'Lancement vidéo de transition...');
         await playTransitionVideo();
+        log('APP', 'Vidéo de transition terminée');
 
         // Démarrer l'exploration et afficher l'interface immédiatement
+        log('APP', 'Démarrage exploration...');
         app.startExploration(true);
 
         // Afficher les éléments UI immédiatement
+        log('APP', 'Affichage éléments interface...');
         showInterfaceElements(app);
+        log('APP', '=== APPLICATION PRÊTE ===');
 
     } catch (error) {
+        logError('APP', 'ERREUR CRITIQUE:', error);
         showError(error);
     }
 }
@@ -520,20 +550,30 @@ function prepareEnvironment() {
  */
 function initialize() {
     if (APP_STATE.initialized) {
+        log('INIT', 'Déjà initialisé, skip');
         return;
     }
 
     APP_STATE.initialized = true;
+    log('INIT', '=== INITIALISATION ===');
 
     // Vérifier WebGL
     if (!checkWebGLCompatibility()) {
+        logError('INIT', 'WebGL incompatible, arrêt');
         return;
     }
 
     // Préparer l'environnement
+    log('INIT', 'Préparation environnement...');
     prepareEnvironment();
 
-    // Le spinner jelly est déjà dans le HTML - pas besoin de l'initialiser
+    // Vérifier éléments DOM critiques
+    const criticalElements = ['loading-screen', 'main-container', 'globe-container', 'app'];
+    criticalElements.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) logWarn('INIT', `Élément manquant: #${id}`);
+        else log('INIT', `#${id} OK`);
+    });
 
     // Simulation de chargement simplifiée
     let progress = 0;
@@ -542,6 +582,7 @@ function initialize() {
 
         if (progress >= 100) {
             clearInterval(interval);
+            log('INIT', 'Chargement simulé terminé, démarrage app...');
 
             // Petit délai avant de démarrer l'app
             setTimeout(() => {
@@ -564,7 +605,9 @@ function cleanup() {
 
 // Point d'entrée principal - UN SEUL écouteur DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
+    log('DOM', 'DOMContentLoaded déclenché');
     if (APP_STATE.domReady) {
+        logWarn('DOM', 'DOMContentLoaded déjà traité, skip');
         return;
     }
 
@@ -581,14 +624,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // UN SEUL écouteur d'erreurs global
 window.addEventListener('error', (e) => {
-    // Ignorer les erreurs de ressources externes
     if (e.target !== window && (e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT')) {
+        logWarn('ERR', 'Ressource non chargée:', e.target.tagName, e.target.src || e.target.href);
         return;
     }
+    logError('ERR', 'Erreur globale:', e.message, e.filename, 'ligne', e.lineno);
 }, { once: false, capture: true });
 
 // UN SEUL écouteur pour les promesses rejetées
 window.addEventListener('unhandledrejection', (e) => {
+    logError('PROMISE', 'Promise rejetée:', e.reason);
     e.preventDefault();
 }, { once: false });
 
