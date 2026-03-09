@@ -54,90 +54,242 @@ export class Interaction {
      * Initialise les gestionnaires d'événements
      */
     init() {
-    const container = this.globeManager.container;
-    
-    // SUPPRIMER TOUTES LES INTERACTIONS DE GLISSEMENT
-    // Conserver seulement le scroll et les clics
-    
-    // Écouteur pour la molette UNIQUEMENT
-    container.addEventListener('wheel', this.handleMouseWheel.bind(this), { passive: false });
-    
-    // Écouteur pour le clavier
-    document.addEventListener('keydown', this.handleKeyDown.bind(this));
-    
-    // Écouteur pour masquer/afficher l'interface après inactivité
-    document.addEventListener('mousemove', this.resetInterfaceAutoHide.bind(this));
-    
-    // Démarrer la détection d'inactivité
-    this.startInterfaceAutoHide();
-    
-    console.log("=== INTERACTIONS INITIALISÉES ===");
-    console.log("- Scroll: Activé (contrôle vitesse orbite)");
-    console.log("- Clic: Activé (sélection hotspots)");
-    console.log("- Glissement: DÉSACTIVÉ");
-    console.log("- Touch: DÉSACTIVÉ");
-    console.log("- Touche Entrée: GÉRÉE PAR GLOBEMANAGER (changement vidéo)");
-}
-    
-    
-    
+        const container = this.globeManager.container;
+
+        // Écouteur pour la molette (zoom)
+        container.addEventListener('wheel', this.handleMouseWheel.bind(this), { passive: false });
+
+        // Écouteurs pour le glissement souris (rotation du globe)
+        container.addEventListener('mousedown', this.handleMouseDown.bind(this));
+        document.addEventListener('mousemove', this.handleMouseMove.bind(this));
+        document.addEventListener('mouseup', this.handleMouseUp.bind(this));
+
+        // Écouteurs tactiles (rotation du globe sur mobile)
+        container.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
+        container.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+        container.addEventListener('touchend', this.handleTouchEnd.bind(this));
+
+        // Écouteur pour le clavier
+        document.addEventListener('keydown', this.handleKeyDown.bind(this));
+
+        // Écouteur pour masquer/afficher l'interface après inactivité
+        document.addEventListener('mousemove', this.resetInterfaceAutoHide.bind(this));
+
+        // Démarrer la détection d'inactivité
+        this.startInterfaceAutoHide();
+    }
+    /**
+     * Gère le début d'un clic souris pour le glissement
+     * @param {MouseEvent} event
+     */
+    handleMouseDown(event) {
+        this.isDragging = true;
+        this.hasMoved = false;
+        this.mouseStartX = event.clientX;
+        this.mouseStartY = event.clientY;
+        this.lastPosition = { x: event.clientX, y: event.clientY };
+        this.velocityX = 0;
+        this.velocityY = 0;
+
+        // Stopper l'inertie en cours
+        if (this.inertiaAnimationId) {
+            cancelAnimationFrame(this.inertiaAnimationId);
+            this.inertiaAnimationId = null;
+        }
+    }
+
+    /**
+     * Gère le mouvement de la souris pour rotation du globe
+     * @param {MouseEvent} event
+     */
+    handleMouseMove(event) {
+        if (!this.isDragging) return;
+
+        const currentX = event.clientX;
+        const currentY = event.clientY;
+        const deltaX = currentX - this.lastPosition.x;
+        const deltaY = currentY - this.lastPosition.y;
+
+        if (Math.abs(deltaX) > this.movementThreshold || Math.abs(deltaY) > this.movementThreshold) {
+            this.hasMoved = true;
+        }
+
+        // Calculer la vélocité pour l'inertie
+        this.velocityX = 0.8 * this.velocityX + 0.2 * deltaX;
+        this.velocityY = 0.8 * this.velocityY + 0.2 * deltaY;
+
+        // Rotation du globe
+        this.globeManager.orbitParams.orbitAngle -= deltaX * 0.005;
+
+        // Inclinaison verticale
+        const newInclination = this.globeManager.orbitParams.inclination + deltaY * 0.003;
+        this.globeManager.orbitParams.inclination = Math.max(0.1, Math.min(Math.PI / 3, newInclination));
+
+        this.lastPosition = { x: currentX, y: currentY };
+
+        if (typeof this.globeManager._updateCameraPositionManual === 'function') {
+            this.globeManager._updateCameraPositionManual();
+        }
+    }
+
+    /**
+     * Gère la fin d'un clic souris
+     * @param {MouseEvent} event
+     */
+    handleMouseUp(event) {
+        if (!this.isDragging) return;
+        this.isDragging = false;
+
+        // Lancer l'inertie si le mouvement était significatif
+        if (this.inertiaEnabled && this.hasMoved && (Math.abs(this.velocityX) > 1 || Math.abs(this.velocityY) > 1)) {
+            this.startInertia();
+        }
+    }
+
+    /**
+     * Démarre l'animation d'inertie après un glissement
+     */
+    startInertia() {
+        const friction = 0.95;
+
+        const animateInertia = () => {
+            this.velocityX *= friction;
+            this.velocityY *= friction;
+
+            if (Math.abs(this.velocityX) < 0.1 && Math.abs(this.velocityY) < 0.1) {
+                this.inertiaAnimationId = null;
+                return;
+            }
+
+            this.globeManager.orbitParams.orbitAngle -= this.velocityX * 0.005;
+
+            const newInclination = this.globeManager.orbitParams.inclination + this.velocityY * 0.003;
+            this.globeManager.orbitParams.inclination = Math.max(0.1, Math.min(Math.PI / 3, newInclination));
+
+            if (typeof this.globeManager._updateCameraPositionManual === 'function') {
+                this.globeManager._updateCameraPositionManual();
+            }
+
+            this.inertiaAnimationId = requestAnimationFrame(animateInertia);
+        };
+
+        this.inertiaAnimationId = requestAnimationFrame(animateInertia);
+    }
+
+    /**
+     * Gère le début d'un toucher
+     * @param {TouchEvent} event
+     */
+    handleTouchStart(event) {
+        if (event.touches.length === 1) {
+            this.isDragging = true;
+            this.hasMoved = false;
+            this.mouseStartX = event.touches[0].clientX;
+            this.mouseStartY = event.touches[0].clientY;
+            this.lastPosition = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+            this.scrollAmount = 0;
+            this.velocityX = 0;
+            this.velocityY = 0;
+
+            if (this.inertiaAnimationId) {
+                cancelAnimationFrame(this.inertiaAnimationId);
+                this.inertiaAnimationId = null;
+            }
+        } else if (event.touches.length === 2) {
+            this.isPinching = true;
+            this.initialDistance = this.getTouchDistance(event.touches);
+        }
+    }
+
+    /**
+     * Calcule la distance entre deux points de toucher
+     * @param {TouchList} touches
+     * @returns {number}
+     */
+    getTouchDistance(touches) {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    /**
+     * Gère la fin d'un toucher
+     * @param {TouchEvent} event
+     */
+    handleTouchEnd(event) {
+        if (this.isPinching && event.touches.length < 2) {
+            this.isPinching = false;
+        }
+
+        if (event.touches.length === 0) {
+            this.isDragging = false;
+
+            if (this.inertiaEnabled && this.hasMoved && (Math.abs(this.velocityX) > 1 || Math.abs(this.velocityY) > 1)) {
+                this.startInertia();
+            }
+        }
+    }
+
     /**
      * Gère le mouvement d'un toucher
      * @param {TouchEvent} event - Événement de toucher
      */
     handleTouchMove(event) {
-        if (!this.isDragging) return;
-        
         event.preventDefault();
-        
-        
+
+        // Pinch-to-zoom avec 2 doigts
+        if (this.isPinching && event.touches.length === 2) {
+            this.currentDistance = this.getTouchDistance(event.touches);
+            const scale = this.currentDistance / this.initialDistance;
+
+            if (scale > 1.05) {
+                this.globeManager.zoom(true);
+                this.initialDistance = this.currentDistance;
+            } else if (scale < 0.95) {
+                this.globeManager.zoom(false);
+                this.initialDistance = this.currentDistance;
+            }
+            return;
+        }
+
+        if (!this.isDragging || event.touches.length !== 1) return;
+
         // Si en mode hotspot, détecter le scroll vertical pour quitter
-        if (this.globeManager.orbitParams.inHotspotMode && event.touches.length === 1) {
+        if (this.globeManager.orbitParams.inHotspotMode) {
             const currentY = event.touches[0].clientY;
             const diffY = currentY - this.mouseStartY;
-            
-            // Accumuler la quantité de scroll
+
             this.scrollAmount += diffY;
-            
-            // Si le scroll a dépassé un certain seuil vers le bas, quitter le mode hotspot
+
             if (this.scrollAmount > 150) {
                 this.globeManager.exitHotspotModeExternal();
-                
-                // Créer un effet de feedback visuel
-                // Notification désactivée volontairement
-
-                
                 this.scrollAmount = 0;
             }
-            
-            // Mettre à jour la position de départ pour le prochain mouvement
+
             this.mouseStartY = currentY;
         }
-        // Si pas en mode hotspot, permettre la rotation du globe
-        else if (event.touches.length === 1) {
+        // Rotation du globe
+        else {
             const currentX = event.touches[0].clientX;
             const currentY = event.touches[0].clientY;
-            
-            // Calculer le déplacement
+
             const deltaX = currentX - this.lastPosition.x;
             const deltaY = currentY - this.lastPosition.y;
-            
-            // Marquer comme déplacé si le mouvement dépasse le seuil
+
             if (Math.abs(deltaX) > this.movementThreshold || Math.abs(deltaY) > this.movementThreshold) {
                 this.hasMoved = true;
             }
-            
-            // Calculer la vélocité
+
             this.velocityX = 0.8 * this.velocityX + 0.2 * deltaX;
             this.velocityY = 0.8 * this.velocityY + 0.2 * deltaY;
-            
-            // Rotation manuelle du globe basée sur les paramètres d'orbite
+
             this.globeManager.orbitParams.orbitAngle -= deltaX * 0.005;
-            
-            // Mettre à jour la position pour le prochain mouvement
+
+            const newInclination = this.globeManager.orbitParams.inclination + deltaY * 0.003;
+            this.globeManager.orbitParams.inclination = Math.max(0.1, Math.min(Math.PI / 3, newInclination));
+
             this.lastPosition = { x: currentX, y: currentY };
-            
-            // Forcer la mise à jour de la position de la caméra
+
             if (typeof this.globeManager._updateCameraPositionManual === 'function') {
                 this.globeManager._updateCameraPositionManual();
             }
@@ -145,93 +297,21 @@ export class Interaction {
     }
     
     /**
-     * Gère le défilement de la molette pour contrôler la vitesse de l'orbite
-     * Implémentation améliorée avec effets visuels et transition fluide
+     * Gère le défilement de la molette pour zoomer/dézoomer la caméra
      * @param {WheelEvent} event - Événement de défilement
      */
     handleMouseWheel(event) {
         event.preventDefault();
-        
+
         // Afficher l'interface si elle est masquée
         this.showInterface();
-        
+
         // Réinitialiser la détection d'inactivité
         this.resetInterfaceAutoHide();
-        
-        // Si en mode hotspot, utiliser la molette pour zoomer/dézoomer
-        if (this.globeManager.orbitParams.inHotspotMode) {
-            const zoomIn = event.deltaY < 0;
-            this.globeManager.zoom(zoomIn);
-            return;
-        }
-        
-        const now = Date.now();
-        const timeDelta = now - this.lastScrollTime;
-        this.lastScrollTime = now;
-        
-        // Accumuler le défilement pour une réaction plus fluide
-        this.scrollAccumulator += event.deltaY;
-        
-        // Limiter la fréquence des mises à jour pour éviter les réactions trop rapides
-        if (timeDelta < 50 && this.scrollTimerId) return;
-        
-        // Annuler tout minuteur existant
-        if (this.scrollTimerId) {
-            clearTimeout(this.scrollTimerId);
-        }
-        
-        // Appliquer le changement de vitesse en fonction de l'accumulation
-        const scrollDirection = Math.sign(this.scrollAccumulator);
-        const scrollMagnitude = Math.min(Math.abs(this.scrollAccumulator) / 100, 2);
-        
-        // Vitesse précédente pour la comparaison
-        const previousSpeed = this.globeManager.orbitParams.currentSpeed;
-        
-        if (scrollDirection > 0) {
-            // Défilement vers le bas - ralentir
-            this.globeManager.orbitParams.currentSpeed = Math.max(
-                this.globeManager.orbitParams.baseSpeed * 0.5, // Limite minimale
-                this.globeManager.orbitParams.currentSpeed * Math.pow(this.globeManager.orbitParams.decelerationFactor, scrollMagnitude)
-            );
-            
-            // Effet visuel pour ralentissement
-            if (this.visualEffects && Math.abs(previousSpeed - this.globeManager.orbitParams.currentSpeed) > 0.0001) {
-                // Notification désactivée volontairement
 
-            }
-        } else {
-            // Défilement vers le haut - accélérer
-            this.globeManager.orbitParams.currentSpeed = Math.min(
-                this.globeManager.orbitParams.maxSpeed,
-                this.globeManager.orbitParams.currentSpeed * Math.pow(this.globeManager.orbitParams.accelerationFactor, scrollMagnitude)
-            );
-            
-            // Effet visuel pour accélération
-            if (this.visualEffects && Math.abs(previousSpeed - this.globeManager.orbitParams.currentSpeed) > 0.0001) {
-               // Notification désactivée volontairement
-
-            }
-        }
-        
-        // Réinitialiser l'accumulateur
-        this.scrollAccumulator = 0;
-        
-        // Définir un minuteur pour revenir progressivement à la vitesse normale après un délai
-        this.scrollTimerId = setTimeout(() => {
-            // Animation douce de retour à la vitesse de base
-            gsap.to(this.globeManager.orbitParams, {
-                currentSpeed: this.globeManager.orbitParams.baseSpeed,
-                duration: 3,
-                ease: "power2.out",
-                onComplete: () => {
-                    if (this.visualEffects) {
-                        this.visualEffects.showNotification("Vitesse d'orbite normalisée", "info", 1000);
-                    }
-                }
-            });
-            
-            this.scrollTimerId = null;
-        }, 3000);
+        // Zoom : scroll vers le haut = zoom in, scroll vers le bas = zoom out
+        const zoomIn = event.deltaY < 0;
+        this.globeManager.zoom(zoomIn);
     }
     
     /**
@@ -369,7 +449,6 @@ export class Interaction {
                 this.globeManager.orbitParams.isOrbiting = wasOrbiting;
             }, 500);
         } catch (e) {
-            console.error("Erreur lors de la navigation par flèches:", e);
             // Restaurer l'angle original en cas d'erreur
             if (this.globeManager && this.globeManager.orbitParams) {
                 this.globeManager.orbitParams.orbitAngle = backupAngle;

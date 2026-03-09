@@ -36,14 +36,9 @@ class MondesImmergesApp {
      * Initialise l'application complète
      */
     init() {
-        console.log('Initialisation de l\'application Mondes Immergés');
-        
         if (this.isInitialized) return;
         this.isInitialized = true;
-        
-        // Ajouter un fond étoilé au conteneur principal
-        this.createStarryBackground();
-        
+
         // Initialiser les effets visuels en premier
         this.visualEffects = new VisualEffects({
             container: this.mainContainer
@@ -88,12 +83,11 @@ class MondesImmergesApp {
             contentPanelElements.titleElement && contentPanelElements.descriptionElement) {
             this.contentPanel = new ContentPanel(contentPanelElements);
         } else {
-            console.warn('ContentPanel: Éléments DOM du panneau de contenu manquants, fonctionnalité désactivée');
             // Créer un objet mock pour éviter les erreurs
             this.contentPanel = {
-                show: () => console.log('ContentPanel.show() appelé mais panneau désactivé'),
-                hide: () => console.log('ContentPanel.hide() appelé mais panneau désactivé'),
-                update: () => console.log('ContentPanel.update() appelé mais panneau désactivé')
+                show: () => { /* Production: panel disabled */ },
+                hide: () => { /* Production: panel disabled */ },
+                update: () => { /* Production: panel disabled */ }
             };
         }
         
@@ -116,7 +110,6 @@ class MondesImmergesApp {
         // Ajouter le logo National Geographic
         this.addNatGeoLogo();
         
-        console.log('Initialisation terminée avec succès');
     }
     
     /**
@@ -161,7 +154,7 @@ class MondesImmergesApp {
      */
     startExploration(skipStartupAnimation = false) {
         if (this.isExploring) return;
-        
+
         // Masquer l'écran d'accueil et afficher le conteneur principal
         if (this.welcomeScreen) {
             this.welcomeScreen.classList.add('hidden');
@@ -169,20 +162,20 @@ class MondesImmergesApp {
         if (this.mainContainer) {
             this.mainContainer.classList.remove('hidden');
         }
-        
-        // Transition visuelle
-        this.visualEffects.transitionIn();
-        
-        // Si skipStartupAnimation est true, on saute la séquence d'initialisation
+
+        // Si skipStartupAnimation est true, on saute complètement la transition
+        // pour éviter le flash noir qui coupe l'animation de chargement
         if (skipStartupAnimation) {
-            console.log("Séquence de démarrage fictive ignorée");
             this.isExploring = true;
         } else {
+            // Transition visuelle normale
+            this.visualEffects.transitionIn();
+
             // Attendre la fin de la transition pour démarrer la séquence d'initialisation
             setTimeout(() => {
                 this.startupSequence();
             }, 1000);
-            
+
             this.isExploring = true;
         }
     }
@@ -229,43 +222,45 @@ class MondesImmergesApp {
         
         // Autres ajustements responsive si nécessaire
     }
-    
-    /**
-     * Crée un arrière-plan étoilé
-     */
-    createStarryBackground() {
-        const background = document.createElement('div');
-        background.className = 'starry-background';
-        this.mainContainer.appendChild(background);
-    }
-    
+
     /**
      * Ajoute le logo National Geographic en haut au centre
+     * Avec vérification pour éviter les duplications - SANS fond
      */
     addNatGeoLogo() {
-        // Créer le conteneur du logo
+        // Vérifier si le logo existe déjà pour éviter les duplications
+        const existingLogo = this.mainContainer.querySelector('.nat-geo-logo-container');
+        if (existingLogo) {
+            return;
+        }
+
+        // Créer le conteneur du logo avec une classe identifiable - SANS FOND
         const logoContainer = document.createElement('div');
+        logoContainer.className = 'nat-geo-logo-container';
         logoContainer.style.cssText = `
             position: absolute;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 100;
+            z-index: 1000;
         `;
-        
-        // Créer l'élément image du logo
+
+        // Créer l'élément image du logo (PNG transparent, taille réduite)
         const logo = document.createElement('img');
         logo.src = `${import.meta.env.BASE_URL}images/nat-geo-logo.png`;
         logo.alt = 'National Geographic';
+        logo.className = 'nat-geo-logo';
         logo.style.cssText = `
-            height: 40px;
+            height: 50px;
             width: auto;
-            filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.7));
+            display: block;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
         `;
-        
+
         // Ajouter le logo au conteneur puis au document
         logoContainer.appendChild(logo);
         this.mainContainer.appendChild(logoContainer);
+
     }
     
     /**
@@ -323,10 +318,15 @@ class MondesImmergesApp {
                     coordLngElement.textContent = Math.abs(lng).toFixed(4) + (lng >= 0 ? '' : '-');
                 }
                 
-                // Calculer l'altitude (distance au centre)
-                const altitude = cameraPosition.length();
+                // Calculer l'altitude réaliste (distance au centre - rayon Terre)
+                // Rayon du globe = 2 unités, 1 unité ≈ 100 km
+                const GLOBE_RADIUS = 2;  // Rayon du globe en unités Three.js
+                const KM_PER_UNIT = 100; // Conversion: 1 unité = 100 km
+                const distanceFromCenter = cameraPosition.length();
+                const altitude = (distanceFromCenter - GLOBE_RADIUS) * KM_PER_UNIT;
                 if (altitudeElement) {
-                    altitudeElement.textContent = altitude.toFixed(3);
+                    // Afficher en format xxx.xx KM
+                    altitudeElement.textContent = altitude.toFixed(2);
                 }
                 
                 // Mettre à jour le niveau de zoom
@@ -357,12 +357,19 @@ class MondesImmergesApp {
     /**
      * Exécute une séquence de démarrage stylisée
      */
-    startupSequence() {
-        // Créer l'effet de chargement orbital seulement - pas de texte, pas de barre
+    startupSequence(onComplete) {
+        // Créer l'effet de chargement orbital dans l'écran de chargement existant
+        const loadingScreen = document.getElementById('loading-screen');
+
         this.visualEffects.createOrbitalLoaderEffect(() => {
             // Cette fonction sera appelée une fois l'animation terminée
             this.finalizeStartup();
-        }, 1.5);
+
+            // Appeler le callback si fourni
+            if (onComplete && typeof onComplete === 'function') {
+                onComplete();
+            }
+        }, 3, loadingScreen); // Durée de 3 secondes et utiliser l'écran de chargement
 
         // Pas de messages - loader uniquement
     }
@@ -373,13 +380,7 @@ class MondesImmergesApp {
     finalizeStartup() {
         // Afficher des messages système après le chargement
         this.showSystemMessages();
-        
-        // Ajouter des particules en arrière-plan pour l'ambiance
-        this.visualEffects.addBackgroundParticles({
-            count: 30,
-            container: this.mainContainer
-        });
-        
+
         // Afficher une notification de bienvenue
         setTimeout(() => {
             this.visualEffects.showNotification(
@@ -405,8 +406,6 @@ class MondesImmergesApp {
      * @param {Object} hotspot - Le point d'intérêt sélectionné
      */
     handleHotspotSelect(hotspot) {
-        console.log(`Point d'intérêt sélectionné: ${hotspot.title}`);
-        
         // Mettre à jour l'état actuel
         this.currentHotspot = hotspot;
         
@@ -463,20 +462,12 @@ class MondesImmergesApp {
             
             // Afficher le panneau
             this.contentPanel.show();
-        } else {
-            console.log('ContentPanel non disponible, affichage des informations dans la console:');
-            console.log('Titre:', hotspot.title);
-            console.log('Description:', hotspot.description);
-            console.log('Coordonnées:', hotspot.position);
         }
         
         // Masquer les contrôles de l'interface utilisateur
         if (this.interfaceUI && this.interfaceUI.setUIVisibility) {
             this.interfaceUI.setUIVisibility(false);
         }
-        
-        // Afficher une notification
-        this.visualEffects.showNotification(`Exploration de: ${hotspot.title}`, 'info', 3000);
     }
     
     /**
@@ -571,12 +562,7 @@ class MondesImmergesApp {
         if (this.interfaceUI && this.interfaceUI.setUIVisibility) {
             this.interfaceUI.setUIVisibility(true);
         }
-        
-        // Afficher une notification
-        if (this.visualEffects) {
-            this.visualEffects.showNotification("Retour à l'exploration globale", "info", 3000);
-        }
-        
+
         // Réinitialiser l'état actuel
         this.currentHotspot = null;
     }

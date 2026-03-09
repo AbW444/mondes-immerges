@@ -32,7 +32,6 @@ export class ContentPanel {
         if (this.panel && this.closeBtn && this.titleElement && this.descriptionElement) {
             this.init();
         } else {
-            console.warn('ContentPanel: Éléments DOM manquants, panneau désactivé');
             // Créer des méthodes vides pour éviter les erreurs
             this.show = () => {};
             this.hide = () => {};
@@ -58,7 +57,6 @@ export class ContentPanel {
         // Configurer l'événement de chargement de la vidéo si l'élément existe
         if (this.videoElement) {
             this.videoElement.addEventListener('loadeddata', () => {
-                console.log('Vidéo chargée avec succès');
                 // Ajouter un effet de fade-in pour la vidéo
                 gsap.fromTo(this.videoElement, 
                     { opacity: 0 },
@@ -68,7 +66,6 @@ export class ContentPanel {
             
             // Gérer les erreurs de vidéo
             this.videoElement.addEventListener('error', () => {
-                console.error('Erreur lors du chargement de la vidéo');
                 this.videoElement.style.display = 'none';
                 
                 // Afficher une image de remplacement
@@ -96,7 +93,6 @@ export class ContentPanel {
     applyDesignSystem() {
         // Vérifier que tous les éléments existent avant d'appliquer les styles
         if (!this.panel) {
-            console.warn('ContentPanel.panel n\'existe pas');
             return;
         }
         

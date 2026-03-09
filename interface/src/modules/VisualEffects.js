@@ -130,23 +130,41 @@ export class VisualEffects {
      * @param {Function} onComplete - Fonction à appeler une fois l'animation terminée
      * @param {number} duration - Durée de l'animation en secondes
      */
-    createOrbitalLoaderEffect(onComplete, duration = 4) {
+    createOrbitalLoaderEffect(onComplete, duration = 4, targetContainer = null) {
         // Créer un conteneur pour l'effet
         const loaderContainer = document.createElement('div');
         loaderContainer.className = 'orbital-loader';
-        loaderContainer.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 50;
-            background-color: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-        `;
+
+        // Si un conteneur cible est fourni, ne pas créer de fond (l'écran de chargement a déjà un fond noir)
+        if (targetContainer) {
+            loaderContainer.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 50;
+                background-color: transparent;
+            `;
+        } else {
+            // Comportement par défaut avec fond
+            loaderContainer.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 50;
+                background-color: rgba(0, 0, 0, 0.7);
+                backdrop-filter: blur(5px);
+            `;
+        }
         
         // Créer le loader orbital
         const orbitalLoader = document.createElement('div');
@@ -203,12 +221,31 @@ export class VisualEffects {
             animation: pulse 2s ease-in-out infinite;
         `;
         orbitalLoader.appendChild(center);
-        
-        // Texte supprimé - loader uniquement
+
+        // Ajouter le texte "Initialisation du système..."
+        const loadingText = document.createElement('div');
+        loadingText.className = 'orbital-loading-text';
+        loadingText.style.cssText = `
+            position: absolute;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffcc00;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+            white-space: nowrap;
+            letter-spacing: 1px;
+        `;
+
+        // Créer le texte avec les spans pour les points
+        loadingText.innerHTML = `
+            Initialisation du système<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
+        `;
+
+        orbitalLoader.appendChild(loadingText);
 
         // Ajouter les éléments au DOM
         loaderContainer.appendChild(orbitalLoader);
-        // text supprimé - pas de texte dans le loader
         
         // Ajouter le style des animations
         const styleEl = document.createElement('style');
@@ -229,29 +266,69 @@ export class VisualEffects {
                 0%, 100% { transform: scale(1); opacity: 1; }
                 50% { transform: scale(1.3); opacity: 0.7; }
             }
+
+            /* Animation des points de chargement */
+            .loading-dots span {
+                opacity: 0;
+                animation: dotFade 1.5s infinite;
+            }
+            .loading-dots span:nth-child(1) {
+                animation-delay: 0s;
+            }
+            .loading-dots span:nth-child(2) {
+                animation-delay: 0.5s;
+            }
+            .loading-dots span:nth-child(3) {
+                animation-delay: 1s;
+            }
+
+            @keyframes dotFade {
+                0%, 100% { opacity: 0; }
+                50% { opacity: 1; }
+            }
         `;
         document.head.appendChild(styleEl);
-        
-        this.effectsContainer.appendChild(loaderContainer);
-        
+
+        // Ajouter au conteneur cible ou au conteneur d'effets par défaut
+        const container = targetContainer || this.effectsContainer;
+        container.appendChild(loaderContainer);
+
         // Animer l'entrée
-        gsap.fromTo(loaderContainer, 
-            { opacity: 0 }, 
-            { opacity: 1, duration: 0.5 }
-        );
-        
-        // Définir un timer pour la sortie
-        setTimeout(() => {
-            // Animer la sortie
-            gsap.to(loaderContainer, {
-                opacity: 0,
+        gsap.fromTo(loaderContainer,
+            { opacity: 0 },
+            {
+                opacity: 1,
                 duration: 0.5,
                 onComplete: () => {
-                    loaderContainer.remove();
-                    styleEl.remove();
-                    if (onComplete) onComplete();
+                    // Une fois que l'orbital est complètement visible,
+                    // démarrer la transition du fond noir si on est dans un targetContainer
+                    if (targetContainer && onComplete) {
+                        onComplete();
+                    }
                 }
-            });
+            }
+        );
+
+        // Définir un timer pour la sortie
+        setTimeout(() => {
+            // Si c'est dans un conteneur cible (écran de chargement),
+            // l'orbital reste à 100% d'opacité puis disparaît instantanément
+            if (targetContainer) {
+                // Supprimer l'orbital instantanément (pas de fade)
+                loaderContainer.remove();
+                styleEl.remove();
+            } else {
+                // Comportement normal : tout disparaît ensemble
+                gsap.to(loaderContainer, {
+                    opacity: 0,
+                    duration: 1,
+                    onComplete: () => {
+                        loaderContainer.remove();
+                        styleEl.remove();
+                        if (onComplete) onComplete();
+                    }
+                });
+            }
         }, duration * 1000);
     }
     
