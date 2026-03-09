@@ -593,7 +593,13 @@ window.addEventListener('unhandledrejection', (e) => {
 }, { once: false });
 
 // Nettoyage avant déchargement
-window.addEventListener('beforeunload', cleanup, { once: true });
+window.addEventListener('beforeunload', () => {
+    const app = getAppInstance();
+    if (app) {
+        app.destroy();
+    }
+    cleanup();
+}, { once: true });
 
 // Corriger le bug de retour depuis les pages collection
 // Recharger la page si elle vient du cache (bouton retour)
