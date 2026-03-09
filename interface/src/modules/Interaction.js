@@ -13,61 +13,59 @@ export class Interaction {
     constructor(options) {
         this.globeManager = options.globeManager;
         this.visualEffects = options.visualEffects;
-        
+
         this.isDragging = false;
         this.lastTouchTime = 0;
         this.touchTimeout = null;
         this.mouseStartY = 0;
         this.mouseStartX = 0;
         this.scrollAmount = 0;
-        this.lastPosition = { x: 0, y: 0 }; // Pour suivre les mouvements de la souris/touch
-        
+        this.lastPosition = { x: 0, y: 0 };
+
         // Variables pour gérer le scroll
         this.scrollTimerId = null;
         this.scrollSpeed = 0;
         this.lastScrollTime = 0;
         this.scrollAccumulator = 0;
-        
-        // Nouveaux paramètres pour l'inertie
-        this.inertiaEnabled = true;
-        this.velocityX = 0;
-        this.velocityY = 0;
-        this.inertiaAnimationId = null;
-        this.zoomInertia = 0;
-        
+
+        // Paramètres pour l'inertie (scroll orbit)
+        this.orbitVelocity = 0;
+        this.inclinationVelocity = 0;
+        this.orbitAnimationId = null;
+
         // Paramètres pour le pinch-to-zoom
         this.initialDistance = 0;
         this.currentDistance = 0;
         this.isPinching = false;
-        
+
         // Paramètres pour la détection de mouvement
-        this.movementThreshold = 5; // pixels
-        this.swipeThreshold = 80; // pixels
+        this.movementThreshold = 5;
+        this.swipeThreshold = 80;
         this.hasMoved = false;
-        
+
         // État de l'interface
         this.interfaceVisible = true;
         this.autoHideTimeout = null;
 
-        ilog('Initialisation des interactions (drag désactivé, molette = orbite)');
+        ilog('Initialisation des interactions (drag désactivé, molette = orbite fluide)');
         this.init();
     }
-    
+
     /**
      * Initialise les gestionnaires d'événements
      */
     init() {
         const container = this.globeManager.container;
 
-        // Écouteur pour la molette (zoom)
+        // Écouteur pour la molette (orbite fluide)
         container.addEventListener('wheel', this.handleMouseWheel.bind(this), { passive: false });
 
-        // Écouteurs pour le glissement souris (rotation du globe)
+        // Écouteurs souris (drag désactivé — détection de clic uniquement)
         container.addEventListener('mousedown', this.handleMouseDown.bind(this));
         document.addEventListener('mousemove', this.handleMouseMove.bind(this));
         document.addEventListener('mouseup', this.handleMouseUp.bind(this));
 
-        // Écouteurs tactiles (rotation du globe sur mobile)
+        // Écouteurs tactiles
         container.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
         container.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
         container.addEventListener('touchend', this.handleTouchEnd.bind(this));
@@ -81,23 +79,20 @@ export class Interaction {
         // Démarrer la détection d'inactivité
         this.startInterfaceAutoHide();
     }
+
     /**
-     * Gère le début d'un clic souris pour le glissement
-     * @param {MouseEvent} event
+     * Gère le début d'un clic souris — drag désactivé
      */
     handleMouseDown(event) {
-        // Drag rotation désactivé — navigation par molette uniquement
         this.hasMoved = false;
         this.mouseStartX = event.clientX;
         this.mouseStartY = event.clientY;
     }
 
     /**
-     * Gère le mouvement de la souris pour rotation du globe
-     * @param {MouseEvent} event
+     * Gère le mouvement de la souris — drag désactivé, détection de mouvement uniquement
      */
     handleMouseMove(event) {
-        // Drag rotation désactivé — détection de mouvement uniquement pour les clics
         const deltaX = event.clientX - this.mouseStartX;
         const deltaY = event.clientY - this.mouseStartY;
         if (Math.abs(deltaX) > this.movementThreshold || Math.abs(deltaY) > this.movementThreshold) {
@@ -106,50 +101,48 @@ export class Interaction {
     }
 
     /**
-     * Gère la fin d'un clic souris
-     * @param {MouseEvent} event
+     * Gère la fin d'un clic souris — drag désactivé
      */
     handleMouseUp(event) {
-        // Drag rotation désactivé — pas d'inertie
+        // Pas d'action
     }
 
     /**
-     * Démarre l'animation d'inertie après un glissement
+     * Animation d'inertie pour l'orbite (molette)
+     * Applique la vélocité accumulée avec friction pour un mouvement fluide
      */
-    startInertia() {
-        const friction = 0.95;
+    animateOrbitInertia() {
+        const friction = 0.92;
 
-        const animateInertia = () => {
-            this.velocityX *= friction;
-            this.velocityY *= friction;
+        this.orbitVelocity *= friction;
+        this.inclinationVelocity *= friction;
 
-            if (Math.abs(this.velocityX) < 0.1 && Math.abs(this.velocityY) < 0.1) {
-                this.inertiaAnimationId = null;
-                return;
-            }
+        // Arrêter si la vitesse est négligeable
+        if (Math.abs(this.orbitVelocity) < 0.00005 && Math.abs(this.inclinationVelocity) < 0.00005) {
+            this.orbitAnimationId = null;
+            return;
+        }
 
-            this.globeManager.orbitParams.orbitAngle -= this.velocityX * 0.005;
+        // Appliquer la vélocité aux paramètres d'orbite
+        this.globeManager.orbitParams.orbitAngle += this.orbitVelocity;
 
-            const newInclination = this.globeManager.orbitParams.inclination + this.velocityY * 0.003;
+        if (Math.abs(this.inclinationVelocity) > 0.00001) {
+            const newInclination = this.globeManager.orbitParams.inclination + this.inclinationVelocity;
             this.globeManager.orbitParams.inclination = Math.max(0.1, Math.min(Math.PI / 3, newInclination));
+        }
 
-            if (typeof this.globeManager._updateCameraPositionManual === 'function') {
-                this.globeManager._updateCameraPositionManual();
-            }
+        if (typeof this.globeManager._updateCameraPositionManual === 'function') {
+            this.globeManager._updateCameraPositionManual();
+        }
 
-            this.inertiaAnimationId = requestAnimationFrame(animateInertia);
-        };
-
-        this.inertiaAnimationId = requestAnimationFrame(animateInertia);
+        this.orbitAnimationId = requestAnimationFrame(() => this.animateOrbitInertia());
     }
 
     /**
      * Gère le début d'un toucher
-     * @param {TouchEvent} event
      */
     handleTouchStart(event) {
         if (event.touches.length === 1) {
-            // Drag rotation désactivé — garder le tracking pour hotspot scroll uniquement
             this.hasMoved = false;
             this.mouseStartX = event.touches[0].clientX;
             this.mouseStartY = event.touches[0].clientY;
@@ -162,8 +155,6 @@ export class Interaction {
 
     /**
      * Calcule la distance entre deux points de toucher
-     * @param {TouchList} touches
-     * @returns {number}
      */
     getTouchDistance(touches) {
         const dx = touches[0].clientX - touches[1].clientX;
@@ -173,18 +164,15 @@ export class Interaction {
 
     /**
      * Gère la fin d'un toucher
-     * @param {TouchEvent} event
      */
     handleTouchEnd(event) {
         if (this.isPinching && event.touches.length < 2) {
             this.isPinching = false;
         }
-        // Drag rotation désactivé — pas d'inertie
     }
 
     /**
      * Gère le mouvement d'un toucher
-     * @param {TouchEvent} event - Événement de toucher
      */
     handleTouchMove(event) {
         event.preventDefault();
@@ -220,141 +208,112 @@ export class Interaction {
 
             this.mouseStartY = currentY;
         }
-        // Drag rotation désactivé sur touch aussi
     }
-    
+
     /**
-     * Gère le défilement de la molette pour déplacer la caméra en orbite
-     * @param {WheelEvent} event - Événement de défilement
+     * Gère le défilement de la molette — orbite fluide avec inertie
+     * Accumule la vélocité et laisse l'animation RAF appliquer le mouvement progressivement
      */
     handleMouseWheel(event) {
         event.preventDefault();
 
-        // Afficher l'interface si elle est masquée
         this.showInterface();
-
-        // Réinitialiser la détection d'inactivité
         this.resetInterfaceAutoHide();
 
-        // Normaliser le delta (différents navigateurs/OS renvoient des valeurs très différentes)
+        // Normaliser le delta
         let delta = event.deltaY;
-        if (event.deltaMode === 1) delta *= 40;   // lignes → pixels
-        if (event.deltaMode === 2) delta *= 800;  // pages → pixels
+        if (event.deltaMode === 1) delta *= 40;
+        if (event.deltaMode === 2) delta *= 800;
 
-        // Scroll vertical → rotation orbitale horizontale
-        this.globeManager.orbitParams.orbitAngle += delta * 0.0008;
+        // Accumuler dans la vélocité (au lieu d'appliquer directement)
+        this.orbitVelocity += delta * 0.00015;
 
-        // Scroll horizontal (shift+scroll ou trackpad) → inclinaison verticale
+        // Scroll horizontal (shift+scroll ou trackpad) → inclinaison
         if (event.deltaX !== 0) {
             let deltaX = event.deltaX;
             if (event.deltaMode === 1) deltaX *= 40;
             if (event.deltaMode === 2) deltaX *= 800;
-
-            const newInclination = this.globeManager.orbitParams.inclination - deltaX * 0.0005;
-            this.globeManager.orbitParams.inclination = Math.max(0.1, Math.min(Math.PI / 3, newInclination));
+            this.inclinationVelocity -= deltaX * 0.0001;
         }
 
-        if (typeof this.globeManager._updateCameraPositionManual === 'function') {
-            this.globeManager._updateCameraPositionManual();
+        // Démarrer l'animation si pas déjà en cours
+        if (!this.orbitAnimationId) {
+            this.orbitAnimationId = requestAnimationFrame(() => this.animateOrbitInertia());
         }
     }
-    
+
     /**
-     * Gère les événements du clavier avec améliorations pour les hotspots
-     * MODIFICATION: Retrait de la gestion de la touche Entrée (maintenant gérée par GlobeManager)
-     * @param {KeyboardEvent} event - Événement clavier
+     * Gère les événements du clavier
      */
     handleKeyDown(event) {
-        // Afficher l'interface si elle est masquée
         this.showInterface();
-        
-        // Réinitialiser la détection d'inactivité
         this.resetInterfaceAutoHide();
-        
+
         switch (event.key) {
             case 'Escape':
-                // Si en mode hotspot, Escape pour revenir au globe
                 if (this.globeManager.orbitParams.inHotspotMode) {
                     this.globeManager.exitHotspotModeExternal();
-                    
-                    // Effet visuel de retour
+
                     if (this.visualEffects) {
                         this.visualEffects.flashScreen('rgba(0, 0, 0, 0.4)');
                         this.visualEffects.showNotification("Retour à l'exploration globale", "info", 2000);
                     }
                 }
                 break;
-                
-            // SUPPRIMÉ: case 'Enter' - maintenant géré par GlobeManager pour le changement de vidéo
-                
+
             case 'ArrowUp':
             case 'ArrowDown':
             case 'ArrowLeft':
             case 'ArrowRight':
-                // Empêcher le défilement de la page
                 event.preventDefault();
-                
-                // Comportement différent selon le mode
+
                 if (this.globeManager.orbitParams.inHotspotMode && event.key === 'ArrowDown') {
-                    // Si en mode hotspot, flèche bas pour quitter
                     this.globeManager.exitHotspotModeExternal();
-                    
+
                     if (this.visualEffects) {
                         this.visualEffects.flashScreen('rgba(0, 0, 0, 0.4)');
                         this.visualEffects.showNotification("Retour à l'exploration globale", "info", 2000);
                     }
                 } else {
-                    // Navigation standard pour les autres cas
                     this.handleArrowNavigation(event.key);
                 }
                 break;
-                
+
             case '+':
-            case '=': 
-                // Zoomer
+            case '=':
                 this.globeManager.zoom(true);
                 break;
-                
+
             case '-':
-            case '_': 
-                // Dézoomer
+            case '_':
                 this.globeManager.zoom(false);
                 break;
-                
+
             case 'r':
             case 'R':
-                // Réinitialiser la vue
                 this.globeManager.resetView();
-                
-                // Effet visuel de réinitialisation
                 if (this.visualEffects) {
                     this.visualEffects.flashScreen('rgba(255, 255, 255, 0.2)');
                     this.visualEffects.showNotification("Vue réinitialisée", "info", 2000);
                 }
                 break;
-                
+
             case 'h':
             case 'H':
-                // Basculer la visibilité de l'interface
                 this.toggleInterface();
                 break;
         }
     }
-    
+
     /**
-     * Gère la navigation par flèches avec protection améliorée
-     * @param {string} key - Touche de direction ('ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight')
+     * Gère la navigation par flèches
      */
     handleArrowNavigation(key) {
         try {
-            // Sauvegarde temporaire des paramètres actuels en cas d'erreur
             const backupAngle = this.globeManager.orbitParams.orbitAngle;
-            
-            // Désactiver temporairement l'orbite automatique
             const wasOrbiting = this.globeManager.orbitParams.isOrbiting;
             this.globeManager.orbitParams.isOrbiting = false;
-            
-            // Modifier la rotation en fonction de la touche
+
             switch (key) {
                 case 'ArrowLeft':
                     this.globeManager.orbitParams.orbitAngle += 0.05;
@@ -363,45 +322,37 @@ export class Interaction {
                     this.globeManager.orbitParams.orbitAngle -= 0.05;
                     break;
                 case 'ArrowUp':
-                    // Optionnellement utiliser pour augmenter l'inclinaison ou accélérer l'orbite
                     if (!this.globeManager.orbitParams.inHotspotMode) {
-                        const prevIncl = this.globeManager.orbitParams.inclination;
                         this.globeManager.orbitParams.inclination = Math.min(
-                            prevIncl + 0.03, 
-                            Math.PI / 3 // Maximum 60 degrés
+                            this.globeManager.orbitParams.inclination + 0.03,
+                            Math.PI / 3
                         );
                     }
                     break;
                 case 'ArrowDown':
-                    // Optionnellement utiliser pour diminuer l'inclinaison ou ralentir l'orbite
                     if (!this.globeManager.orbitParams.inHotspotMode) {
-                        const prevIncl = this.globeManager.orbitParams.inclination;
                         this.globeManager.orbitParams.inclination = Math.max(
-                            prevIncl - 0.03,
-                            0.1 // Minimum 5.7 degrés
+                            this.globeManager.orbitParams.inclination - 0.03,
+                            0.1
                         );
                     }
                     break;
             }
-            
-            // Mettre à jour la caméra
+
             if (typeof this.globeManager._updateCameraPositionManual === 'function') {
                 this.globeManager._updateCameraPositionManual();
             }
-            
-            // Réactiver l'orbite après un court délai
+
             setTimeout(() => {
                 this.globeManager.orbitParams.isOrbiting = wasOrbiting;
             }, 500);
         } catch (e) {
-            // Restaurer l'angle original en cas d'erreur
             if (this.globeManager && this.globeManager.orbitParams) {
-                this.globeManager.orbitParams.orbitAngle = backupAngle;
                 this.globeManager.orbitParams.isOrbiting = true;
             }
         }
     }
-    
+
     /**
      * Démarre le minuteur pour masquer l'interface après une période d'inactivité
      */
@@ -409,12 +360,12 @@ export class Interaction {
         if (this.autoHideTimeout) {
             clearTimeout(this.autoHideTimeout);
         }
-        
+
         this.autoHideTimeout = setTimeout(() => {
             this.hideInterface();
-        }, 10000); // 10 secondes d'inactivité
+        }, 10000);
     }
-    
+
     /**
      * Réinitialise le minuteur d'auto-masquage de l'interface
      */
@@ -422,83 +373,73 @@ export class Interaction {
         this.showInterface();
         this.startInterfaceAutoHide();
     }
-    
+
     /**
      * Masque l'interface utilisateur
      */
     hideInterface() {
         if (!this.interfaceVisible) return;
-        
+
         this.interfaceVisible = false;
-        
-        // Obtenir les éléments d'interface
+
         const uiControls = document.getElementById('ui-controls');
         const huds = document.querySelectorAll('.satellite-hud, .coordinates-display');
         const crosshair = document.querySelector('.satellite-crosshair');
-        
-        // Animer la disparition progressive
+
         gsap.to(uiControls, {
             opacity: 0,
             y: 20,
             duration: 0.5,
             ease: "power2.inOut"
         });
-        
+
         gsap.to([...huds, crosshair], {
             opacity: 0,
             duration: 0.5,
             ease: "power2.inOut"
         });
-        
-        // Désactiver les interactions avec les éléments masqués
+
         setTimeout(() => {
             if (!this.interfaceVisible) {
                 uiControls.style.pointerEvents = 'none';
             }
         }, 500);
     }
-    
+
     /**
      * Affiche l'interface utilisateur
      */
     showInterface() {
         if (this.interfaceVisible) return;
-        
+
         this.interfaceVisible = true;
-        
-        // Obtenir les éléments d'interface
+
         const uiControls = document.getElementById('ui-controls');
         const huds = document.querySelectorAll('.satellite-hud, .coordinates-display');
         const crosshair = document.querySelector('.satellite-crosshair');
-        
-        // Réactiver les interactions
+
         uiControls.style.pointerEvents = 'auto';
-        
-        // Animer l'apparition progressive
+
         gsap.to(uiControls, {
             opacity: 1,
             y: 0,
             duration: 0.5,
             ease: "power2.out"
         });
-        
+
         gsap.to([...huds, crosshair], {
             opacity: 1,
             duration: 0.5,
             ease: "power2.out"
         });
     }
-    
+
     /**
      * Bascule l'état de visibilité de l'interface
      */
     toggleInterface() {
         if (this.interfaceVisible) {
             this.hideInterface();
-            
-            // Afficher une notification temporaire pour indiquer que 'H' peut réafficher l'interface
-            // Notification désactivée volontairement
-
         } else {
             this.showInterface();
             this.startInterfaceAutoHide();

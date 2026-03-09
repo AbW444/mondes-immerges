@@ -431,42 +431,46 @@ export class GlobeManager {
         return new Promise((resolve, reject) => {
             const loader = new THREE.TextureLoader();
             const skyTexturePath = `${import.meta.env.BASE_URL}images/night-sky.png`;
+            glog('SKYBOX', 'Chargement texture:', skyTexturePath);
 
             let resolved = false;
 
-            // Timeout de sécurité: si pas chargé en 8 secondes, continuer quand même
+            // Timeout de sécurité: si pas chargé en 15 secondes, continuer quand même
             const timeout = setTimeout(() => {
                 if (!resolved) {
+                    gwarn('SKYBOX', 'TIMEOUT 15s — fallback couleur unie');
                     this.scene.background = new THREE.Color(0x000011);
                     resolved = true;
                     resolve();
                 }
-            }, 8000);
+            }, 15000);
 
             loader.load(
                 skyTexturePath,
                 (texture) => {
                     if (!resolved) {
                         try {
+                            glog('SKYBOX', 'Texture chargée OK, dimensions:', texture.image.width, 'x', texture.image.height);
                             this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
                             this.renderer.toneMappingExposure = 0.6;
 
                             // FIX: Limiter la résolution du cubemap pour éviter GL_OUT_OF_MEMORY
-                            // L'image originale fait 8192x4096 - utiliser la hauteur complète
-                            // créerait 6 faces de 4096x4096 = ~384 MB de VRAM
                             const maxCubemapSize = this.isMobile ? 512 : 1024;
                             const cubemapSize = Math.min(texture.image.height, maxCubemapSize);
+                            glog('SKYBOX', 'Cubemap size:', cubemapSize, '(max:', maxCubemapSize, ')');
 
                             const rt = new THREE.WebGLCubeRenderTarget(cubemapSize);
                             rt.fromEquirectangularTexture(this.renderer, texture);
                             this.scene.background = rt.texture;
+                            glog('SKYBOX', 'Skybox appliquée avec succès');
 
-                            // Libérer la texture equirectangulaire originale (plus besoin après conversion)
+                            // Libérer la texture equirectangulaire originale
                             texture.dispose();
 
                             // Fog plus légère pour voir davantage les étoiles
                             this.scene.fog = new THREE.FogExp2(0x000011, 0.00005);
                         } catch (error) {
+                            gerr('SKYBOX', 'Erreur création cubemap:', error.message);
                             this.scene.background = new THREE.Color(0x000011);
                         }
                         resolved = true;
@@ -474,13 +478,19 @@ export class GlobeManager {
                         resolve();
                     }
                 },
-                undefined,
+                (progress) => {
+                    if (progress.lengthComputable) {
+                        glog('SKYBOX', 'Progression:', Math.round(progress.loaded / progress.total * 100) + '%');
+                    }
+                },
                 (error) => {
                     if (!resolved) {
+                        gerr('SKYBOX', 'ERREUR chargement texture:', error);
+                        gerr('SKYBOX', 'Chemin tenté:', skyTexturePath);
                         this.scene.background = new THREE.Color(0x000011);
                         resolved = true;
                         clearTimeout(timeout);
-                        resolve(); // Résoudre quand même pour ne pas bloquer
+                        resolve();
                     }
                 }
             );
