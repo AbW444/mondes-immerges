@@ -20,6 +20,7 @@ if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
 }
 
 Write-Host "=== Compression videos > ${maxSizeMB}Mo ===" -ForegroundColor Cyan
+Write-Host "Fichiers trouves: $($files.Count)" -ForegroundColor Cyan
 Write-Host ""
 
 foreach ($relPath in $files) {
@@ -65,21 +66,26 @@ foreach ($relPath in $files) {
     $backupFile = "$fullPath.backup$ext"
 
     # Encoder selon le format
+    # -stats affiche la progression, -speed accelere VP9
     if ($ext -eq ".webm") {
-        # VP9 + Opus pour WebM - 2-pass pour précision du bitrate
-        Write-Host "  Pass 1/2..." -ForegroundColor Gray
-        & ffmpeg -y -i "$fullPath" -c:v libvpx-vp9 -b:v "${videoBitrate}k" -pass 1 -an -f null NUL 2>$null
+        # VP9 + Opus pour WebM - 2-pass
+        Write-Host "  Pass 1/2 (VP9)..." -ForegroundColor Gray
+        & ffmpeg -y -i "$fullPath" -c:v libvpx-vp9 -b:v "${videoBitrate}k" -speed 4 -row-mt 1 -threads 0 -pass 1 -an -f null NUL -stats 2>&1 | Select-String "frame=" | ForEach-Object { Write-Host "`r  $($_.Line)" -NoNewline }
+        Write-Host ""
 
-        Write-Host "  Pass 2/2..." -ForegroundColor Gray
-        & ffmpeg -y -i "$fullPath" -c:v libvpx-vp9 -b:v "${videoBitrate}k" -pass 2 -c:a libopus -b:a "${audioBitrate}k" -threads 4 "$tempFile" 2>$null
+        Write-Host "  Pass 2/2 (VP9)..." -ForegroundColor Gray
+        & ffmpeg -y -i "$fullPath" -c:v libvpx-vp9 -b:v "${videoBitrate}k" -speed 2 -row-mt 1 -threads 0 -pass 2 -c:a libopus -b:a "${audioBitrate}k" "$tempFile" -stats 2>&1 | Select-String "frame=" | ForEach-Object { Write-Host "`r  $($_.Line)" -NoNewline }
+        Write-Host ""
     }
     else {
         # H.264 + AAC pour MP4 - 2-pass
-        Write-Host "  Pass 1/2..." -ForegroundColor Gray
-        & ffmpeg -y -i "$fullPath" -c:v libx264 -b:v "${videoBitrate}k" -pass 1 -an -f null NUL 2>$null
+        Write-Host "  Pass 1/2 (H.264)..." -ForegroundColor Gray
+        & ffmpeg -y -i "$fullPath" -c:v libx264 -preset fast -b:v "${videoBitrate}k" -pass 1 -an -f null NUL -stats 2>&1 | Select-String "frame=" | ForEach-Object { Write-Host "`r  $($_.Line)" -NoNewline }
+        Write-Host ""
 
-        Write-Host "  Pass 2/2..." -ForegroundColor Gray
-        & ffmpeg -y -i "$fullPath" -c:v libx264 -b:v "${videoBitrate}k" -pass 2 -c:a aac -b:a "${audioBitrate}k" -movflags +faststart "$tempFile" 2>$null
+        Write-Host "  Pass 2/2 (H.264)..." -ForegroundColor Gray
+        & ffmpeg -y -i "$fullPath" -c:v libx264 -preset fast -b:v "${videoBitrate}k" -pass 2 -c:a aac -b:a "${audioBitrate}k" -movflags +faststart "$tempFile" -stats 2>&1 | Select-String "frame=" | ForEach-Object { Write-Host "`r  $($_.Line)" -NoNewline }
+        Write-Host ""
     }
 
     # Vérifier le résultat
@@ -95,16 +101,16 @@ foreach ($relPath in $files) {
         }
         elseif ($newSize -gt $maxSizeBytes) {
             # Encore trop gros, réessayer avec bitrate réduit
-            $reducedBitrate = [math]::Floor($videoBitrate * 0.75)
+            $reducedBitrate = [math]::Floor($videoBitrate * 0.7)
             Write-Host "  Encore ${newSizeMB}Mo, retry bitrate ${reducedBitrate}k..." -ForegroundColor Yellow
             Remove-Item $tempFile -Force
 
             if ($ext -eq ".webm") {
-                & ffmpeg -y -i "$fullPath" -c:v libvpx-vp9 -b:v "${reducedBitrate}k" -pass 1 -an -f null NUL 2>$null
-                & ffmpeg -y -i "$fullPath" -c:v libvpx-vp9 -b:v "${reducedBitrate}k" -pass 2 -c:a libopus -b:a "${audioBitrate}k" -threads 4 "$tempFile" 2>$null
+                & ffmpeg -y -i "$fullPath" -c:v libvpx-vp9 -b:v "${reducedBitrate}k" -speed 4 -row-mt 1 -threads 0 -pass 1 -an -f null NUL 2>&1 | Out-Null
+                & ffmpeg -y -i "$fullPath" -c:v libvpx-vp9 -b:v "${reducedBitrate}k" -speed 2 -row-mt 1 -threads 0 -pass 2 -c:a libopus -b:a "${audioBitrate}k" "$tempFile" 2>&1 | Out-Null
             } else {
-                & ffmpeg -y -i "$fullPath" -c:v libx264 -b:v "${reducedBitrate}k" -pass 1 -an -f null NUL 2>$null
-                & ffmpeg -y -i "$fullPath" -c:v libx264 -b:v "${reducedBitrate}k" -pass 2 -c:a aac -b:a "${audioBitrate}k" -movflags +faststart "$tempFile" 2>$null
+                & ffmpeg -y -i "$fullPath" -c:v libx264 -preset fast -b:v "${reducedBitrate}k" -pass 1 -an -f null NUL 2>&1 | Out-Null
+                & ffmpeg -y -i "$fullPath" -c:v libx264 -preset fast -b:v "${reducedBitrate}k" -pass 2 -c:a aac -b:a "${audioBitrate}k" -movflags +faststart "$tempFile" 2>&1 | Out-Null
             }
 
             if (Test-Path $tempFile) {
