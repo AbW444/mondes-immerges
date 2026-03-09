@@ -60,9 +60,8 @@ export class GlobeManager {
 
         this._savedState = null;
 
-        // Chemins des vidéos du globe
+        // Chemin de la vidéo du globe
         this.currentVideoPath = `${import.meta.env.BASE_URL}videos/globe-video.webm`;
-        this.aberrationVideoPath = `${import.meta.env.BASE_URL}videos/globe-video-aberration.webm`;
 
         this.init();
     }

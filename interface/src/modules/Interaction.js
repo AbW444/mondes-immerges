@@ -376,23 +376,6 @@ export class Interaction {
                 this.globeManager.zoom(false);
                 break;
                 
-            case 'r':
-            case 'R':
-                // Réinitialiser la vue
-                this.globeManager.resetView();
-                
-                // Effet visuel de réinitialisation
-                if (this.visualEffects) {
-                    this.visualEffects.flashScreen('rgba(255, 255, 255, 0.2)');
-                    this.visualEffects.showNotification("Vue réinitialisée", "info", 2000);
-                }
-                break;
-                
-            case 'h':
-            case 'H':
-                // Basculer la visibilité de l'interface
-                this.toggleInterface();
-                break;
         }
     }
     
@@ -544,19 +527,4 @@ export class Interaction {
         });
     }
     
-    /**
-     * Bascule l'état de visibilité de l'interface
-     */
-    toggleInterface() {
-        if (this.interfaceVisible) {
-            this.hideInterface();
-            
-            // Afficher une notification temporaire pour indiquer que 'H' peut réafficher l'interface
-            // Notification désactivée volontairement
-
-        } else {
-            this.showInterface();
-            this.startInterfaceAutoHide();
-        }
-    }
 }
