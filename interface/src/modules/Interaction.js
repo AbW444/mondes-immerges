@@ -145,87 +145,59 @@ export class Interaction {
      */
     handleMouseWheel(event) {
         event.preventDefault();
-        
+
         // Afficher l'interface si elle est masquée
         this.showInterface();
-        
+
         // Réinitialiser la détection d'inactivité
         this.resetInterfaceAutoHide();
-        
+
         // Si en mode hotspot, utiliser la molette pour zoomer/dézoomer
         if (this.globeManager.orbitParams.inHotspotMode) {
             const zoomIn = event.deltaY < 0;
             this.globeManager.zoom(zoomIn);
             return;
         }
-        
-        const now = Date.now();
-        const timeDelta = now - this.lastScrollTime;
-        this.lastScrollTime = now;
-        
-        // Accumuler le défilement pour une réaction plus fluide
-        this.scrollAccumulator += event.deltaY;
-        
-        // Limiter la fréquence des mises à jour pour éviter les réactions trop rapides
-        if (timeDelta < 50 && this.scrollTimerId) return;
-        
-        // Annuler tout minuteur existant
-        if (this.scrollTimerId) {
-            clearTimeout(this.scrollTimerId);
-        }
-        
-        // Appliquer le changement de vitesse en fonction de l'accumulation
-        const scrollDirection = Math.sign(this.scrollAccumulator);
-        const scrollMagnitude = Math.min(Math.abs(this.scrollAccumulator) / 100, 2);
-        
-        // Vitesse précédente pour la comparaison
-        const previousSpeed = this.globeManager.orbitParams.currentSpeed;
-        
-        if (scrollDirection > 0) {
+
+        // Annuler toute animation gsap de retour en cours (évite les conflits)
+        gsap.killTweensOf(this.globeManager.orbitParams, "currentSpeed");
+
+        // Normaliser le deltaY (les trackpads envoient des valeurs très différentes des souris)
+        let delta = event.deltaY;
+        if (event.deltaMode === 1) delta *= 40; // lignes → pixels
+        if (event.deltaMode === 2) delta *= 800; // pages → pixels
+
+        // Appliquer le changement de vitesse directement (pas d'accumulation buggée)
+        const scrollMagnitude = Math.min(Math.abs(delta) / 100, 1.5);
+
+        if (delta > 0) {
             // Défilement vers le bas - ralentir
             this.globeManager.orbitParams.currentSpeed = Math.max(
-                this.globeManager.orbitParams.baseSpeed * 0.5, // Limite minimale
+                this.globeManager.orbitParams.baseSpeed * 0.3,
                 this.globeManager.orbitParams.currentSpeed * Math.pow(this.globeManager.orbitParams.decelerationFactor, scrollMagnitude)
             );
-            
-            // Effet visuel pour ralentissement
-            if (this.visualEffects && Math.abs(previousSpeed - this.globeManager.orbitParams.currentSpeed) > 0.0001) {
-                // Notification désactivée volontairement
-
-            }
         } else {
             // Défilement vers le haut - accélérer
             this.globeManager.orbitParams.currentSpeed = Math.min(
                 this.globeManager.orbitParams.maxSpeed,
                 this.globeManager.orbitParams.currentSpeed * Math.pow(this.globeManager.orbitParams.accelerationFactor, scrollMagnitude)
             );
-            
-            // Effet visuel pour accélération
-            if (this.visualEffects && Math.abs(previousSpeed - this.globeManager.orbitParams.currentSpeed) > 0.0001) {
-               // Notification désactivée volontairement
-
-            }
         }
-        
-        // Réinitialiser l'accumulateur
-        this.scrollAccumulator = 0;
-        
-        // Définir un minuteur pour revenir progressivement à la vitesse normale après un délai
+
+        // Annuler tout minuteur existant de retour à la vitesse de base
+        if (this.scrollTimerId) {
+            clearTimeout(this.scrollTimerId);
+        }
+
+        // Retour progressif à la vitesse de base après 2s d'inactivité de scroll
         this.scrollTimerId = setTimeout(() => {
-            // Animation douce de retour à la vitesse de base
             gsap.to(this.globeManager.orbitParams, {
                 currentSpeed: this.globeManager.orbitParams.baseSpeed,
-                duration: 3,
-                ease: "power2.out",
-                onComplete: () => {
-                    if (this.visualEffects) {
-                        this.visualEffects.showNotification("Vitesse d'orbite normalisée", "info", 1000);
-                    }
-                }
+                duration: 2.5,
+                ease: "power2.out"
             });
-            
             this.scrollTimerId = null;
-        }, 3000);
+        }, 2000);
     }
     
     /**

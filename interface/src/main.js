@@ -156,6 +156,7 @@ function initCustomCursor() {
 
 /**
  * Joue la vidéo de transition après le préchargement
+ * FLUX : écran noir reste → afficher contenu derrière → jouer vidéo logo par-dessus → retirer écran noir
  */
 async function playTransitionVideo() {
     return new Promise((resolve) => {
@@ -164,11 +165,6 @@ async function playTransitionVideo() {
         const loadingScreen = document.getElementById('loading-screen');
         const mainContainer = document.getElementById('main-container');
 
-        if (!transitionVideo) {
-            resolve();
-            return;
-        }
-
         // Cacher le jelly loader
         if (jellyLoader) {
             jellyLoader.style.transition = 'opacity 0.3s ease';
@@ -176,67 +172,79 @@ async function playTransitionVideo() {
             setTimeout(() => jellyLoader.remove(), 300);
         }
 
-        // IMPORTANT: Afficher le globe IMMÉDIATEMENT
+        if (!transitionVideo) {
+            // Pas de vidéo : afficher directement le contenu
+            if (mainContainer) mainContainer.style.opacity = '1';
+            if (loadingScreen) {
+                loadingScreen.style.display = 'none';
+                loadingScreen.classList.add('hidden');
+            }
+            resolve();
+            return;
+        }
+
+        // ÉTAPE 1: Afficher le contenu derrière l'écran noir (invisible pour l'utilisateur)
         if (mainContainer) {
             mainContainer.style.opacity = '1';
         }
 
-        // IMPORTANT: Rendre le loading-screen transparent (garder la vidéo visible)
-        if (loadingScreen) {
-            loadingScreen.style.background = 'transparent';
-        }
-
         // Enregistrer la vidéo de transition avec le VideoManager
         videoManager.register(transitionVideo, {
-            loop: false, // Ne pas boucler les transitions
+            loop: false,
             muted: true,
             autoRetry: true,
             name: 'transition-video-in'
         });
 
-        // Activer la vidéo de transition - EXACTEMENT comme accueil
+        // ÉTAPE 2: Préparer et lancer la vidéo
         transitionVideo.classList.add('active');
         transitionVideo.currentTime = 0;
 
-        // Lancer la vidéo
-        transitionVideo.play().then(() => {
-            // Écouter la fin de la vidéo pour terminer la transition
-            transitionVideo.addEventListener('ended', function() {
-                transitionVideo.classList.remove('active');
+        let resolved = false;
+        const finish = () => {
+            if (resolved) return;
+            resolved = true;
 
-                // Cacher le loading-screen APRÈS la vidéo
-                if (loadingScreen) {
-                    loadingScreen.style.display = 'none';
-                    loadingScreen.classList.add('hidden');
-                }
-
-                setTimeout(() => resolve(), 300);
-            }, { once: true });
-
-        }).catch(e => {
             transitionVideo.classList.remove('active');
-            resolve();
+
+            // ÉTAPE 4: Retirer complètement le loading-screen
+            if (loadingScreen) {
+                loadingScreen.style.display = 'none';
+                loadingScreen.classList.add('hidden');
+            }
+
+            setTimeout(() => resolve(), 200);
+        };
+
+        transitionVideo.play().then(() => {
+            // ÉTAPE 3: La vidéo joue → retirer le fond noir du loading-screen
+            // La vidéo (z-index: 99999) reste visible par-dessus le contenu
+            if (loadingScreen) {
+                loadingScreen.style.background = 'transparent';
+            }
+
+            transitionVideo.addEventListener('ended', finish, { once: true });
+
+        }).catch(() => {
+            // Vidéo échouée : afficher directement
+            if (loadingScreen) {
+                loadingScreen.style.display = 'none';
+                loadingScreen.classList.add('hidden');
+            }
+            finish();
         });
 
         // Timeout de sécurité basé sur la durée de la vidéo
         transitionVideo.addEventListener('loadedmetadata', function() {
             const videoDuration = transitionVideo.duration;
-
-            // Timeout = durée vidéo + 2 secondes de sécurité
             setTimeout(() => {
-                if (transitionVideo.classList.contains('active')) {
-                    transitionVideo.classList.remove('active');
-                    resolve();
-                }
+                if (!resolved) finish();
             }, (videoDuration + 2) * 1000);
         }, { once: true });
 
         // Fallback ultime : 15 secondes
         setTimeout(() => {
-            if (transitionVideo.classList.contains('active')) {
-                transitionVideo.classList.remove('active');
-                resolve();
-            }
+            if (!resolved) finish();
         }, 15000);
     });
 }
