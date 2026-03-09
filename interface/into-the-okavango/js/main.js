@@ -672,6 +672,9 @@ function fixVideos() {
             this.currentTime = 0;
             playOnce();
         });
+
+        // Start the globe video immediately after setup
+        startGlobeVideo();
     }
     
     // Vidéo du documentaire - Adaptée tactile avec contrôles intelligents
