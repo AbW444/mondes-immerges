@@ -44,9 +44,9 @@ export class VideoManager {
 
         this.videos.set(video, config);
 
-        // Only listen for 'ended' as fallback if loop fails
+        // Fallback si loop natif échoue (rare) - attendre que la vidéo soit prête
         video.addEventListener('ended', () => {
-            if (config.shouldLoop && this.isActive && !this._contextLost) {
+            if (config.shouldLoop && this.isActive && !this._contextLost && !video.loop) {
                 video.currentTime = 0;
                 this._tryPlay(video);
             }
@@ -98,7 +98,9 @@ export class VideoManager {
             if (!this.isActive || this._contextLost) return;
 
             this.videos.forEach((config, video) => {
-                if (video.paused && !video.ended && config.shouldLoop) {
+                // Ne relancer que si la vidéo est vraiment stoppée ET a assez de données
+                // readyState >= 3 (HAVE_FUTURE_DATA) = évite de spam play() pendant le buffering
+                if (video.paused && !video.ended && config.shouldLoop && video.readyState >= 3) {
                     this._tryPlay(video);
                 }
             });

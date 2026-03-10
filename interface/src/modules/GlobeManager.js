@@ -326,7 +326,7 @@ export class GlobeManager {
             this.videoTexture = new THREE.VideoTexture(video);
             this.videoTexture.minFilter = THREE.LinearFilter;
             this.videoTexture.magFilter = THREE.LinearFilter;
-            this.videoTexture.format = THREE.RGBFormat;
+            this.videoTexture.generateMipmaps = false;
             this.videoTexture.colorSpace = THREE.SRGBColorSpace;
 
             const depthGeometry = new THREE.SphereGeometry(1.99, 64, 64);
@@ -519,7 +519,7 @@ export class GlobeManager {
             }
 
             // Démarrer la surveillance du VideoManager
-            videoManager.startMonitoring(2000);
+            videoManager.startMonitoring(10000);
         }).catch((error) => {
             gerr('PRELOAD', 'Erreur préchargement:', error);
             // Continuer quand même pour ne pas bloquer l'application
@@ -530,7 +530,7 @@ export class GlobeManager {
             }
 
             // Démarrer la surveillance même en cas d'erreur
-            videoManager.startMonitoring(2000);
+            videoManager.startMonitoring(10000);
         });
     }
     
